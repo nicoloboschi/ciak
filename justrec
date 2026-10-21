@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# justrec — record screen + mic into one file, then let agents do the rest.
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+OUT_DIR="${JUSTREC_DIR:-$HOME/Movies/justrec}"
+WHISPER_MODEL="${JUSTREC_WHISPER_MODEL:-mlx-community/whisper-large-v3-turbo}"
+
+rec() {
+  local bin="$HERE/.build/justrec-rec"
+  if [[ ! -x "$bin" || "$HERE/rec.swift" -nt "$bin" ]]; then
+    mkdir -p "$HERE/.build"
+    swiftc -O -parse-as-library -o "$bin" "$HERE/rec.swift"
+  fi
+  mkdir -p "$OUT_DIR"
+  "$bin" "$OUT_DIR/rec-$(date +%Y%m%d-%H%M%S).mp4" "$@"
+}
+
+captions() {
+  local in="$1" dir base
+  dir="$(cd "$(dirname "$in")" && pwd)"; base="$(basename "${in%.*}")"
+  uvx --from mlx-whisper mlx_whisper "$in" --model "$WHISPER_MODEL" \
+    --output-format all --word-timestamps True \
+    --output-dir "$dir" --output-name "$base" >/dev/null
+  ls "$dir/$base".{srt,json,txt}
+}
+
+case "${1:-}" in
+  rec) shift; rec "$@" ;;
+  captions) captions "${2:?usage: justrec captions <video>}" ;;
+  *) echo "usage: justrec rec [display-index] | captions <video>"; exit 1 ;;
+esac
