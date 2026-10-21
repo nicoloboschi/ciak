@@ -19,7 +19,7 @@ justrec rec                      # record main display + default mic; Enter or C
 
 # what an agent does: record itself using a logged-in browser
 justrec browser https://app.example.com          # the justrec browser: your Brave logins, runs in background
-justrec start --browser --fps 60 --system-audio --name demo   # record its current tab, returns at once
+justrec start --browser --system-audio --name demo        # record its current tab, returns at once
 justrec browser click "New project"              # click / type / key / scroll / go / shot
 justrec pause / resume / status / stop
 
@@ -71,7 +71,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Drive it from the command line: `browser click/type/key/scroll/go/eval/shot`
 - ✅ Browser sound in browser recordings (`--system-audio`: only the justrec browser, not other apps) · 🧪 `--mic`
 - ✅ Sharp: the justrec browser draws at 2x even on a non-Retina monitor
-- ✅ 60 fps (`--fps 60`), kept through the render
+- ✅ 60 fps by default (`--fps 30` for smaller files), kept through the render
 - 🧪 Log cursor position and clicks to `<name>.cursor.jsonl` (file written; clicks not yet checked)
 - ✅ Optional system audio, mixed into the same track (never a second track)
 - ✅ Record a single window (only while visible) or a region
@@ -108,6 +108,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 ### Export
 
 - ✅ `justrec render <project>` → final mp4 (1080p: about 1.3 s of work per second at 30 fps, 2.3 s at 60 fps)
+- ✅ Small files: raw recordings ~20 MB/min, final videos ~30 MB/min at 1080p60 (x264, visually lossless)
 - ✅ Preset 16:9 · 🧪 9:16 and square (`--preset vertical|square`) · ⬜ GIF
 - ✅ Check the output before calling it done (one video + one audio track, right length)
 
