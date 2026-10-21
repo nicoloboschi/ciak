@@ -52,6 +52,9 @@ export JUSTREC_DIR=~/Documents/justrec/<film-name>      # recordings, screenshot
 ./justrec start --browser --name before  …actions…  ./justrec stop
 ./justrec start --browser --name after   …actions…  ./justrec stop
 ./justrec browser shot $JUSTREC_DIR/<name>.png           # stills for image/slide scenes
+# product mockup: a self-playing HTML page (window.play() starts the animation), recorded in one step;
+# scripted captures (--for) are never idle-cut, so slow parts stay in
+./justrec start --browser --url "file://$JUSTREC_DIR/mock.html?mode=slow" --run "play()" --for 8 --name slow
 # write $JUSTREC_DIR/launch.film.json (below)
 ./justrec film $JUSTREC_DIR/launch.film.json --preview   # ~30 s: one contact sheet PNG, look at it
 ./justrec film $JUSTREC_DIR/launch.film.json             # final mp4 + .srt + .report.json
@@ -68,14 +71,34 @@ stretches to fit it, captions are made from it) and `duration` (minimum seconds)
   {"type": "slide", "kicker": "HOW IT WORKS", "heading": "…", "bullets": ["…", "…"], "image": "dark.png", "say": "…"},
   {"type": "chart", "heading": "…", "unit": "%", "bars": [{"label": "A", "value": 100}, {"label": "B", "value": 15, "highlight": true}], "say": "…"},
   {"type": "recording", "label": "…", "project": "after", "say": "…"},
-  {"type": "compare", "before": {"project": "before", "label": "Before"}, "after": {"project": "after", "label": "After"}, "say": "…"}
+  {"type": "compare", "heading": "…", "before": {"project": "before", "label": "Before"}, "after": {"project": "after", "label": "After"}, "say": "…"},
+  {"type": "lines", "heading": "Slower, *as it grows.*", "legend": [{"label": "Time"}, {"label": "Cost"}],
+   "panels": [{"title": "Time to answer", "x": ["4K", "50K", "1M"], "shared": true,
+     "series": [{"values": [0.5, 1, 5.3], "projectedFrom": 1, "label": "5.3s", "color": "#9a9ca3"}, {"values": [0.09, 0.09, 0.09], "label": "0.09s"}],
+     "footer": "5.3s → [0.09s]", "note": "small print"}], "say": "…"},
+  {"type": "end", "columns": [{"title": "[Product]", "kicker": "OPEN SOURCE", "text": "…", "stats": [{"value": "~50K", "label": "GitHub stars"}]}],
+   "buttons": ["Read the docs", "Visit example.com →"], "say": "…"}
 ]}
+```
+
+Headline text everywhere: `*muted words*` render grey (two-tone keynote headlines), `[accent words]`
+render in the accent color/gradient; words reveal one by one.
+
+Any scene can sit on footage or a still: `"background": "footage/city.mp4"` (darkened automatically,
+`"dim": "77"` for darker). Title scenes also take `"align": "top"`, `"kicker"`, `"subtitle"`, `"pill"`
+(rich text), `"chips": ["[Agent] did a thing", …]` (pop-in notifications) and
+`"counter": {"from": 1037, "to": 458692, "label": "memories"}` (counts up during the scene).
+Stats over footage: one item per scene reads best. Lines: each series uses its own scale unless
+`"shared": true`; `"top"` sets a series' scale top; end labels never overlap.
+
+```json
+{"theme": {"base": "light", "accent": "#0f9494", "accentGradient": "linear-gradient(90deg, #1f6feb, #0fa3a3)"}}
 ```
 
 - `project` is the `--name` you recorded with (newest wins), or a `.project.json` path.
 - Optional top level: `"theme": {"base": "dark"|"light", "accent": "#hex", …}`, `"voice": "af_heart"`,
   `"speed": 1`, `"music": false | "song.mp3"` (default: generated soft music, ducked under
-  the voice), `"musicVolume": 0.35`, `"captions": false`, `"fps": 60`, `"output": "name.mp4"`.
+  the voice), `"musicVolume": 1` (music is normalized; 0.7 quieter, 1.4 louder), `"captions": false`, `"fps": 60`, `"output": "name.mp4"`.
 - Write `say` as plain spoken sentences; spell numbers the way they should be read.
 - Only use real numbers: read them from the page or measure them, never invent them.
 - Narration is cached per sentence, so re-running after a visual change is fast.

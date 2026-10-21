@@ -113,6 +113,10 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Background music (generated, or your file), ducked under the voice
 - ✅ `--preview`: one contact-sheet image of every scene in ~30 s
 - ✅ Recordings auto-edit on stop (idle cut, zooms) and are referenced by `--name`
+- ✅ Keynote look: light theme, two-tone headlines (`*muted*`, `[accent]`), word-by-word reveals
+- ✅ Footage or stills behind any scene; chips, pills and counters on title scenes
+- ✅ Animated line charts (dashed projections, end labels, side-by-side panels) and an end card
+- ✅ One-step page capture: `start --browser --url <page> --run "play()" --for 8 --name x`
 
 ### Export
 
