@@ -67,6 +67,16 @@ fields are errors with a "did you mean". One vocabulary everywhere: a scene's he
 voice settings live in `voice` {name, speed, pronounce} and music in `music` (false | file |
 {file, volume}). A scene's `speed` is playback speed of its recording.
 
+**Templates are shortcuts, not limits.** When a scene needs its own layout or animation, write it:
+`{"type": "custom", "component": "scenes/hero.jsx", "props": {...}, "recordings": {"main": "<name>"}, "images": {"logo": "logo.png"}, "say": "…"}`.
+The component (default export) is plain React + Remotion; import building blocks from `"justrec"`
+(Rich, Heading, Pill, Counter, LinePanel, Recording, Text, appear, font, AbsoluteFill, Img,
+useCurrentFrame, interpolate, spring, Easing). It gets its props plus {theme, frames, reserve,
+recordings, images}: show a recording with `<Recording recording={recordings.main} frames={frames}
+box={{width, height, padding}}/>`, keep `reserve` px free at the bottom for captions, wrap text in
+`<Text>` so the layout check sees it. Narration, captions, transitions, music and the check still
+apply. Example: `~/Documents/justrec/inference-launch/scenes/judgments.jsx`.
+
 Text in `title`, `bullets`, `pill`, `chips`, column `text`: `*muted words*` render grey (two-tone
 keynote headline), `[accent words]` in the accent color. Scene types: title, slide, image, stats,
 chart, lines, recording, compare (before/after), end.

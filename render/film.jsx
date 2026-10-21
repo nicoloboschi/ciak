@@ -5,8 +5,8 @@ import {clamp, ease, Clip} from './parts.jsx';
 
 // ---- Films: a sequence of scenes (titles, images, slides, figures, recordings) with captions.
 
-const font = '-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
-const appear = (frame, delay = 0, length = 18) => ease((frame - delay) / length);
+export const font = '-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
+export const appear = (frame, delay = 0, length = 18) => ease((frame - delay) / length);
 // Is a #rrggbb color light? (to pick dark or light text on top of it)
 const light = hex => { const [r, g, b] = (hex.match(/^#(..)(..)(..)/) || [0, 'ff', 'ff', 'ff']).slice(1).map(part => parseInt(part, 16)); return 0.299 * r + 0.587 * g + 0.114 * b > 150; };
 
@@ -20,7 +20,7 @@ function parseRich(text = '') {
   return words;
 }
 
-function Rich({text, theme, frame = 1000, delay = 0, stagger = 2, onDark}) {
+export function Rich({text, theme, frame = 1000, delay = 0, stagger = 2, onDark}) {
   let index = 0;
   return <>{parseRich(text).map((item, key) => {
     if (!item.word.trim()) return <span key={key}>{item.word}</span>;
@@ -32,7 +32,7 @@ function Rich({text, theme, frame = 1000, delay = 0, stagger = 2, onDark}) {
 }
 
 // Footage or a still behind a scene, slowly pushing in, darkened so text stays readable.
-function Background({scene, frames}) {
+export function Background({scene, frames}) {
   const frame = useCurrentFrame();
   if (!scene.backgroundUrl) return null;
   const zoom = 1.04 + 0.06 * frame / Math.max(1, frames);
@@ -43,7 +43,7 @@ function Background({scene, frames}) {
   </AbsoluteFill>;
 }
 
-function Recording({recording, box, frames, rate = 1}) {
+export function Recording({recording, box, frames, rate = 1}) {
   const {fps} = useVideoConfig();
   const {project} = recording;
   let offset = 0;
@@ -67,27 +67,27 @@ function Recording({recording, box, frames, rate = 1}) {
 }
 
 // Small print: sources, dates, "early results".
-function Note({text, theme, frame, onDark, bottom}) {
+export function Note({text, theme, frame, onDark, bottom}) {
   if (!text) return null;
   return <div data-check="text" style={{fontFamily: font, fontSize: 22, color: onDark ? '#ffffffb0' : theme.muted, opacity: appear(frame, 24), ...(bottom ? {position: 'absolute', bottom, width: '100%', left: 0, textAlign: 'center'} : {})}}>{text}</div>;
 }
 
-function Label({children, theme, frame, delay = 6}) {
+export function Label({children, theme, frame, delay = 6}) {
   return <div data-check="text" style={{display: 'inline-block', padding: '10px 22px', borderRadius: 999, background: theme.accent, color: theme.accentText, fontFamily: font, fontWeight: 700, fontSize: 28, letterSpacing: 1, opacity: appear(frame, delay), transform: `translateY(${(1 - appear(frame, delay)) * 12}px)`}}>{children}</div>;
 }
 
-function Heading({text, theme, frame, size = 64, onDark, align}) {
+export function Heading({text, theme, frame, size = 64, onDark, align}) {
   return <div data-check="text" style={{fontFamily: font, fontWeight: 700, fontSize: size, color: onDark ? '#fff' : theme.text, letterSpacing: -size / 36, lineHeight: 1.1, textAlign: align, textShadow: onDark ? '0 2px 30px #0008' : undefined}}><Rich text={text} theme={theme} frame={frame} onDark={onDark}/></div>;
 }
 
-function Pill({children, theme, frame, delay, onDark, size = 30}) {
+export function Pill({children, theme, frame, delay, onDark, size = 30}) {
   const shown = appear(frame, delay, 16);
   return <div data-check="text" style={{display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 26px', borderRadius: 999, background: onDark ? '#ffffffe8' : theme.panel, color: theme.text, fontFamily: font, fontWeight: 600, fontSize: size,
     boxShadow: '0 10px 40px #0003, 0 0 0 1px #0000000d', opacity: shown, transform: `translateY(${(1 - shown) * 16}px) scale(${0.96 + 0.04 * shown})`}}>{children}</div>;
 }
 
 // Counts like a meter: fast at first, then settling on the final value.
-function counted(value, progress) {
+export function counted(value, progress) {
   const match = String(value).match(/^(\D*)([\d.,]+)(.*)$/);
   if (!match) return value;
   const target = Number(match[2].replace(/,/g, ''));
@@ -95,7 +95,7 @@ function counted(value, progress) {
   return `${match[1]}${(target * progress).toLocaleString('en-US', {minimumFractionDigits: decimals, maximumFractionDigits: decimals})}${match[3]}`;
 }
 
-function Counter({counter, theme, frame, frames, onDark}) {
+export function Counter({counter, theme, frame, frames, onDark}) {
   const from = Number(String(counter.from ?? 0).replace(/,/g, ''));
   const to = Number(String(counter.to).replace(/,/g, ''));
   const progress = clamp((frame - 10) / Math.max(1, frames * 0.8 - 10), 0, 1);
@@ -207,7 +207,7 @@ function ChartScene({scene, theme}) {
 
 // Line charts: each series draws left to right; "projected" points are dashed; the last
 // point gets a dot and a label. Each series uses its own scale unless "shared" is set.
-function LinePanel({panel, theme, frame, frames, width, height}) {
+export function LinePanel({panel, theme, frame, frames, width, height}) {
   const left = 60; const right = panel.series.some(item => item.label) ? 250 : 40; const top = 30; const bottom = 60;
   const plotWidth = width - left - right; const plotHeight = height - top - bottom;
   const shared = panel.shared ? Math.max(...panel.series.flatMap(item => item.values)) : null;
@@ -325,7 +325,20 @@ function EndScene({scene, theme}) {
   </AbsoluteFill>;
 }
 
-const scenes = {title: TitleScene, image: ImageScene, slide: SlideScene, stats: StatsScene, chart: ChartScene, lines: LinesScene, recording: RecordingScene, compare: CompareScene, end: EndScene};
+// Custom scenes: React components from the film's folder, registered by the build entry.
+const custom = {};
+export function registerScene(name, component) { custom[name] = component; }
+
+function CustomScene({scene, theme, frames, reserve}) {
+  const Component = custom[scene.component];
+  if (!Component) return <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', color: '#ff8a8a', fontFamily: font, fontSize: 36}}>Custom scene not found: {scene.component}</AbsoluteFill>;
+  return <AbsoluteFill>
+    <Background scene={scene} frames={frames}/>
+    <Component {...(scene.props || {})} scene={scene} theme={theme} frames={frames} reserve={reserve} recordings={scene.recordingsReady || {}} images={scene.imageUrls || {}}/>
+  </AbsoluteFill>;
+}
+
+const scenes = {custom: CustomScene, title: TitleScene, image: ImageScene, slide: SlideScene, stats: StatsScene, chart: ChartScene, lines: LinesScene, recording: RecordingScene, compare: CompareScene, end: EndScene};
 
 function Captions({captions}) {
   const frame = useCurrentFrame();

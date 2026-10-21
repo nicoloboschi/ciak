@@ -236,6 +236,9 @@
         },
         {
           "$ref": "#/$defs/end"
+        },
+        {
+          "$ref": "#/$defs/custom"
         }
       ]
     },
@@ -769,6 +772,60 @@
             "type": "string"
           },
           "description": "The last one is the filled, primary button."
+        },
+        "say": {
+          "$ref": "#/$defs/common/say"
+        },
+        "duration": {
+          "$ref": "#/$defs/common/duration"
+        },
+        "background": {
+          "$ref": "#/$defs/common/background"
+        },
+        "dim": {
+          "$ref": "#/$defs/common/dim"
+        }
+      }
+    },
+    "custom": {
+      "description": "Any layout you want: a React component (default export) from the film's folder. Import building blocks from \"justrec\" (Rich, Heading, Pill, Counter, LinePanel, Recording, Text, appear, ease, font, plus Remotion's AbsoluteFill, Img, useCurrentFrame, interpolate, spring). It receives its props plus {theme, frames, reserve, recordings, images}; keep `reserve` px free at the bottom for captions; wrap readable text in <Text> so the layout check sees it.",
+      "type": "object",
+      "required": [
+        "type",
+        "component"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "custom"
+        },
+        "component": {
+          "type": "string",
+          "description": "Path to the .jsx file, relative to film.json, e.g. \"scenes/hero.jsx\"."
+        },
+        "props": {
+          "type": "object",
+          "description": "Anything; passed to the component as props."
+        },
+        "recordings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Recordings by name, e.g. {\"main\": \"terminal-calls\"}; the component gets props.recordings.main for <Recording>. The scene lasts at least as long as the longest."
+        },
+        "images": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Images by name, e.g. {\"logo\": \"logo.png\"}; the component gets props.images.logo (a URL)."
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 4,
+          "description": "Playback speed of the recordings."
         },
         "say": {
           "$ref": "#/$defs/common/say"

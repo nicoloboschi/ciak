@@ -90,6 +90,9 @@ function App() {
     const poll = async () => {
       const next = await fetch('/state.json', {cache: 'no-store'}).then(response => response.json()).catch(() => null);
       if (next && next.version !== current) {
+        // A custom scene's code changed: the page script itself is new, so reload the page.
+        if (window.__bundle && next.bundle && next.bundle !== window.__bundle) { location.reload(); return; }
+        window.__bundle = next.bundle;
         current = next.version;
         const frame = player.current?.getCurrentFrame?.() ?? 0;
         setState(next);
