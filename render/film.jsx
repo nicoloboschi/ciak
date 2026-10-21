@@ -5,7 +5,11 @@ import {clamp, ease, Clip} from './parts.jsx';
 
 // ---- Films: a sequence of scenes (titles, images, slides, figures, recordings) with captions.
 
-export const font = '-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
+// Fonts come from the style (CSS variables set on the film root), with system fallbacks.
+const systemFont = '-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
+export const font = 'var(--jr-font)';
+export const headingFont = 'var(--jr-heading)';
+export const monoFont = 'var(--jr-mono)';
 export const appear = (frame, delay = 0, length = 18) => ease((frame - delay) / length);
 // Is a #rrggbb color light? (to pick dark or light text on top of it)
 const light = hex => { const [r, g, b] = (hex.match(/^#(..)(..)(..)/) || [0, 'ff', 'ff', 'ff']).slice(1).map(part => parseInt(part, 16)); return 0.299 * r + 0.587 * g + 0.114 * b > 150; };
@@ -77,7 +81,7 @@ export function Label({children, theme, frame, delay = 6}) {
 }
 
 export function Heading({text, theme, frame, size = 64, onDark, align}) {
-  return <div data-check="text" style={{fontFamily: font, fontWeight: 700, fontSize: size, color: onDark ? '#fff' : theme.text, letterSpacing: -size / 36, lineHeight: 1.1, textAlign: align, textShadow: onDark ? '0 2px 30px #0008' : undefined}}><Rich text={text} theme={theme} frame={frame} onDark={onDark}/></div>;
+  return <div data-check="text" style={{fontFamily: headingFont, fontWeight: 700, fontSize: size, color: onDark ? '#fff' : theme.text, letterSpacing: -size / 36, lineHeight: 1.1, textAlign: align, textShadow: onDark ? '0 2px 30px #0008' : undefined}}><Rich text={text} theme={theme} frame={frame} onDark={onDark}/></div>;
 }
 
 export function Pill({children, theme, frame, delay, onDark, size = 30}) {
@@ -114,7 +118,7 @@ function TitleScene({scene, theme, frames}) {
     <Background scene={scene} frames={frames}/>
     <AbsoluteFill style={{alignItems: top ? 'flex-start' : 'center', justifyContent: top ? 'flex-start' : 'center', textAlign: top ? 'left' : 'center', padding: top ? '80px 110px' : 140, gap: 30}}>
       {scene.kicker && <div data-check="text" style={{fontFamily: font, fontWeight: 600, fontSize: 28, letterSpacing: 6, color: onDark ? '#ffffffd0' : theme.muted, opacity: appear(frame, 0)}}>{scene.kicker}</div>}
-      <div data-check="text" style={{fontFamily: font, fontWeight: 700, fontSize: scene.size || (top ? 76 : 112), color: onDark ? '#fff' : theme.text, letterSpacing: -3, lineHeight: 1.04, textShadow: onDark ? '0 2px 40px #0009' : undefined}}>
+      <div data-check="text" style={{fontFamily: headingFont, fontWeight: 700, fontSize: scene.size || (top ? 76 : 112), color: onDark ? '#fff' : theme.text, letterSpacing: -3, lineHeight: 1.04, textShadow: onDark ? '0 2px 40px #0009' : undefined}}>
         <Rich text={scene.title} theme={theme} frame={frame} delay={4} stagger={3} onDark={onDark}/>
       </div>
       {scene.subtitle && <div data-check="text" style={{fontFamily: font, fontSize: 40, color: onDark ? '#ffffffe0' : theme.muted, maxWidth: 1300, lineHeight: 1.35, opacity: appear(frame, 18), textShadow: onDark ? '0 2px 20px #0009' : undefined}}>{scene.subtitle}</div>}
@@ -173,9 +177,9 @@ function StatsScene({scene, theme, frames}) {
       <div style={{display: 'flex', gap: 60, justifyContent: 'center'}}>
         {scene.stats.map((item, index) => {
           const shown = appear(frame, 4 + index * 8);
-          return <div key={index} data-check="text" style={{minWidth: 380, padding: '40px 56px', borderRadius: 28, textAlign: 'center', opacity: shown, transform: `translateY(${(1 - shown) * 30}px)`,
-            background: onDark ? '#ffffffe6' : theme.panel, boxShadow: onDark ? '0 20px 60px #0006' : '0 0 0 1px #0000000d, 0 20px 50px #0000000f', backdropFilter: 'blur(20px)'}}>
-            <div style={{fontFamily: font, fontWeight: 700, fontSize: 120, color: theme.text, letterSpacing: -4, fontVariantNumeric: 'tabular-nums', lineHeight: 1}}>{counted(item.value, appear(frame, 6 + index * 8, 36))}</div>
+          return <div key={index} data-check="text" style={{minWidth: 380, padding: '40px 56px', borderRadius: theme.radius ? theme.radius * 1.6 : 28, textAlign: 'center', opacity: shown, transform: `translateY(${(1 - shown) * 30}px)`,
+            background: onDark ? '#ffffffe6' : theme.panel, boxShadow: onDark ? '0 20px 60px #0006' : `0 0 0 1px ${theme.border || '#0000000d'}, 0 20px 50px #0000000f`, backdropFilter: 'blur(20px)'}}>
+            <div style={{fontFamily: headingFont, fontWeight: 700, fontSize: 120, color: theme.text, letterSpacing: -4, fontVariantNumeric: 'tabular-nums', lineHeight: 1}}>{counted(item.value, appear(frame, 6 + index * 8, 36))}</div>
             <div style={{fontFamily: font, fontSize: 30, color: theme.muted, marginTop: 14}}>{item.label}</div>
           </div>;
         })}
@@ -253,7 +257,7 @@ function LinesScene({scene, theme, frames}) {
       {scene.legend.map((item, index) => <span key={index} style={{display: 'flex', alignItems: 'center', gap: 10}}><span style={{width: 16, height: 16, borderRadius: 8, background: item.color || [theme.text, theme.muted, theme.accent][index % 3]}}/>{item.label}</span>)}
     </div>}
     <div style={{display: 'flex', gap: 40, flex: 1, minHeight: 0, width: '100%'}}>
-      {panels.map((panel, index) => <div key={index} style={{flex: 1, borderRadius: 26, background: theme.card, boxShadow: '0 0 0 1px #0000000c, 0 24px 60px #0000000d', padding: '30px 34px', display: 'flex', flexDirection: 'column', opacity: appear(frame, 6 + index * 6, 20)}}>
+      {panels.map((panel, index) => <div key={index} style={{flex: 1, borderRadius: theme.radius ? theme.radius * 1.5 : 26, background: theme.card, boxShadow: `0 0 0 1px ${theme.border || '#0000000c'}, 0 24px 60px #0000000d`, padding: '30px 34px', display: 'flex', flexDirection: 'column', opacity: appear(frame, 6 + index * 6, 20)}}>
         {panel.title && <div data-check="text" style={{fontFamily: font, fontWeight: 700, fontSize: 32, color: theme.text}}>{panel.title}</div>}
         <div style={{flex: 1}}><LinePanel panel={panel} theme={theme} frame={frame} frames={frames} width={panelWidth - 68} height={panels.length > 1 ? 470 : 560}/></div>
         {panel.footer && <div data-check="text" style={{textAlign: 'center', fontFamily: font, fontWeight: 700, fontSize: 40, color: theme.text, opacity: appear(frame, 12 + frames * 0.6, 14)}}><Rich text={panel.footer} theme={theme}/></div>}
@@ -305,12 +309,12 @@ function EndScene({scene, theme}) {
       {scene.columns.map((column, index) => {
         const delay = index * 16;
         return <div key={index} style={{flex: 1, padding: index ? '0 0 0 90px' : '0 90px 0 0', borderLeft: index ? `2px solid ${theme.muted}33` : undefined, display: 'flex', flexDirection: 'column', gap: 22}}>
-          <div data-check="text" style={{fontFamily: font, fontWeight: 800, fontSize: 92, letterSpacing: -3, color: theme.text, lineHeight: 1}}><Rich text={column.title} theme={theme} frame={frame} delay={delay} stagger={3}/></div>
+          <div data-check="text" style={{fontFamily: headingFont, fontWeight: 700, fontSize: 92, letterSpacing: -3, color: theme.text, lineHeight: 1}}><Rich text={column.title} theme={theme} frame={frame} delay={delay} stagger={3}/></div>
           {column.kicker && <div data-check="text" style={{fontFamily: font, fontWeight: 600, fontSize: 24, letterSpacing: 4, color: theme.muted, opacity: appear(frame, delay + 10)}}>{column.kicker}</div>}
           {column.text && <div data-check="text" style={{fontFamily: font, fontSize: 36, lineHeight: 1.35, color: theme.muted, opacity: appear(frame, delay + 14)}}><Rich text={column.text} theme={theme}/></div>}
           <div style={{display: 'flex', gap: 56, marginTop: 14}}>
             {(column.stats || []).map((stat, step) => <div key={step} data-check="text" style={{opacity: appear(frame, delay + 22 + step * 6)}}>
-              <div style={{fontFamily: font, fontWeight: 800, fontSize: 64, letterSpacing: -2, color: theme.text}}>{stat.value}</div>
+              <div style={{fontFamily: headingFont, fontWeight: 700, fontSize: 64, letterSpacing: -2, color: theme.text}}>{stat.value}</div>
               <div style={{fontFamily: font, fontSize: 22, color: theme.muted}}>{stat.label}</div>
             </div>)}
           </div>
@@ -424,10 +428,28 @@ function LayoutProbe() {
   return null;
 }
 
+// Load the style's fonts before any frame is captured.
+function Fonts({url}) {
+  const [handle] = useState(() => url ? delayRender('fonts') : null);
+  useEffect(() => {
+    if (!url) return;
+    let link = document.querySelector(`link[data-jr-fonts="${url}"]`);
+    if (!link) { link = Object.assign(document.createElement('link'), {rel: 'stylesheet', href: url}); link.dataset.jrFonts = url; document.head.appendChild(link); }
+    const done = () => document.fonts.ready.then(() => continueRender(handle));
+    const timer = setTimeout(() => continueRender(handle), 15000); // never block a render on a slow font server
+    if (link.sheet) done(); else link.addEventListener('load', done, {once: true});
+    link.addEventListener('error', () => continueRender(handle), {once: true});
+    return () => clearTimeout(timer);
+  }, [url]);
+  return null;
+}
+
 export function Film({film}) {
   const {fps} = useVideoConfig();
   const theme = film.theme;
-  return <AbsoluteFill style={{background: theme.background}}>
+  const variables = {'--jr-font': theme.font || systemFont, '--jr-heading': theme.headingFont || theme.font || systemFont, '--jr-mono': theme.monoFont || 'ui-monospace, Menlo, monospace'};
+  return <AbsoluteFill style={{background: theme.background, ...variables}}>
+    <Fonts url={theme.fontUrl}/>
     {film.scenes.map((scene, index) => {
       const Scene = scenes[scene.type];
       const last = index === film.scenes.length - 1;

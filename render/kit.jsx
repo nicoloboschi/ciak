@@ -5,7 +5,7 @@
 // for the captions.
 import React from 'react';
 export {AbsoluteFill, Sequence, Img, Audio, useCurrentFrame, useVideoConfig, interpolate, spring, Easing} from 'remotion';
-export {Rich, Heading, Pill, Label, Note, Counter, LinePanel, Recording, counted, appear, font} from './film.jsx';
+export {Rich, Heading, Pill, Label, Note, Counter, LinePanel, Recording, counted, appear, font, headingFont, monoFont} from './film.jsx';
 export {clamp, ease} from './parts.jsx';
 
 export function Text({children, style, ...rest}) {

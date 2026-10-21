@@ -12,6 +12,7 @@
     "@remotion/renderer": "4.0.537",
     "@xterm/addon-fit": "0.11.0",
     "@xterm/xterm": "6.0.0",
+    "giotto": "github:nicoloboschi/giotto#3d5159acdce4ece8f0a1e4a40cb1a8b99fe2e233",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "remotion": "4.0.537"
