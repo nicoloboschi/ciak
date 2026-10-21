@@ -276,7 +276,7 @@
           "items": {
             "$ref": "#/$defs/rich"
           },
-          "description": "Pop-in notifications with a check mark."
+          "description": "Pop-in chips; a check mark is added unless the chip is a question (ends with ?)."
         },
         "counter": {
           "type": "object",

@@ -108,7 +108,8 @@ function TitleScene({scene, theme, frames}) {
   const onDark = Boolean(scene.backgroundUrl);
   const top = scene.align === 'top';
   // Chips: small "done" notifications that pop in around the frame, one after another.
-  const spots = [[0.58, 0.58], [0.28, 0.72], [0.68, 0.38], [0.18, 0.5], [0.5, 0.82], [0.75, 0.66]];
+  // Chips go where the headline isn't: around it when it sits at the top, below it when centered.
+  const spots = top ? [[0.58, 0.58], [0.28, 0.72], [0.68, 0.38], [0.18, 0.5], [0.5, 0.82], [0.75, 0.66]] : [[0.22, 0.7], [0.5, 0.78], [0.78, 0.7], [0.36, 0.86], [0.64, 0.86]];
   return <AbsoluteFill>
     <Background scene={scene} frames={frames}/>
     <AbsoluteFill style={{alignItems: top ? 'flex-start' : 'center', justifyContent: top ? 'flex-start' : 'center', textAlign: top ? 'left' : 'center', padding: top ? '80px 110px' : 140, gap: 30}}>
@@ -124,8 +125,8 @@ function TitleScene({scene, theme, frames}) {
       const [x, y] = spots[index % spots.length];
       const shown = appear(frame, 20 + index * 14, 12);
       return <div key={index} data-check="text" style={{position: 'absolute', left: `${x * 100}%`, top: `${y * 100}%`, transform: `translate(-50%, -50%) scale(${0.8 + 0.2 * shown})`, opacity: shown,
-        padding: '12px 22px', borderRadius: 14, background: '#ffffffee', fontFamily: font, fontSize: 26, color: theme.text, boxShadow: '0 12px 40px #0005', whiteSpace: 'nowrap'}}>
-        <Rich text={chip} theme={theme}/> <span style={{color: '#16a34a', fontWeight: 700}}>✓</span>
+        padding: '12px 22px', borderRadius: 14, background: '#ffffffee', fontFamily: font, fontSize: 26, color: '#111214', boxShadow: '0 12px 40px #0005', whiteSpace: 'nowrap'}}>
+        <Rich text={chip} theme={theme}/>{!chip.trim().endsWith('?') && <> <span style={{color: '#16a34a', fontWeight: 700}}>✓</span></>}
       </div>;
     })}
   </AbsoluteFill>;
@@ -187,7 +188,8 @@ function StatsScene({scene, theme, frames}) {
 function ChartScene({scene, theme}) {
   const frame = useCurrentFrame();
   const highest = Math.max(...scene.bars.map(bar => bar.value));
-  return <AbsoluteFill style={{padding: '90px 160px 230px', gap: 60}}>
+  // Room under the bar labels for the small print.
+  return <AbsoluteFill style={{padding: `90px 160px ${scene.note ? 290 : 230}px`, gap: 60}}>
     <Heading text={scene.title} theme={theme} frame={frame} size={56}/>
     <div style={{flex: 1, display: 'flex', alignItems: 'flex-end', gap: 50, borderBottom: `3px solid ${theme.muted}55`}}>
       {scene.bars.map((bar, index) => {
