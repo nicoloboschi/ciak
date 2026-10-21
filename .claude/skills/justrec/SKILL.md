@@ -50,11 +50,11 @@ Everything for one film lives in one folder. Recordings auto-edit when they stop
 export JUSTREC_DIR=~/Documents/justrec/<film-name>      # recordings, screenshots and film.json together
 ./justrec browser <url>                                  # set the page up as it should look first
 ./justrec start --browser --name before  …actions…  ./justrec stop
-./justrec terminal open --blur 'sk_\w+'                 # a real shell, shown in the justrec browser
+./justrec terminal open --blur 'sk_\w+'                 # the user's own zsh (prompt, iTerm colors) in the justrec browser
 ./justrec start --terminal --name calls                  # …then: ./justrec terminal run "<command>" … ./justrec stop
 ./justrec browser shot $JUSTREC_DIR/<name>.png           # stills for image/slide scenes
 # write $JUSTREC_DIR/launch.film.json (see `./justrec schema`)
-./justrec film $JUSTREC_DIR/launch.film.json --live      # plays it in the browser now, reloads on save (for the human)
+./justrec film $JUSTREC_DIR/launch.film.json --live      # player + scene list + schema-driven editor for the human; reloads on save
 ./justrec film $JUSTREC_DIR/launch.film.json --preview   # ~20 s: contact sheet + layout check
 ./justrec frames $JUSTREC_DIR/launch.film.json --scene 3 # labelled frames of one scene (or --from/--to, --at)
 ./justrec film $JUSTREC_DIR/launch.film.json             # final mp4 + .srt + .report.json, then the check
@@ -81,6 +81,10 @@ voice; words a listener would mishear; captions too fast. Fix and re-render unti
 - Only use real numbers: read them from the source or measure them; mark early results with `note`.
 - Keep secrets out: `--hide <text>` / `--blur <regex>` on browser recordings, `browser mask` before a
   shot, `terminal open --blur` for the terminal (keys come from the environment, never typed).
+- Terminal: `terminal run` types the command key by key into a real zsh (multi-line commands show zsh's
+  own `>` / `quote>` prompts), waits for it, returns `{code, output}`. Pagers are off; a command still
+  running after `--timeout` (120 s) gets Ctrl-C. Pass secrets through the environment of
+  `terminal open` (e.g. `KEY=$(cat file) ./justrec terminal open --blur 'hsk_\w+'`), never type them.
 - Auto-zooms land on every click; delete a pointless one from the recording's `zooms` in its project JSON.
 
 ## B. Edit
