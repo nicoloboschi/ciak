@@ -21,7 +21,7 @@ browser window for this.
 ./justrec browser click "Sign in"              # CSS selector or visible text; the mouse glides there
 ./justrec browser type "Search" "my query"     # click a field, then type; or: type "text" into the focused field
 ./justrec browser key Enter                    # Enter Tab Escape Backspace Arrow* Space
-./justrec browser scroll 600 | go <url> | eval <js> | tabs
+./justrec browser scroll 600 | go <url> | eval <js> | tabs | switch <tab>   # recordings follow the active tab
 ./justrec browser shot /tmp/look.png           # see the page before deciding the next step
 ./justrec stop
 ```
