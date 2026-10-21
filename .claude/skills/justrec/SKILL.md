@@ -117,6 +117,7 @@ voice; words a listener would mishear; captions too fast. Fix and re-render unti
 - `--cut start,end`: remove a range (source seconds).
 - `--auto-zoom`: zooms on clicks and marks; close actions pan instead of zooming out.
 - `--preset landscape|vertical|square`.
+- `--background aurora|sunset|ocean|meadow|graphite|midnight` (or any CSS background): the wallpaper behind the recording. Default aurora.
 
 Everything else is a direct edit of the project JSON, then re-render:
 - `zooms[]`: `{start, end, x, y, scale}` in source seconds, x/y 0–1. "Zoom less" = lower `scale`; zooms that touch are chained.

@@ -28,7 +28,7 @@ justrec sources                                  # displays, windows, mics, came
 justrec start --window 69 --name demo
 justrec mark "click Save" --at 0.4,0.2           # where an action happens if the real mouse didn't move
 justrec captions <mp4>           # <name>.srt, .txt, .json (word timestamps)
-justrec edit <project> --cut-idle --auto-zoom    # or --cut-silence, --cut a,b, --preset vertical
+justrec edit <project> --cut-idle --auto-zoom    # or --cut-silence, --cut a,b, --preset vertical, --background sunset
 justrec preview <project> --frame 90             # one PNG frame
 justrec render <project>         # <name>.edited.mp4, checked: one video + one audio track
 ```
@@ -99,7 +99,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ⬜ Smooth pan following the cursor while zoomed
 - ✅ Smooth / enlarged cursor drawn on top, gliding onto each click
 - ✅ Click sounds: a soft tick on each click (`audio.clicks` in the project, on by default)
-- ✅ Background, padding, rounded corners, shadow
+- ✅ Background (wallpaper gradients: `--background aurora|sunset|ocean|meadow|graphite`, or any CSS), padding, rounded corners, shadow
 - 🧪 Burned-in captions with a clean style
 - 🧪 Intro/outro title cards (`intro` / `outro` in the project)
 - 🧪 Loudness normalization for the voice
