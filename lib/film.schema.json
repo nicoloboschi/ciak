@@ -98,30 +98,8 @@
       "description": "Output mp4 path, relative to this file. Default: <name>.mp4."
     },
     "style": {
-      "description": "A Giotto style (fonts, colors, surfaces, radius, glow): a name from ~/.giotto/styles (see `giotto` list_styles), a path to a style .json, or {name, mode: \"dark\"|\"light\"}. Videos use the style's dark variant when it has one. \"theme\" overrides on top.",
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "object",
-          "required": [
-            "name"
-          ],
-          "additionalProperties": false,
-          "properties": {
-            "name": {
-              "type": "string"
-            },
-            "mode": {
-              "enum": [
-                "dark",
-                "light"
-              ]
-            }
-          }
-        }
-      ]
+      "type": "string",
+      "description": "A style: fonts, colors, surfaces, radius, backdrop. A name (`justrec styles` lists them: built-in hindsight, midnight, keynote, plus your own in ~/.justrec/styles) or a path to a style .json. \"theme\" overrides on top."
     }
   },
   "$defs": {
@@ -227,19 +205,12 @@
           "description": "Corner radius of cards.",
           "type": "number"
         },
-        "tones": {
-          "type": "object",
-          "description": "Named color sets {fill, stroke, text} from the style."
-        },
-        "fontWeight": {
-          "type": "number"
-        },
         "cardShadow": {
           "type": [
             "object",
             "null"
           ],
-          "description": "Card glow from the style: {dx, dy, blur, color, opacity}."
+          "description": "Card glow: {dx, dy, blur, color, opacity}."
         }
       }
     },

@@ -119,7 +119,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ One-step page capture: `start --browser --url <page> --run "play()" --for 8 --name x`
 - ✅ Schema for film.json (`justrec schema`): one vocabulary, typo suggestions, exact error paths
 - ✅ Custom scenes: any layout as a React component in the film folder (`"type": "custom"`), with justrec's building blocks
-- ✅ Giotto styles for films (`"style": "hindsight-release"`): fonts, colors, surfaces, radius, dark mode — one design system with Giotto
+- ✅ Film styles (`"style": "hindsight"`, `justrec styles`): fonts, colors, surfaces, radius, backdrop; built-in or your own
 - ✅ Live preview in the browser (`film --live`): plays with sound, reloads when files change
 - ✅ Frame by frame (`justrec frames`): labelled frames of a scene or time range, before export
 - ✅ Terminal recordings: `terminal open` + `start --terminal` + `terminal run "<cmd>"` (real shell, secrets masked)

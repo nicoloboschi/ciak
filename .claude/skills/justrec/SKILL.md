@@ -67,11 +67,11 @@ fields are errors with a "did you mean". One vocabulary everywhere: a scene's he
 voice settings live in `voice` {name, speed, pronounce} and music in `music` (false | file |
 {file, volume}). A scene's `speed` is playback speed of its recording.
 
-**Style comes from Giotto.** Set `"style": "<name>"` (a Giotto style from `~/.giotto/styles`; list
-them with Giotto's `list_styles`, make or change one with `save_style`) or a path to a style .json.
-It sets fonts (loaded from the style's fontUrl), colors, card surfaces, radius and glow; `theme`
-fine-tunes on top (e.g. `"backdrop": "aurora"`). Custom scenes get the same via `theme` and the
-`font` / `headingFont` / `monoFont` exports of "justrec".
+**Style.** Set `"style": "<name>"`: `./justrec styles` lists them (built-in `hindsight`, `midnight`,
+`keynote` in styles/; your own as JSON in `~/.justrec/styles`), or a path to a style .json. A style
+is theme fields: fonts (`font`, `headingFont`, `monoFont` + `fontUrl` to load them), colors, `panel`
+/ `card` / `border` / `radius`, `backdrop`. `theme` fine-tunes on top. Custom scenes get it via
+`theme` and the `font` / `headingFont` / `monoFont` exports of "justrec".
 
 **Templates are shortcuts, not limits.** When a scene needs its own layout or animation, write it:
 `{"type": "custom", "component": "scenes/hero.jsx", "props": {...}, "recordings": {"main": "<name>"}, "images": {"logo": "logo.png"}, "say": "…"}`.

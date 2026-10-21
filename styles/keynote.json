@@ -1,0 +1,9 @@
+{
+  "name": "Keynote",
+  "description": "Light keynote look: off-white, near-black type, grey second half of headlines, teal accent.",
+  "background": "#f4f5f6", "text": "#111214", "muted": "#8e9199", "accent": "#0f9494", "accentText": "#ffffff",
+  "accentGradient": "linear-gradient(90deg, #1f6feb, #0fa3a3)",
+  "panel": "#ffffff", "card": "#fbfcfc", "border": "#e3e5e8", "radius": 18,
+  "font": "Inter, system-ui, sans-serif", "headingFont": "Inter, system-ui, sans-serif", "monoFont": "\"JetBrains Mono\", ui-monospace, Menlo, monospace",
+  "fontUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+}

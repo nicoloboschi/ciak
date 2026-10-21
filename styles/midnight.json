@@ -1,0 +1,10 @@
+{
+  "name": "Midnight",
+  "description": "Dark and calm: near-black navy, soft white type, violet accent.",
+  "background": "#0b0d14", "text": "#f2f3f8", "muted": "#9aa1b5", "accent": "#8b7cff", "accentText": "#0b0d14",
+  "accentGradient": "linear-gradient(90deg, #8b7cff, #4cc9f0)",
+  "panel": "#151a26", "card": "#121621", "border": "#252c3d", "radius": 16,
+  "font": "Inter, system-ui, sans-serif", "headingFont": "Inter, system-ui, sans-serif", "monoFont": "\"JetBrains Mono\", ui-monospace, Menlo, monospace",
+  "fontUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap",
+  "backdrop": "aurora", "glow": "#4c3fd1", "glow2": "#1b6f9e"
+}

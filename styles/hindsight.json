@@ -1,0 +1,10 @@
+{
+  "name": "Hindsight",
+  "description": "Hindsight brand: deep navy, blue accent, Space Grotesk headlines over Inter.",
+  "background": "#080C17", "text": "#DCE8FF", "muted": "#7f8db0", "accent": "#5BB0FF", "accentText": "#080C17",
+  "accentGradient": "linear-gradient(90deg, #5BB0FF, #22D3C5)",
+  "panel": "#0F1626", "card": "#0F1626", "border": "#1D3557", "radius": 14,
+  "font": "Inter, system-ui, sans-serif", "headingFont": "\"Space Grotesk\", Inter, system-ui, sans-serif", "monoFont": "\"JetBrains Mono\", ui-monospace, Menlo, monospace",
+  "fontUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
+  "backdrop": "aurora", "glow": "#3b5bdb", "glow2": "#0ea5a4"
+}
