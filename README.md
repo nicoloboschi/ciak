@@ -19,7 +19,7 @@ justrec rec                      # record main display + default mic; Enter or C
 
 # what an agent does: record itself using a logged-in browser
 justrec browser https://app.example.com          # the justrec browser: your Brave logins, runs in background
-justrec start --browser --name demo              # record its current tab, returns at once
+justrec start --browser --fps 60 --system-audio --name demo   # record its current tab, returns at once
 justrec browser click "New project"              # click / type / key / scroll / go / shot
 justrec pause / resume / status / stop
 
@@ -69,7 +69,9 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Action marks (`justrec mark`, `--at` or `--page`) to drive zooms when the real mouse doesn't move
 - ✅ Logged-in browser for agents (`justrec browser`), recorded while covered, page clicks/typing logged
 - ✅ Drive it from the command line: `browser click/type/key/scroll/go/eval/shot`
-- ⬜ Mic / system audio in browser recordings
+- ✅ Browser sound in browser recordings (`--system-audio`: only the justrec browser, not other apps) · 🧪 `--mic`
+- ✅ Sharp: the justrec browser draws at 2x even on a non-Retina monitor
+- ✅ 60 fps (`--fps 60`), kept through the render
 - 🧪 Log cursor position and clicks to `<name>.cursor.jsonl` (file written; clicks not yet checked)
 - ✅ Optional system audio, mixed into the same track (never a second track)
 - ✅ Record a single window (only while visible) or a region
@@ -96,6 +98,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Auto-zoom on clicks in the justrec browser · 🧪 on real mouse clicks
 - ⬜ Smooth pan following the cursor while zoomed
 - ✅ Smooth / enlarged cursor drawn on top, gliding onto each click
+- ✅ Click sounds: a soft tick on each click (`audio.clicks` in the project, on by default)
 - ✅ Background, padding, rounded corners, shadow
 - 🧪 Burned-in captions with a clean style
 - 🧪 Intro/outro title cards (`intro` / `outro` in the project)
@@ -104,7 +107,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 
 ### Export
 
-- ✅ `justrec render <project>` → final mp4 (about 1.3 s of work per second of 1080p video)
+- ✅ `justrec render <project>` → final mp4 (1080p: about 1.3 s of work per second at 30 fps, 2.3 s at 60 fps)
 - ✅ Preset 16:9 · 🧪 9:16 and square (`--preset vertical|square`) · ⬜ GIF
 - ✅ Check the output before calling it done (one video + one audio track, right length)
 

@@ -17,7 +17,7 @@ browser window for this.
 
 ```bash
 ./justrec browser https://example.com/start    # start it (first run copies the profile) + open a tab
-./justrec start --browser --name <short-name>  # record the current tab
+./justrec start --browser --fps 60 --system-audio --name <short-name>  # record the current tab (+ its sound; --mic for voice)
 ./justrec browser click "Sign in"              # CSS selector or visible text; the mouse glides there
 ./justrec browser type "Search" "my query"     # click a field, then type; or: type "text" into the focused field
 ./justrec browser key Enter                    # Enter Tab Escape Backspace Arrow* Space
@@ -27,7 +27,8 @@ browser window for this.
 ```
 
 Clicks, mouse moves and typing on the page are logged automatically: zooms and the
-drawn cursor need no marks. Browser recordings are silent (no mic yet).
+drawn cursor need no marks. `--system-audio` records only this browser's sound, never other apps.
+The render adds a soft tick on each click (`audio.clicks: false` in the project turns it off).
 If the user's logins changed, `./justrec browser --refresh-login <url>` re-copies the profile.
 
 ## A2. Record the screen, a window or a region

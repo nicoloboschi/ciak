@@ -26,6 +26,7 @@ struct Options: Decodable {
     var maxWidth: Int
     var camera: String?
     var cameraOutput: String?
+    var audioApps: [Int32]?
 }
 
 final class CursorLog: @unchecked Sendable {
@@ -164,7 +165,13 @@ struct Rec {
         guard [24, 30, 60].contains(options.fps), options.maxWidth >= 320, options.maxWidth <= 7680 else { fail("Invalid frame rate or maximum width") }
         let filter: SCContentFilter
         var bounds: CGRect
-        if let windowID = options.window {
+        if let pids = options.audioApps {
+            // Audio-only helper for browser recordings: sound from these processes, plus the mic.
+            let apps = content.applications.filter { pids.contains($0.processID) }
+            guard !apps.isEmpty else { fail("None of the processes \(pids) can be captured") }
+            filter = SCContentFilter(display: displays[0], including: apps, exceptingWindows: [])
+            bounds = CGDisplayBounds(displays[0].displayID)
+        } else if let windowID = options.window {
             guard let window = content.windows.first(where: { $0.windowID == windowID }) else { fail("Window \(windowID) is not available") }
             filter = SCContentFilter(desktopIndependentWindow: window)
             bounds = window.frame
@@ -185,6 +192,7 @@ struct Rec {
         let scale = min(Double(filter.pointPixelScale), Double(options.maxWidth) / bounds.width)
         configuration.width = max(2, Int(bounds.width * scale) / 2 * 2)
         configuration.height = max(2, Int(bounds.height * scale) / 2 * 2)
+        if options.audioApps != nil { configuration.width = 64; configuration.height = 64 }
         configuration.minimumFrameInterval = CMTime(value: 1, timescale: CMTimeScale(options.fps))
         configuration.queueDepth = 3
         configuration.showsCursor = options.cursorVisible

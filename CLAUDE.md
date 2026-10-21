@@ -41,6 +41,10 @@ the output, not just that it compiles.
   lines of ffmpeg do.
 - Keep it small. Bash for glue, Swift only for what needs macOS APIs.
 
+## Git
+
+Commit each main change on `main` and push it to GitHub (`origin`) right away.
+
 ## Verifying changes
 
 There is no test suite yet. Check output files directly:
