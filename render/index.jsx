@@ -41,10 +41,10 @@ function Cursor({events, clicks, time, width, height, style}) {
 }
 
 // box: the area the screen is fitted into (the whole video, or half of it in a comparison).
-function Clip({project, clip, sourceUrl, events, clicks, transcript, webcams, box}) {
+function Clip({project, clip, sourceUrl, events, clicks, transcript, webcams, box, rate = 1}) {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
-  const time = clip.start + frame / fps;
+  const time = clip.start + frame * rate / fps;
   const padding = box?.padding ?? project.style.padding;
   const ratio = Math.min(((box?.width ?? width) - 2 * padding) / project.width, ((box?.height ?? height) - 2 * padding) / project.height);
   const screenWidth = project.width * ratio;
@@ -65,7 +65,7 @@ function Clip({project, clip, sourceUrl, events, clicks, transcript, webcams, bo
   return <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
     <div style={{width: screenWidth, height: screenHeight, overflow: 'hidden', position: 'relative', borderRadius: project.style.radius, boxShadow: project.style.shadow ? '0 24px 70px #0008, 0 0 0 1px #ffffff18' : undefined}}>
       <div style={{width: screenWidth, height: screenHeight, transformOrigin: '0 0', transform: `translate(${targetX * strength}px, ${targetY * strength}px) scale(${scale})`}}>
-        <Video src={sourceUrl} muted trimBefore={Math.round(clip.start * fps)} objectFit="fill" style={{width: screenWidth, height: screenHeight}}/>
+        <Video src={sourceUrl} muted playbackRate={rate} trimBefore={Math.round(clip.start * fps)} objectFit="fill" style={{width: screenWidth, height: screenHeight}}/>
         {!project.cursorBaked && <Cursor events={events} clicks={clicks} time={time} width={screenWidth} height={screenHeight} style={project.style}/>}
       </div>
     </div>
@@ -104,6 +104,8 @@ function Demo(props) {
 
 const font = '-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
 const appear = (frame, delay = 0, length = 18) => ease((frame - delay) / length);
+// Is a #rrggbb color light? (to pick dark or light text on top of it)
+const light = hex => { const [r, g, b] = (hex.match(/^#(..)(..)(..)/) || [0, 'ff', 'ff', 'ff']).slice(1).map(part => parseInt(part, 16)); return 0.299 * r + 0.587 * g + 0.114 * b > 150; };
 
 // Rich text: *muted words* and [accent words]; words reveal one by one.
 function parseRich(text = '') {
@@ -138,14 +140,14 @@ function Background({scene, frames}) {
   </AbsoluteFill>;
 }
 
-function Recording({recording, box, frames}) {
+function Recording({recording, box, frames, rate = 1}) {
   const {fps} = useVideoConfig();
   const {project} = recording;
   let offset = 0;
   const sequences = project.clips.map((clip, index) => {
-    const duration = Math.max(1, Math.round((clip.end - clip.start) * fps));
+    const duration = Math.max(1, Math.round((clip.end - clip.start) * fps / rate));
     const sequence = <Sequence key={index} from={offset} durationInFrames={duration} premountFor={fps}>
-      <Clip {...recording} project={{...project, captions: {enabled: false}}} transcript={[]} clip={clip} box={box}/>
+      <Clip {...recording} project={{...project, captions: {enabled: false}}} transcript={[]} clip={clip} box={box} rate={rate}/>
     </Sequence>;
     offset += duration;
     return sequence;
@@ -356,7 +358,7 @@ function RecordingScene({scene, theme, frames, reserve}) {
   const boxHeight = height - top - reserve;
   return <AbsoluteFill>
     {scene.heading && <div style={{position: 'absolute', top: 60, width: '100%'}}><Heading text={scene.heading} theme={theme} frame={frame} size={60} align="center"/></div>}
-    <div data-check="media" style={{position: 'absolute', top, left: 0, width, height: boxHeight}}><Recording recording={scene.recording} frames={frames} box={{width, height: boxHeight, padding: 40}}/></div>
+    <div data-check="media" style={{position: 'absolute', top, left: 0, width, height: boxHeight}}><Recording recording={scene.recording} frames={frames} rate={scene.speed || 1} box={{width, height: boxHeight, padding: 40}}/></div>
     {scene.label && !scene.heading && <div style={{position: 'absolute', top: 22, width: '100%', textAlign: 'center'}}><Label theme={theme} frame={frame}>{scene.label}</Label></div>}
   </AbsoluteFill>;
 }
@@ -375,7 +377,7 @@ function CompareScene({scene, theme, frames}) {
         return <div key={index} style={{width: box.width, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, opacity: appear(frame, index * 8, 20)}}>
           <div data-check="text" style={{padding: '10px 26px', borderRadius: 999, fontFamily: font, fontWeight: 700, fontSize: 30, letterSpacing: 0.5,
             background: index ? theme.accent : theme.panel, color: index ? theme.accentText : theme.muted, boxShadow: '0 0 0 1px #0000000f'}}>{side.label || (index ? 'After' : 'Before')}</div>
-          <div data-check="media" style={{position: 'relative', width: box.width, height: box.height}}><Recording recording={side.recording} frames={frames} box={box}/></div>
+          <div data-check="media" style={{position: 'relative', width: box.width, height: box.height}}><Recording recording={side.recording} frames={frames} rate={scene.speed || 1} box={box}/></div>
         </div>;
       })}
     </div>
@@ -404,7 +406,7 @@ function EndScene({scene, theme}) {
     </div>
     {scene.buttons && <div style={{display: 'flex', gap: 22, justifyContent: 'center', opacity: appear(frame, 50)}}>
       {scene.buttons.map((button, index) => <div key={index} data-check="text" style={{padding: '20px 40px', borderRadius: 14, fontFamily: font, fontWeight: 700, fontSize: 30,
-        background: index === scene.buttons.length - 1 ? theme.text : 'transparent', color: index === scene.buttons.length - 1 ? theme.background.startsWith('#') ? theme.background : '#fff' : theme.text,
+        background: index === scene.buttons.length - 1 ? theme.text : 'transparent', color: index === scene.buttons.length - 1 ? (light(theme.text) ? '#0b0d14' : '#ffffff') : theme.text,
         boxShadow: `0 0 0 2px ${theme.text}`}}>{button}</div>)}
     </div>}
   </AbsoluteFill>;
@@ -449,6 +451,32 @@ function LayoutProbe() {
         const {box} = item;
         if (box.left < -2 || box.top < -2 || box.right > width + 2 || box.bottom > height + 2) issues.push({kind: 'off-frame', text: item.text, box});
         if (item.element.scrollWidth > item.element.clientWidth + 2 && getComputedStyle(item.element).overflow !== 'visible') issues.push({kind: 'clipped', text: item.text, box});
+      }
+      // Contrast: text color against the first solid background behind it (WCAG ratio).
+      const rgb = value => (value.match(/[\d.]+/g) || []).map(Number);
+      const luminance = ([r, g, b]) => [r, g, b].map(channel => { channel /= 255; return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4; }).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
+      const contrast = element => {
+        const style = getComputedStyle(element);
+        const color = rgb(style.color);
+        if (color[3] === 0 || style.backgroundClip === 'text' || style.webkitBackgroundClip === 'text') return null; // gradient text
+        let background = null;
+        for (let node = element; node; node = node.parentElement) {
+          const computed = getComputedStyle(node);
+          const solid = rgb(computed.backgroundColor);
+          if (solid.length && (solid[3] === undefined || solid[3] > 0.8)) { background = solid; break; }
+          // A gradient background: judge against its first color.
+          const stop = computed.backgroundImage.includes('gradient') && computed.backgroundImage.match(/rgba?\([^)]*\)/);
+          if (stop) { background = rgb(stop[0]); break; }
+        }
+        if (!background) return null;
+        const [a, b] = [luminance(color), luminance(background)].sort((x, y) => y - x);
+        return (a + 0.05) / (b + 0.05);
+      };
+      for (const item of texts) {
+        // Judge the elements that actually hold the words, not their container.
+        const holders = [item.element, ...item.element.querySelectorAll('*')].filter(element => [...element.childNodes].some(node => node.nodeType === 3 && node.textContent.trim()) && visible(element));
+        const ratios = holders.map(contrast).filter(ratio => ratio !== null);
+        if (ratios.length && Math.min(...ratios) < 3) issues.push({kind: 'contrast', text: `${item.text} (contrast ${Math.min(...ratios).toFixed(1)}:1)`, box: item.box});
       }
       // Text on text (ignoring an element inside another), and text under media.
       for (let a = 0; a < texts.length; a++) for (let b = a + 1; b < texts.length; b++) {

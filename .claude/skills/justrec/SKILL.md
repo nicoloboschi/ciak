@@ -57,7 +57,20 @@ export JUSTREC_DIR=~/Documents/justrec/<film-name>      # recordings, screenshot
 ./justrec start --browser --url "file://$JUSTREC_DIR/mock.html?mode=slow" --run "play()" --for 8 --name slow
 # write $JUSTREC_DIR/launch.film.json (below)
 ./justrec film $JUSTREC_DIR/launch.film.json --preview   # ~30 s: one contact sheet PNG, look at it
-./justrec film $JUSTREC_DIR/launch.film.json             # final mp4 + .srt + .report.json
+./justrec film $JUSTREC_DIR/launch.film.json             # final mp4 + .srt + .report.json, then the check
+```
+
+**Always read the check.** `justrec film` ends by inspecting the result and lists `issues`, each with a
+time, a scene, what's wrong and a `frame` PNG to look at (`<name>.check/`): text off-frame, overlapping,
+low contrast or under the captions; picture jumps or flashes; a recording frozen on a still; music too
+loud under the voice; words a listener would mishear (Whisper vs your script); captions too fast. Fix and
+re-render until it is empty. `--preview` already runs the layout part. `justrec check <film.json>` re-runs
+the inspection. The report's `timings` shows where the time went.
+
+```bash
+# keep secrets and internal things out of recordings and stills (repeatable flags):
+./justrec start --browser --name x --hide "internal-model-name" --blur 'hsk_\w+' --blur '^\$\d+\.\d\d$'
+./justrec browser mask --hide "internal-model-name" --blur 'hsk_\w+'    # before a browser shot
 ```
 
 `launch.film.json` is a list of scenes. Each scene may have `say` (narration; the scene
@@ -102,6 +115,10 @@ Stats over footage: one item per scene reads best. Lines: each series uses its o
 - Write `say` as plain spoken sentences; spell numbers the way they should be read.
 - Only use real numbers: read them from the page or measure them, never invent them.
 - Narration is cached per sentence, so re-running after a visual change is fast.
+- `"pronounce": {"Memlake": "Mem-lake"}` changes only what the voice says (captions keep the spelling).
+- Recording/compare scenes take `"speed": 1.6` to play faster (zooms, cursor and click sounds follow).
+- Auto-zooms land on every click; delete a pointless one (e.g. a click that closes a dialog) from the
+  recording's `zooms` in its project JSON.
 
 ## B. Edit
 
