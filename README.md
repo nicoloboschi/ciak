@@ -14,12 +14,36 @@ change and re-render any part of it.
 ## Usage
 
 ```bash
-justrec rec            # record main display + default mic; Enter or Ctrl-C stops
-justrec rec 1          # record display #1 instead
-justrec captions <mp4> # writes <name>.srt, .txt, .json (word timestamps) next to the video
+justrec ui                       # small local page: pick source/mic/camera, record, pause, finish
+justrec rec                      # record main display + default mic; Enter or Ctrl-C stops
+
+# what an agent does: record itself using a logged-in browser
+justrec browser https://app.example.com          # the justrec browser: your Brave logins, runs in background
+justrec start --browser --name demo              # record its current tab, returns at once
+justrec browser click "New project"              # click / type / key / scroll / go / shot
+justrec pause / resume / status / stop
+
+# or the screen / a window
+justrec sources                                  # displays, windows, mics, cameras (JSON)
+justrec start --window 69 --name demo
+justrec mark "click Save" --at 0.4,0.2           # where an action happens if the real mouse didn't move
+justrec captions <mp4>           # <name>.srt, .txt, .json (word timestamps)
+justrec edit <project> --cut-idle --auto-zoom    # or --cut-silence, --cut a,b, --preset vertical
+justrec preview <project> --frame 90             # one PNG frame
+justrec render <project>         # <name>.edited.mp4, checked: one video + one audio track
 ```
 
-Recordings land in `~/Movies/justrec/` (set `JUSTREC_DIR` to change).
+`justrec help` lists every option. The agent workflow is written down as a Claude Code
+skill in `.claude/skills/justrec/SKILL.md`.
+
+Recordings land in `~/Documents/justrec/` (set `JUSTREC_DIR` to change). Each one is
+`<name>.mp4` plus `<name>.project.json` (the edit), `<name>.cursor.jsonl`, and optional
+`<name>.camera-N.mov`.
+
+**Recording a browser:** use `justrec browser`. It is a second Brave on a copy of your
+Brave profile (in `~/Library/Application Support/justrec/browser`, so you're logged in),
+recorded from the page itself, so it works while covered. `--refresh-login` re-copies
+your profile. A plain window recording only updates while the window is visible.
 
 ### First run
 
@@ -29,7 +53,7 @@ Restart the terminal after granting Screen Recording.
 
 ### Requirements
 
-macOS 15+, Xcode command line tools (`swiftc`), `uv` (for Whisper), `ffmpeg`.
+macOS 15+, Xcode command line tools (`swiftc`), Node 22+ (`npm install` once), `uv` (for Whisper), `ffmpeg`.
 
 ## Features
 
@@ -37,45 +61,55 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 
 ### Record
 
-- 🧪 Screen + cursor + mic into **one** mp4 with a single audio track (ScreenCaptureKit)
-- 🧪 Pick the display (`justrec rec <index>`)
-- 🧪 Stop with Enter or Ctrl-C; file is finalized cleanly
-- ⬜ Log cursor position and clicks to `<name>.cursor.jsonl` (drives zooms)
-- ⬜ Optional system audio, mixed into the same track (never a second track)
-- ⬜ Record a single window or a region instead of the whole display
-- ⬜ Optional webcam bubble
+- ✅ Screen + cursor + mic into **one** mp4 with a single audio track (ScreenCaptureKit)
+- ✅ Pick the display (`--display <index>`)
+- ✅ Stop with Enter or Ctrl-C; file is finalized cleanly
+- ✅ Background recording for agents: `start` / `pause` / `resume` / `stop`, pauses leave no gap
+- ✅ If the recorder crashes, the recording so far is kept and the session pauses
+- ✅ Action marks (`justrec mark`, `--at` or `--page`) to drive zooms when the real mouse doesn't move
+- ✅ Logged-in browser for agents (`justrec browser`), recorded while covered, page clicks/typing logged
+- ✅ Drive it from the command line: `browser click/type/key/scroll/go/eval/shot`
+- ⬜ Mic / system audio in browser recordings
+- 🧪 Log cursor position and clicks to `<name>.cursor.jsonl` (file written; clicks not yet checked)
+- ✅ Optional system audio, mixed into the same track (never a second track)
+- ✅ Record a single window (only while visible) or a region
+- ✅ Optional webcam bubble
 - ⬜ Global hotkey to start/stop without a terminal in front
 - ⬜ Menu-bar indicator while recording (so you know it's on)
-- ⬜ Pick the mic by name (`--mic "Brio 100"`)
-- ⬜ Mic level check before recording starts (warn if silent or too quiet)
+- 🧪 Pick the mic by name (`--mic "Brio 100"`)
+- 🧪 Mic level check before recording starts (meter in `justrec ui`)
 
 ### Understand
 
 - ✅ Local transcript with word timestamps (`justrec captions`, Whisper on Apple silicon)
 - ⬜ Scene/screen-change detection (what's on screen when)
-- ⬜ One `<name>.project.json` that gathers everything an agent needs:
-  video, transcript, cursor log, edit decisions
+- ✅ One `<name>.project.json` that gathers everything an agent needs:
+  video, transcript, cursor log, marks, edit decisions
 
 ### Edit (agents)
 
-- ⬜ Cut silences and filler words, driven by the transcript
+- 🧪 Cut silences, driven by the audio (`--cut-silence`)
+- ✅ Cut idle time: still picture, no voice, no clicks or typing (`--cut-idle`, for agent recordings)
+- ⬜ Cut filler words, driven by the transcript
 - ⬜ Cut by text: delete a sentence from the transcript, it's gone from the video
-- ⬜ Auto-zoom on clicks and typing, smooth pan following the cursor
-- ⬜ Smooth / enlarged cursor drawn on top
-- ⬜ Background, padding, rounded corners, shadow
-- ⬜ Burned-in captions with a clean style
-- ⬜ Intro/outro title cards
-- ⬜ Loudness normalization for the voice
-- ⬜ Rendering via Remotion, so every edit is code an agent can change
+- ✅ Auto-zoom on marks; close actions pan instead of zooming out and in
+- ✅ Auto-zoom on clicks in the justrec browser · 🧪 on real mouse clicks
+- ⬜ Smooth pan following the cursor while zoomed
+- ✅ Smooth / enlarged cursor drawn on top, gliding onto each click
+- ✅ Background, padding, rounded corners, shadow
+- 🧪 Burned-in captions with a clean style
+- 🧪 Intro/outro title cards (`intro` / `outro` in the project)
+- 🧪 Loudness normalization for the voice
+- ✅ Rendering via Remotion, so every edit is code an agent can change
 
 ### Export
 
-- ⬜ `justrec render <project>` → final mp4
-- ⬜ Presets: 16:9, 9:16 (shorts), square, GIF
-- ⬜ Check the output before calling it done (has audio, voice audible, right length)
+- ✅ `justrec render <project>` → final mp4 (about 1.3 s of work per second of 1080p video)
+- ✅ Preset 16:9 · 🧪 9:16 and square (`--preset vertical|square`) · ⬜ GIF
+- ✅ Check the output before calling it done (one video + one audio track, right length)
 
 ### Agent workflow
 
-- ⬜ Claude Code skill: "edit my last recording" end to end
-- ⬜ Feedback loop: you say "zoom less at 1:20", the agent edits and re-renders
+- 🧪 Claude Code skill: record a task / edit a recording end to end (`.claude/skills/justrec`)
+- 🧪 Feedback loop: you say "zoom less at 1:20", the agent edits the project JSON and re-renders
 - ⬜ Watch folder: new recordings are processed automatically

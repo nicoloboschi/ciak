@@ -9,12 +9,21 @@ the output, not just that it compiles.
 
 ## Layout
 
-- `justrec` — bash entrypoint. Subcommands: `rec`, `captions`. Keep it the only CLI.
-- `rec.swift` — the recorder (ScreenCaptureKit, macOS 15+). Compiled on demand by
-  `justrec` into `.build/justrec-rec` with `swiftc -O -parse-as-library`.
-- Recordings go to `~/Movies/justrec/` (`JUSTREC_DIR`). Every artifact for a
-  recording sits next to it with the same base name: `rec-X.mp4`, `rec-X.srt`,
-  `rec-X.json`, later `rec-X.cursor.jsonl`, `rec-X.project.json`.
+- `justrec` — entrypoint, runs `lib/cli.mjs`. Keep it the only CLI (`justrec help`).
+- `lib/session.mjs` — background worker per recording: HTTP control (pause/resume/
+  mark/stop), joins segments, mixes all audio into one track, writes the project.
+- `rec.swift` — native capture (ScreenCaptureKit + AVFoundation for the camera), one
+  process per segment. Compiled on demand into `.build/justrec-rec`. Never compile over
+  that path while a recording runs: macOS kills the running recorder.
+- `lib/browser.mjs` — the justrec browser (Brave on a profile copy, debugging port 9333):
+  `justrec browser ...` driving commands, and the page recorder used by `start --browser`
+  (same JSON-lines protocol as `rec.swift`).
+- `lib/project.mjs` — project JSON and edits (`justrec edit`); `lib/render.mjs` +
+  `render/index.jsx` — Remotion render; `lib/ui.mjs` + `ui/index.html` — record panel.
+- `.claude/skills/justrec/SKILL.md` — how an agent records and edits.
+- Recordings go to `~/Documents/justrec/` (`JUSTREC_DIR`). Every artifact for a
+  recording sits next to it with the same base name: `X.mp4`, `X.project.json`,
+  `X.cursor.jsonl`, `X.srt`/`X.json` (captions), `X.edited.mp4` (render).
 
 ## Rules
 
