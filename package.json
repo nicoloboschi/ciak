@@ -2,13 +2,16 @@
   "name": "justrec",
   "private": true,
   "type": "module",
-  "engines": {"node": ">=22"},
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@remotion/bundler": "4.0.537",
-    "@remotion/renderer": "4.0.537",
     "@remotion/media": "4.0.537",
-    "remotion": "4.0.537",
+    "@remotion/player": "4.0.537",
+    "@remotion/renderer": "4.0.537",
     "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "react-dom": "19.2.0",
+    "remotion": "4.0.537"
   }
 }

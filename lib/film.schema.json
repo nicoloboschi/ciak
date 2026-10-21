@@ -1,0 +1,788 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/nicoloboschi/justrec/lib/film.schema.json",
+  "title": "justrec film",
+  "description": "A launch video as a list of scenes. Each scene lasts as long as its narration (or its recording); captions, music, transitions and audio levels are automatic. Rich text fields accept *muted words* (grey) and [accent words] (accent color).",
+  "type": "object",
+  "required": [
+    "scenes"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/scene"
+      }
+    },
+    "theme": {
+      "$ref": "#/$defs/theme"
+    },
+    "voice": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The narrator (local Kokoro voice; macOS say if it fails).",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Kokoro voice, e.g. af_heart, af_bella, am_michael, bf_emma. Default af_heart."
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.7,
+          "maximum": 1.5,
+          "description": "Speaking speed, default 1."
+        },
+        "pronounce": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "How to say words, e.g. {\"Memlake\": \"Mem-lake\"}. Only the voice changes; captions keep the spelling."
+        }
+      }
+    },
+    "music": {
+      "description": "false for no music; a file path; or {file, volume}. Default: generated music. Music is normalized and ducked under the voice.",
+      "anyOf": [
+        {
+          "const": false
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "file": {
+              "type": "string"
+            },
+            "volume": {
+              "type": "number",
+              "minimum": 0.1,
+              "maximum": 3,
+              "description": "1 = standard bed; 0.7 quieter, 1.4 louder."
+            }
+          }
+        }
+      ]
+    },
+    "captions": {
+      "type": "boolean",
+      "description": "Burned-in captions from the narration. Default true."
+    },
+    "fps": {
+      "enum": [
+        24,
+        30,
+        60
+      ]
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 320,
+      "maximum": 3840
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 240,
+      "maximum": 2160
+    },
+    "output": {
+      "type": "string",
+      "description": "Output mp4 path, relative to this file. Default: <name>.mp4."
+    }
+  },
+  "$defs": {
+    "rich": {
+      "type": "string",
+      "description": "Text; *muted words* render grey, [accent words] in the accent color."
+    },
+    "stat": {
+      "type": "object",
+      "required": [
+        "value",
+        "label"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": [
+            "string",
+            "number"
+          ],
+          "description": "Shown big; numbers in it count up, e.g. \"7.2M+\"."
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "enum": [
+            "dark",
+            "light"
+          ],
+          "description": "Starting palette. Default dark."
+        },
+        "backdrop": {
+          "enum": [
+            "plain",
+            "aurora",
+            "grid"
+          ],
+          "description": "Animated background behind every scene. Default plain."
+        },
+        "background": {
+          "type": "string",
+          "description": "CSS background (color or gradient)."
+        },
+        "text": {
+          "type": "string"
+        },
+        "muted": {
+          "type": "string"
+        },
+        "accent": {
+          "type": "string"
+        },
+        "accentText": {
+          "type": "string",
+          "description": "Text color on accent-colored pills."
+        },
+        "accentGradient": {
+          "type": "string",
+          "description": "CSS gradient for [accent] words."
+        },
+        "panel": {
+          "type": "string"
+        },
+        "card": {
+          "type": "string"
+        },
+        "glow": {
+          "type": "string",
+          "description": "Second aurora color."
+        },
+        "glow2": {
+          "type": "string",
+          "description": "Third aurora color."
+        }
+      }
+    },
+    "common": {
+      "say": {
+        "type": "string",
+        "description": "What the narrator says in this scene; the scene stretches to fit it."
+      },
+      "duration": {
+        "type": "number",
+        "minimum": 0.5,
+        "description": "Minimum seconds for the scene."
+      },
+      "background": {
+        "type": "string",
+        "description": "Footage (mp4/mov) or image behind the scene, darkened automatically."
+      },
+      "dim": {
+        "type": "string",
+        "pattern": "^[0-9a-fA-F]{2}$",
+        "description": "Darkening over the background as hex alpha, default \"55\"."
+      },
+      "kicker": {
+        "type": "string",
+        "description": "Small label above the title."
+      }
+    },
+    "scene": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "discriminator": "type",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/title"
+        },
+        {
+          "$ref": "#/$defs/slide"
+        },
+        {
+          "$ref": "#/$defs/image"
+        },
+        {
+          "$ref": "#/$defs/stats"
+        },
+        {
+          "$ref": "#/$defs/chart"
+        },
+        {
+          "$ref": "#/$defs/lines"
+        },
+        {
+          "$ref": "#/$defs/recording"
+        },
+        {
+          "$ref": "#/$defs/compare"
+        },
+        {
+          "$ref": "#/$defs/end"
+        }
+      ]
+    },
+    "title": {
+      "description": "A big headline, optionally over footage, with chips, a pill or a live counter.",
+      "type": "object",
+      "required": [
+        "type",
+        "title"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "title"
+        },
+        "title": {
+          "$ref": "#/$defs/rich"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "align": {
+          "enum": [
+            "center",
+            "top"
+          ]
+        },
+        "size": {
+          "type": "number",
+          "minimum": 30,
+          "maximum": 200
+        },
+        "pill": {
+          "$ref": "#/$defs/rich"
+        },
+        "chips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rich"
+          },
+          "description": "Pop-in notifications with a check mark."
+        },
+        "counter": {
+          "type": "object",
+          "required": [
+            "to"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "to": {
+              "type": [
+                "number",
+                "string"
+              ]
+            },
+            "label": {
+              "type": "string"
+            }
+          }
+        },
+        "say": {
+          "$ref": "#/$defs/common/say"
+        },
+        "duration": {
+          "$ref": "#/$defs/common/duration"
+        },
+        "background": {
+          "$ref": "#/$defs/common/background"
+        },
+        "dim": {
+          "$ref": "#/$defs/common/dim"
+        },
+        "kicker": {
+          "$ref": "#/$defs/common/kicker"
+        }
+      }
+    },
+    "slide": {
+      "description": "Title and bullets that appear one by one, with an optional image on the right.",
+      "type": "object",
+      "required": [
+        "type",
+        "title"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "slide"
+        },
+        "title": {
+          "$ref": "#/$defs/rich"
+        },
+        "bullets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rich"
+          }
+        },
+        "image": {
+          "type": "string"
+        },
+        "say": {
+          "$ref": "#/$defs/common/say"
+        },
+        "duration": {
+          "$ref": "#/$defs/common/duration"
+        },
+        "background": {
+          "$ref": "#/$defs/common/background"
+        },
+        "dim": {
+          "$ref": "#/$defs/common/dim"
+        },
+        "kicker": {
+          "$ref": "#/$defs/common/kicker"
+        }
+      }
+    },
+    "image": {
+      "description": "One image (e.g. a screenshot), slowly pushing in, with an optional title.",
+      "type": "object",
+      "required": [
+        "type",
+        "image"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "image"
+        },
+        "image": {
+          "type": "string"
+        },
+        "title": {
+          "$ref": "#/$defs/rich"
+        },
+        "say": {
+          "$ref": "#/$defs/common/say"
+        },
+        "duration": {
+          "$ref": "#/$defs/common/duration"
+        },
+        "background": {
+          "$ref": "#/$defs/common/background"
+        },
+        "dim": {
+          "$ref": "#/$defs/common/dim"
+        },
+        "kicker": {
+          "$ref": "#/$defs/common/kicker"
+        }
+      }
+    },
+    "stats": {
+      "description": "Big numbers that count up. Over footage, one stat per scene reads best.",
+      "type": "object",
+      "required": [
+        "type",
+        "stats"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "stats"
+        },
+        "title": {
+          "$ref": "#/$defs/rich"
+        },
+        "stats": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/stat"
+          }
+        },
+        "note": {
+          "type": "string",
+          "description": "Small print under the stats (source, date)."
+        },
+        "say": {
+          "$ref": "#/$defs/common/say"
+        },
+        "duration": {
+          "$ref": "#/$defs/common/duration"
+        },
+        "background": {
+          "$ref": "#/$defs/common/background"
+        },
+        "dim": {
+          "$ref": "#/$defs/common/dim"
+        },
+        "kicker": {
+          "$ref": "#/$defs/common/kicker"
+        }
+      }
+    },
+    "chart": {
+      "description": "Bars that grow; highlight the one that matters.",
+      "type": "object",
+      "required": [
+        "type",
+        "title",
+        "bars"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "chart"
+        },
+        "title": {
+          "$ref": "#/$defs/rich"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4,
+          "description": "Decimals shown on bar values. Default 0."
+        },
+        "bars": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "label",
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              },
+              "highlight": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "note": {
+          "type": "string",
+          "description": "Small print under the chart (source, date)."
+        },
+        "say": {
+          "$ref": "#/$defs/common/say"
+        },
+        "duration": {
+          "$ref": "#/$defs/common/duration"
+        },
+        "background": {
+          "$ref": "#/$defs/common/background"
+        },
+        "dim": {
+          "$ref": "#/$defs/common/dim"
+        },
+        "kicker": {
+          "$ref": "#/$defs/common/kicker"
+        }
+      }
+    },
+    "lines": {
+      "description": "Line charts that draw themselves; one or more panels side by side.",
+      "type": "object",
+      "required": [
+        "type",
+        "title",
+        "panels"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "lines"
+        },
+        "title": {
+          "$ref": "#/$defs/rich"
+        },
+        "legend": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "label"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "color": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "panels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "x",
+              "series"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "x": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "string"
+                }
+              },
+              "shared": {
+                "type": "boolean",
+                "description": "All series on one scale (otherwise each uses its own)."
+              },
+              "series": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "values"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      },
+                      "description": "One value per x label."
+                    },
+                    "label": {
+                      "type": "string",
+                      "description": "End label, e.g. \"5.3s\"."
+                    },
+                    "color": {
+                      "type": "string"
+                    },
+                    "projectedFrom": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Index from which the line is dashed (projected)."
+                    },
+                    "top": {
+                      "type": "number",
+                      "description": "Value at the top of this series' scale."
+                    }
+                  }
+                }
+              },
+              "footer": {
+                "$ref": "#/$defs/rich"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "say": {
+          "$ref": "#/$defs/common/say"
+        },
+        "duration": {
+          "$ref": "#/$defs/common/duration"
+        },
+        "background": {
+          "$ref": "#/$defs/common/background"
+        },
+        "dim": {
+          "$ref": "#/$defs/common/dim"
+        },
+        "kicker": {
+          "$ref": "#/$defs/common/kicker"
+        }
+      }
+    },
+    "recording": {
+      "description": "A recording (browser, screen or terminal) with its zooms and cursor.",
+      "type": "object",
+      "required": [
+        "type",
+        "recording"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "recording"
+        },
+        "recording": {
+          "type": "string",
+          "description": "The --name it was recorded with (newest wins), or a .project.json path."
+        },
+        "title": {
+          "$ref": "#/$defs/rich"
+        },
+        "label": {
+          "type": "string",
+          "description": "Small pill on top (when there is no title)."
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 4,
+          "description": "Playback speed; zooms, cursor and click sounds follow."
+        },
+        "say": {
+          "$ref": "#/$defs/common/say"
+        },
+        "duration": {
+          "$ref": "#/$defs/common/duration"
+        },
+        "kicker": {
+          "$ref": "#/$defs/common/kicker"
+        }
+      }
+    },
+    "compare": {
+      "description": "Two recordings side by side, playing together (before vs after).",
+      "type": "object",
+      "required": [
+        "type",
+        "before",
+        "after"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "compare"
+        },
+        "title": {
+          "$ref": "#/$defs/rich"
+        },
+        "before": {
+          "$ref": "#/$defs/side"
+        },
+        "after": {
+          "$ref": "#/$defs/side"
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 4
+        },
+        "say": {
+          "$ref": "#/$defs/common/say"
+        },
+        "duration": {
+          "$ref": "#/$defs/common/duration"
+        },
+        "kicker": {
+          "$ref": "#/$defs/common/kicker"
+        }
+      }
+    },
+    "side": {
+      "type": "object",
+      "required": [
+        "recording"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "recording": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "end": {
+      "description": "Closing card: columns with a title, kicker, text and stats, then buttons.",
+      "type": "object",
+      "required": [
+        "type",
+        "columns"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "end"
+        },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": [
+              "title"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "$ref": "#/$defs/rich"
+              },
+              "kicker": {
+                "type": "string"
+              },
+              "text": {
+                "$ref": "#/$defs/rich"
+              },
+              "stats": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/stat"
+                }
+              }
+            }
+          }
+        },
+        "buttons": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "type": "string"
+          },
+          "description": "The last one is the filled, primary button."
+        },
+        "say": {
+          "$ref": "#/$defs/common/say"
+        },
+        "duration": {
+          "$ref": "#/$defs/common/duration"
+        },
+        "background": {
+          "$ref": "#/$defs/common/background"
+        },
+        "dim": {
+          "$ref": "#/$defs/common/dim"
+        }
+      }
+    }
+  }
+}
