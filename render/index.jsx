@@ -1,5 +1,5 @@
-import React from 'react';
-import {registerRoot, Composition, AbsoluteFill, Sequence, Img, useCurrentFrame, useVideoConfig} from 'remotion';
+import React, {useEffect, useState} from 'react';
+import {registerRoot, Composition, AbsoluteFill, Sequence, Img, useCurrentFrame, useVideoConfig, delayRender, continueRender} from 'remotion';
 import {Video} from '@remotion/media';
 
 const clamp = (value, lower, upper) => Math.min(upper, Math.max(lower, value));
@@ -162,16 +162,16 @@ function Recording({recording, box, frames}) {
 }
 
 function Label({children, theme, frame, delay = 6}) {
-  return <div style={{display: 'inline-block', padding: '10px 22px', borderRadius: 999, background: theme.accent, color: theme.accentText, fontFamily: font, fontWeight: 700, fontSize: 28, letterSpacing: 1, opacity: appear(frame, delay), transform: `translateY(${(1 - appear(frame, delay)) * 12}px)`}}>{children}</div>;
+  return <div data-check="text" style={{display: 'inline-block', padding: '10px 22px', borderRadius: 999, background: theme.accent, color: theme.accentText, fontFamily: font, fontWeight: 700, fontSize: 28, letterSpacing: 1, opacity: appear(frame, delay), transform: `translateY(${(1 - appear(frame, delay)) * 12}px)`}}>{children}</div>;
 }
 
 function Heading({text, theme, frame, size = 64, onDark, align}) {
-  return <div style={{fontFamily: font, fontWeight: 700, fontSize: size, color: onDark ? '#fff' : theme.text, letterSpacing: -size / 36, lineHeight: 1.1, textAlign: align, textShadow: onDark ? '0 2px 30px #0008' : undefined}}><Rich text={text} theme={theme} frame={frame} onDark={onDark}/></div>;
+  return <div data-check="text" style={{fontFamily: font, fontWeight: 700, fontSize: size, color: onDark ? '#fff' : theme.text, letterSpacing: -size / 36, lineHeight: 1.1, textAlign: align, textShadow: onDark ? '0 2px 30px #0008' : undefined}}><Rich text={text} theme={theme} frame={frame} onDark={onDark}/></div>;
 }
 
 function Pill({children, theme, frame, delay, onDark, size = 30}) {
   const shown = appear(frame, delay, 16);
-  return <div style={{display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 26px', borderRadius: 999, background: onDark ? '#ffffffe8' : theme.panel, color: theme.text, fontFamily: font, fontWeight: 600, fontSize: size,
+  return <div data-check="text" style={{display: 'inline-flex', alignItems: 'center', gap: 10, padding: '12px 26px', borderRadius: 999, background: onDark ? '#ffffffe8' : theme.panel, color: theme.text, fontFamily: font, fontWeight: 600, fontSize: size,
     boxShadow: '0 10px 40px #0003, 0 0 0 1px #0000000d', opacity: shown, transform: `translateY(${(1 - shown) * 16}px) scale(${0.96 + 0.04 * shown})`}}>{children}</div>;
 }
 
@@ -201,18 +201,18 @@ function TitleScene({scene, theme, frames}) {
   return <AbsoluteFill>
     <Background scene={scene} frames={frames}/>
     <AbsoluteFill style={{alignItems: top ? 'flex-start' : 'center', justifyContent: top ? 'flex-start' : 'center', textAlign: top ? 'left' : 'center', padding: top ? '80px 110px' : 140, gap: 30}}>
-      {scene.kicker && <div style={{fontFamily: font, fontWeight: 600, fontSize: 28, letterSpacing: 6, color: onDark ? '#ffffffd0' : theme.muted, opacity: appear(frame, 0)}}>{scene.kicker}</div>}
-      <div style={{fontFamily: font, fontWeight: 700, fontSize: scene.size || (top ? 76 : 112), color: onDark ? '#fff' : theme.text, letterSpacing: -3, lineHeight: 1.04, textShadow: onDark ? '0 2px 40px #0009' : undefined}}>
+      {scene.kicker && <div data-check="text" style={{fontFamily: font, fontWeight: 600, fontSize: 28, letterSpacing: 6, color: onDark ? '#ffffffd0' : theme.muted, opacity: appear(frame, 0)}}>{scene.kicker}</div>}
+      <div data-check="text" style={{fontFamily: font, fontWeight: 700, fontSize: scene.size || (top ? 76 : 112), color: onDark ? '#fff' : theme.text, letterSpacing: -3, lineHeight: 1.04, textShadow: onDark ? '0 2px 40px #0009' : undefined}}>
         <Rich text={scene.text} theme={theme} frame={frame} delay={4} stagger={3} onDark={onDark}/>
       </div>
-      {scene.subtitle && <div style={{fontFamily: font, fontSize: 40, color: onDark ? '#ffffffe0' : theme.muted, maxWidth: 1300, lineHeight: 1.35, opacity: appear(frame, 18), textShadow: onDark ? '0 2px 20px #0009' : undefined}}>{scene.subtitle}</div>}
+      {scene.subtitle && <div data-check="text" style={{fontFamily: font, fontSize: 40, color: onDark ? '#ffffffe0' : theme.muted, maxWidth: 1300, lineHeight: 1.35, opacity: appear(frame, 18), textShadow: onDark ? '0 2px 20px #0009' : undefined}}>{scene.subtitle}</div>}
       {scene.pill && <Pill theme={theme} frame={frame} delay={30} onDark={onDark}><Rich text={scene.pill} theme={theme}/></Pill>}
       {scene.counter && <Counter counter={scene.counter} theme={theme} frame={frame} frames={frames} onDark={onDark}/>}
     </AbsoluteFill>
     {(scene.chips || []).map((chip, index) => {
       const [x, y] = spots[index % spots.length];
       const shown = appear(frame, 20 + index * 14, 12);
-      return <div key={index} style={{position: 'absolute', left: `${x * 100}%`, top: `${y * 100}%`, transform: `translate(-50%, -50%) scale(${0.8 + 0.2 * shown})`, opacity: shown,
+      return <div key={index} data-check="text" style={{position: 'absolute', left: `${x * 100}%`, top: `${y * 100}%`, transform: `translate(-50%, -50%) scale(${0.8 + 0.2 * shown})`, opacity: shown,
         padding: '12px 22px', borderRadius: 14, background: '#ffffffee', fontFamily: font, fontSize: 26, color: theme.text, boxShadow: '0 12px 40px #0005', whiteSpace: 'nowrap'}}>
         <Rich text={chip} theme={theme}/> <span style={{color: '#16a34a', fontWeight: 700}}>✓</span>
       </div>;
@@ -226,7 +226,7 @@ function ImageScene({scene, theme, frames}) {
   return <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', padding: '70px 120px 110px', gap: 30}}>
     {scene.heading && <Heading text={scene.heading} theme={theme} frame={frame} size={56}/>}
     <div style={{flex: 1, minHeight: 0, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: appear(frame, 4, 20)}}>
-      <div style={{maxWidth: '100%', maxHeight: '100%', borderRadius: 22, overflow: 'hidden', boxShadow: '0 30px 80px #0005, 0 0 0 1px #0000000f', display: 'flex'}}>
+      <div data-check="media" style={{maxWidth: '100%', maxHeight: '100%', borderRadius: 22, overflow: 'hidden', boxShadow: '0 30px 80px #0005, 0 0 0 1px #0000000f', display: 'flex'}}>
         <Img src={scene.url} style={{maxWidth: '100%', maxHeight: scene.heading ? 760 : 880, objectFit: 'contain', transform: `scale(${zoom})`}}/>
       </div>
     </div>
@@ -242,11 +242,11 @@ function SlideScene({scene, theme, frames}) {
     <div style={{flex: 1, display: 'flex', flexDirection: 'column', gap: 40}}>
       {scene.kicker && <div><Label theme={theme} frame={frame} delay={0}>{scene.kicker}</Label></div>}
       <Heading text={scene.heading} theme={theme} frame={frame}/>
-      {bullets.map((bullet, index) => <div key={index} style={{display: 'flex', gap: 22, alignItems: 'baseline', fontFamily: font, fontSize: 40, color: theme.text, lineHeight: 1.3, opacity: appear(frame, 12 + index * step), transform: `translateX(${(1 - appear(frame, 12 + index * step)) * -30}px)`}}>
+      {bullets.map((bullet, index) => <div key={index} data-check="text" style={{display: 'flex', gap: 22, alignItems: 'baseline', fontFamily: font, fontSize: 40, color: theme.text, lineHeight: 1.3, opacity: appear(frame, 12 + index * step), transform: `translateX(${(1 - appear(frame, 12 + index * step)) * -30}px)`}}>
         <span style={{width: 16, height: 16, borderRadius: 4, background: theme.accent, flex: 'none', transform: 'translateY(-6px)'}}/><span><Rich text={bullet} theme={theme}/></span></div>)}
     </div>
     {scene.url && <div style={{flex: 1.5, display: 'flex', justifyContent: 'center', opacity: appear(frame, 8, 22)}}>
-      <Img src={scene.url} style={{maxWidth: '100%', maxHeight: 780, borderRadius: 22, boxShadow: '0 30px 80px #0005, 0 0 0 1px #0000000f', transform: `translateY(${(1 - appear(frame, 8, 22)) * 30}px)`}}/>
+      <Img data-check="media" src={scene.url} style={{maxWidth: '100%', maxHeight: 780, borderRadius: 22, boxShadow: '0 30px 80px #0005, 0 0 0 1px #0000000f', transform: `translateY(${(1 - appear(frame, 8, 22)) * 30}px)`}}/>
     </div>}
   </AbsoluteFill>;
 }
@@ -261,7 +261,7 @@ function StatsScene({scene, theme, frames}) {
       <div style={{display: 'flex', gap: 60, justifyContent: 'center'}}>
         {scene.items.map((item, index) => {
           const shown = appear(frame, 4 + index * 8);
-          return <div key={index} style={{minWidth: 380, padding: '40px 56px', borderRadius: 28, textAlign: 'center', opacity: shown, transform: `translateY(${(1 - shown) * 30}px)`,
+          return <div key={index} data-check="text" style={{minWidth: 380, padding: '40px 56px', borderRadius: 28, textAlign: 'center', opacity: shown, transform: `translateY(${(1 - shown) * 30}px)`,
             background: onDark ? '#ffffffe6' : theme.panel, boxShadow: onDark ? '0 20px 60px #0006' : '0 0 0 1px #0000000d, 0 20px 50px #0000000f', backdropFilter: 'blur(20px)'}}>
             <div style={{fontFamily: font, fontWeight: 700, fontSize: 120, color: theme.text, letterSpacing: -4, fontVariantNumeric: 'tabular-nums', lineHeight: 1}}>{counted(item.value, appear(frame, 6 + index * 8, 36))}</div>
             <div style={{fontFamily: font, fontSize: 30, color: theme.muted, marginTop: 14}}>{item.label}</div>
@@ -281,9 +281,9 @@ function ChartScene({scene, theme}) {
       {scene.bars.map((bar, index) => {
         const grow = appear(frame, 10 + index * 6, 36);
         return <div key={index} style={{position: 'relative', flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'center', gap: 16}}>
-          <div style={{fontFamily: font, fontWeight: 800, fontSize: 44, color: theme.text, opacity: grow}}>{Math.round(bar.value * grow).toLocaleString('en-US')}{scene.unit || ''}</div>
+          <div data-check="text" style={{fontFamily: font, fontWeight: 800, fontSize: 44, color: theme.text, opacity: grow}}>{Math.round(bar.value * grow).toLocaleString('en-US')}{scene.unit || ''}</div>
           <div style={{width: '70%', height: `${78 * bar.value / highest * grow}%`, borderRadius: '14px 14px 0 0', background: bar.highlight ? theme.accent : `${theme.muted}88`}}/>
-          <div style={{fontFamily: font, fontSize: 32, color: theme.muted, position: 'absolute', bottom: -58, whiteSpace: 'nowrap'}}>{bar.label}</div>
+          <div data-check="text" style={{fontFamily: font, fontSize: 32, color: theme.muted, position: 'absolute', bottom: -58, whiteSpace: 'nowrap'}}>{bar.label}</div>
         </div>;
       })}
     </div>
@@ -305,7 +305,7 @@ function LinePanel({panel, theme, frame, frames, width, height}) {
   const labelY = Object.fromEntries(labels.map(label => [label.index, label.y]));
   return <svg width={width} height={height} style={{overflow: 'visible'}}>
     {[0, 1, 2, 3].map(line => <line key={line} x1={left} x2={left + plotWidth} y1={top + plotHeight * line / 3} y2={top + plotHeight * line / 3} stroke={theme.muted} strokeOpacity={line === 3 ? 0.4 : 0.15}/>)}
-    {panel.x.map((label, index) => <text key={index} x={left + plotWidth * index / (panel.x.length - 1)} y={height - 18} textAnchor="middle" fontFamily={font} fontSize={24} fill={theme.muted} opacity={draw * (panel.x.length - 1) >= index - 0.5 ? 1 : 0.3}>{label}</text>)}
+    {panel.x.map((label, index) => <text key={index} data-check="text" x={left + plotWidth * index / (panel.x.length - 1)} y={height - 18} textAnchor="middle" fontFamily={font} fontSize={24} fill={theme.muted} opacity={draw * (panel.x.length - 1) >= index - 0.5 ? 1 : 0.3}>{label}</text>)}
     {panel.series.map((series, index) => {
       const points = series.values.map((value, step) => [left + plotWidth * step / (series.values.length - 1), yOf(series, value)]);
       const reach = draw * (points.length - 1);
@@ -321,7 +321,7 @@ function LinePanel({panel, theme, frame, frames, width, height}) {
         {solid.length > 1 && <path d={path(solid)} fill="none" stroke={color} strokeWidth={5} strokeLinejoin="round" strokeLinecap="round"/>}
         {dashed.length > 1 && <path d={path(dashed)} fill="none" stroke={color} strokeWidth={5} strokeDasharray="14 10" strokeLinecap="round"/>}
         {draw >= 1 && <><circle cx={end[0]} cy={end[1]} r={10} fill={color}/>
-          {series.label && <text x={end[0] + 22} y={labelY[index] + 9} fontFamily={font} fontWeight={700} fontSize={28} fill={color} opacity={appear(frame, 12 + frames * 0.55, 12)}>{series.label}</text>}</>}
+          {series.label && <text data-check="text" x={end[0] + 22} y={labelY[index] + 9} fontFamily={font} fontWeight={700} fontSize={28} fill={color} opacity={appear(frame, 12 + frames * 0.55, 12)}>{series.label}</text>}</>}
       </g>;
     })}
   </svg>;
@@ -334,27 +334,29 @@ function LinesScene({scene, theme, frames}) {
   const panelWidth = (width - 220 - (panels.length - 1) * 40) / panels.length;
   return <AbsoluteFill style={{alignItems: 'center', padding: '80px 110px 150px', gap: 26}}>
     <Heading text={scene.heading} theme={theme} frame={frame} size={68} align="center"/>
-    {scene.legend && <div style={{display: 'flex', gap: 36, fontFamily: font, fontSize: 26, color: theme.muted, opacity: appear(frame, 10)}}>
+    {scene.legend && <div data-check="text" style={{display: 'flex', gap: 36, fontFamily: font, fontSize: 26, color: theme.muted, opacity: appear(frame, 10)}}>
       {scene.legend.map((item, index) => <span key={index} style={{display: 'flex', alignItems: 'center', gap: 10}}><span style={{width: 16, height: 16, borderRadius: 8, background: item.color || [theme.text, theme.muted, theme.accent][index % 3]}}/>{item.label}</span>)}
     </div>}
     <div style={{display: 'flex', gap: 40, flex: 1, minHeight: 0, width: '100%'}}>
       {panels.map((panel, index) => <div key={index} style={{flex: 1, borderRadius: 26, background: theme.card, boxShadow: '0 0 0 1px #0000000c, 0 24px 60px #0000000d', padding: '30px 34px', display: 'flex', flexDirection: 'column', opacity: appear(frame, 6 + index * 6, 20)}}>
-        {panel.title && <div style={{fontFamily: font, fontWeight: 700, fontSize: 32, color: theme.text}}>{panel.title}</div>}
+        {panel.title && <div data-check="text" style={{fontFamily: font, fontWeight: 700, fontSize: 32, color: theme.text}}>{panel.title}</div>}
         <div style={{flex: 1}}><LinePanel panel={panel} theme={theme} frame={frame} frames={frames} width={panelWidth - 68} height={panels.length > 1 ? 470 : 560}/></div>
-        {panel.footer && <div style={{textAlign: 'center', fontFamily: font, fontWeight: 700, fontSize: 40, color: theme.text, opacity: appear(frame, 12 + frames * 0.6, 14)}}><Rich text={panel.footer} theme={theme}/></div>}
-        {panel.note && <div style={{textAlign: 'center', fontFamily: font, fontSize: 20, color: theme.muted, marginTop: 6}}>{panel.note}</div>}
+        {panel.footer && <div data-check="text" style={{textAlign: 'center', fontFamily: font, fontWeight: 700, fontSize: 40, color: theme.text, opacity: appear(frame, 12 + frames * 0.6, 14)}}><Rich text={panel.footer} theme={theme}/></div>}
+        {panel.note && <div data-check="text" style={{textAlign: 'center', fontFamily: font, fontSize: 20, color: theme.muted, marginTop: 6}}>{panel.note}</div>}
       </div>)}
     </div>
   </AbsoluteFill>;
 }
 
-function RecordingScene({scene, theme, frames}) {
+function RecordingScene({scene, theme, frames, reserve}) {
   const frame = useCurrentFrame();
   const {width, height} = useVideoConfig();
   const top = scene.heading ? 170 : 40;
+  // Leave the caption band at the bottom free.
+  const boxHeight = height - top - reserve;
   return <AbsoluteFill>
     {scene.heading && <div style={{position: 'absolute', top: 60, width: '100%'}}><Heading text={scene.heading} theme={theme} frame={frame} size={60} align="center"/></div>}
-    <div style={{position: 'absolute', top, left: 0, width, height: height - top - 30}}><Recording recording={scene.recording} frames={frames} box={{width, height: height - top - 30, padding: 60}}/></div>
+    <div data-check="media" style={{position: 'absolute', top, left: 0, width, height: boxHeight}}><Recording recording={scene.recording} frames={frames} box={{width, height: boxHeight, padding: 40}}/></div>
     {scene.label && !scene.heading && <div style={{position: 'absolute', top: 22, width: '100%', textAlign: 'center'}}><Label theme={theme} frame={frame}>{scene.label}</Label></div>}
   </AbsoluteFill>;
 }
@@ -371,9 +373,9 @@ function CompareScene({scene, theme, frames}) {
         const {project} = side.recording;
         const box = {width: width / 2, height: (width / 2 - 2 * padding) * project.height / project.width + 2 * padding, padding};
         return <div key={index} style={{width: box.width, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, opacity: appear(frame, index * 8, 20)}}>
-          <div style={{padding: '10px 26px', borderRadius: 999, fontFamily: font, fontWeight: 700, fontSize: 30, letterSpacing: 0.5,
+          <div data-check="text" style={{padding: '10px 26px', borderRadius: 999, fontFamily: font, fontWeight: 700, fontSize: 30, letterSpacing: 0.5,
             background: index ? theme.accent : theme.panel, color: index ? theme.accentText : theme.muted, boxShadow: '0 0 0 1px #0000000f'}}>{side.label || (index ? 'After' : 'Before')}</div>
-          <div style={{position: 'relative', width: box.width, height: box.height}}><Recording recording={side.recording} frames={frames} box={box}/></div>
+          <div data-check="media" style={{position: 'relative', width: box.width, height: box.height}}><Recording recording={side.recording} frames={frames} box={box}/></div>
         </div>;
       })}
     </div>
@@ -388,11 +390,11 @@ function EndScene({scene, theme}) {
       {scene.columns.map((column, index) => {
         const delay = index * 16;
         return <div key={index} style={{flex: 1, padding: index ? '0 0 0 90px' : '0 90px 0 0', borderLeft: index ? `2px solid ${theme.muted}33` : undefined, display: 'flex', flexDirection: 'column', gap: 22}}>
-          <div style={{fontFamily: font, fontWeight: 800, fontSize: 92, letterSpacing: -3, color: theme.text, lineHeight: 1}}><Rich text={column.title} theme={theme} frame={frame} delay={delay} stagger={3}/></div>
-          {column.kicker && <div style={{fontFamily: font, fontWeight: 600, fontSize: 24, letterSpacing: 4, color: theme.muted, opacity: appear(frame, delay + 10)}}>{column.kicker}</div>}
-          {column.text && <div style={{fontFamily: font, fontSize: 36, lineHeight: 1.35, color: theme.muted, opacity: appear(frame, delay + 14)}}><Rich text={column.text} theme={theme}/></div>}
+          <div data-check="text" style={{fontFamily: font, fontWeight: 800, fontSize: 92, letterSpacing: -3, color: theme.text, lineHeight: 1}}><Rich text={column.title} theme={theme} frame={frame} delay={delay} stagger={3}/></div>
+          {column.kicker && <div data-check="text" style={{fontFamily: font, fontWeight: 600, fontSize: 24, letterSpacing: 4, color: theme.muted, opacity: appear(frame, delay + 10)}}>{column.kicker}</div>}
+          {column.text && <div data-check="text" style={{fontFamily: font, fontSize: 36, lineHeight: 1.35, color: theme.muted, opacity: appear(frame, delay + 14)}}><Rich text={column.text} theme={theme}/></div>}
           <div style={{display: 'flex', gap: 56, marginTop: 14}}>
-            {(column.stats || []).map((stat, step) => <div key={step} style={{opacity: appear(frame, delay + 22 + step * 6)}}>
+            {(column.stats || []).map((stat, step) => <div key={step} data-check="text" style={{opacity: appear(frame, delay + 22 + step * 6)}}>
               <div style={{fontFamily: font, fontWeight: 800, fontSize: 64, letterSpacing: -2, color: theme.text}}>{stat.value}</div>
               <div style={{fontFamily: font, fontSize: 22, color: theme.muted}}>{stat.label}</div>
             </div>)}
@@ -401,7 +403,7 @@ function EndScene({scene, theme}) {
       })}
     </div>
     {scene.buttons && <div style={{display: 'flex', gap: 22, justifyContent: 'center', opacity: appear(frame, 50)}}>
-      {scene.buttons.map((button, index) => <div key={index} style={{padding: '20px 40px', borderRadius: 14, fontFamily: font, fontWeight: 700, fontSize: 30,
+      {scene.buttons.map((button, index) => <div key={index} data-check="text" style={{padding: '20px 40px', borderRadius: 14, fontFamily: font, fontWeight: 700, fontSize: 30,
         background: index === scene.buttons.length - 1 ? theme.text : 'transparent', color: index === scene.buttons.length - 1 ? theme.background.startsWith('#') ? theme.background : '#fff' : theme.text,
         boxShadow: `0 0 0 2px ${theme.text}`}}>{button}</div>)}
     </div>}
@@ -418,8 +420,54 @@ function Captions({captions}) {
   if (!caption) return null;
   const fade = Math.min(ease((time - caption.start) / 0.12), ease((caption.end - time) / 0.12));
   return <div style={{position: 'absolute', bottom: 36, width: '100%', display: 'flex', justifyContent: 'center', opacity: fade}}>
-    <div style={{maxWidth: width * 0.8, padding: '12px 28px', borderRadius: 14, background: '#0b0d14e0', color: '#fff', fontFamily: font, fontWeight: 600, fontSize: 38, lineHeight: 1.3, textAlign: 'center', boxShadow: '0 8px 30px #0006'}}>{caption.text}</div>
+    <div data-check="caption" style={{maxWidth: width * 0.8, padding: '12px 28px', borderRadius: 14, background: '#0b0d14e0', color: '#fff', fontFamily: font, fontWeight: 600, fontSize: 38, lineHeight: 1.3, textAlign: 'center', boxShadow: '0 8px 30px #0006'}}>{caption.text}</div>
   </div>;
+}
+
+// Check mode only: measure what is really on screen in this frame and log layout problems.
+function LayoutProbe() {
+  const frame = useCurrentFrame();
+  const {width, height} = useVideoConfig();
+  const [handle] = useState(() => delayRender('layout probe'));
+  useEffect(() => {
+    const measure = () => {
+      const visible = element => {
+        for (let node = element; node && node !== document.body; node = node.parentElement) {
+          const style = getComputedStyle(node);
+          if (style.visibility === 'hidden' || style.display === 'none' || Number(style.opacity) < 0.6) return false;
+        }
+        return true;
+      };
+      const items = [...document.querySelectorAll('[data-check]')].filter(visible).map(element => {
+        const box = element.getBoundingClientRect();
+        return {kind: element.dataset.check, element, text: (element.textContent || '').trim().slice(0, 50), box: {left: box.left, top: box.top, right: box.right, bottom: box.bottom}};
+      }).filter(item => item.box.right > item.box.left && item.box.bottom > item.box.top);
+      const issues = [];
+      const overlap = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+      const texts = items.filter(item => item.kind === 'text');
+      for (const item of texts) {
+        const {box} = item;
+        if (box.left < -2 || box.top < -2 || box.right > width + 2 || box.bottom > height + 2) issues.push({kind: 'off-frame', text: item.text, box});
+        if (item.element.scrollWidth > item.element.clientWidth + 2 && getComputedStyle(item.element).overflow !== 'visible') issues.push({kind: 'clipped', text: item.text, box});
+      }
+      // Text on text (ignoring an element inside another), and text under media.
+      for (let a = 0; a < texts.length; a++) for (let b = a + 1; b < texts.length; b++) {
+        if (texts[a].element.contains(texts[b].element) || texts[b].element.contains(texts[a].element)) continue;
+        if (overlap(texts[a].box, texts[b].box) > 40) issues.push({kind: 'overlap', text: `${texts[a].text} ⟷ ${texts[b].text}`, box: texts[a].box});
+      }
+      // Captions sit in a fixed band at the bottom: nothing important may live there.
+      const band = {left: width * 0.1, right: width * 0.9, top: height - 125, bottom: height - 25};
+      for (const item of items.filter(item => item.kind !== 'caption')) {
+        const shared = overlap(item.box, band);
+        if (shared > 400 && (item.kind === 'text' || shared > 0.03 * (item.box.right - item.box.left) * (item.box.bottom - item.box.top))) issues.push({kind: 'caption-zone', text: item.kind === 'media' ? '(recording or image)' : item.text, box: item.box});
+      }
+      console.log('JUSTREC_LAYOUT ' + JSON.stringify({frame, issues}));
+      continueRender(handle);
+    };
+    // Wait two frames so fonts and layout have settled.
+    requestAnimationFrame(() => requestAnimationFrame(measure));
+  }, [frame]);
+  return null;
 }
 
 function Film({film}) {
@@ -428,17 +476,25 @@ function Film({film}) {
   return <AbsoluteFill style={{background: theme.background}}>
     {film.scenes.map((scene, index) => {
       const Scene = scenes[scene.type];
-      return <Sequence key={index} from={scene.from} durationInFrames={scene.frames} premountFor={fps}>
-        <FadeInOut frames={scene.frames}><Scene scene={scene} theme={theme} frames={scene.frames}/></FadeInOut>
+      const last = index === film.scenes.length - 1;
+      // Crossfade: each scene runs on under the next one while it fades in, so the picture
+      // never passes through the bare background between two scenes.
+      const overlap = last ? 0 : Math.round(fps / 3);
+      return <Sequence key={index} from={scene.from} durationInFrames={scene.frames + overlap} premountFor={fps}>
+        <Crossfade frames={scene.frames} fade={Math.round(fps / 3)} last={last} background={theme.background}>
+          <Scene scene={scene} theme={theme} frames={scene.frames} reserve={film.captions ? 140 : 30}/>
+        </Crossfade>
       </Sequence>;
     })}
     {film.captions && <Captions captions={film.captions}/>}
+    {film.probe && <LayoutProbe/>}
   </AbsoluteFill>;
 }
 
-function FadeInOut({frames, children}) {
+function Crossfade({frames, fade, last, background, children}) {
   const frame = useCurrentFrame();
-  return <AbsoluteFill style={{opacity: Math.min(ease(frame / 10), ease((frames - frame) / 10))}}>{children}</AbsoluteFill>;
+  const opacity = Math.min(ease(frame / fade), last ? ease((frames - frame) / fade) : 1);
+  return <AbsoluteFill style={{opacity, background}}>{children}</AbsoluteFill>;
 }
 
 registerRoot(() => <><Composition id="Demo" component={Demo} width={1920} height={1080} fps={30} durationInFrames={30}
