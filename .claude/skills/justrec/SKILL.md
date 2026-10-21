@@ -41,6 +41,45 @@ If the user's logins changed, `./justrec browser --refresh-login <url>` re-copie
 
 A covered window stops updating in a screen recording: keep it visible.
 
+## B0. Make a launch video (film) — the usual goal
+
+Everything for one film lives in one folder. Recordings auto-edit when they stop
+(idle time cut, zooms on clicks), so they are ready to use as-is.
+
+```bash
+export JUSTREC_DIR=~/Documents/justrec/<film-name>      # recordings, screenshots and film.json together
+./justrec browser <url>                                  # set the page up as it should look first
+./justrec start --browser --name before  …actions…  ./justrec stop
+./justrec start --browser --name after   …actions…  ./justrec stop
+./justrec browser shot $JUSTREC_DIR/<name>.png           # stills for image/slide scenes
+# write $JUSTREC_DIR/launch.film.json (below)
+./justrec film $JUSTREC_DIR/launch.film.json --preview   # ~30 s: one contact sheet PNG, look at it
+./justrec film $JUSTREC_DIR/launch.film.json             # final mp4 + .srt + .report.json
+```
+
+`launch.film.json` is a list of scenes. Each scene may have `say` (narration; the scene
+stretches to fit it, captions are made from it) and `duration` (minimum seconds).
+
+```json
+{"scenes": [
+  {"type": "title", "kicker": "NEW", "text": "Big headline", "subtitle": "One line", "say": "…"},
+  {"type": "stats", "heading": "…", "items": [{"value": "7.2M+", "label": "articles"}], "say": "…"},
+  {"type": "image", "heading": "…", "src": "light.png", "say": "…"},
+  {"type": "slide", "kicker": "HOW IT WORKS", "heading": "…", "bullets": ["…", "…"], "image": "dark.png", "say": "…"},
+  {"type": "chart", "heading": "…", "unit": "%", "bars": [{"label": "A", "value": 100}, {"label": "B", "value": 15, "highlight": true}], "say": "…"},
+  {"type": "recording", "label": "…", "project": "after", "say": "…"},
+  {"type": "compare", "before": {"project": "before", "label": "Before"}, "after": {"project": "after", "label": "After"}, "say": "…"}
+]}
+```
+
+- `project` is the `--name` you recorded with (newest wins), or a `.project.json` path.
+- Optional top level: `"theme": {"base": "dark"|"light", "accent": "#hex", …}`, `"voice": "af_heart"`,
+  `"speed": 1`, `"music": false | "song.mp3"` (default: generated soft music, ducked under
+  the voice), `"musicVolume": 0.35`, `"captions": false`, `"fps": 60`, `"output": "name.mp4"`.
+- Write `say` as plain spoken sentences; spell numbers the way they should be read.
+- Only use real numbers: read them from the page or measure them, never invent them.
+- Narration is cached per sentence, so re-running after a visual change is fast.
+
 ## B. Edit
 
 ```bash

@@ -105,6 +105,15 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - 🧪 Loudness normalization for the voice
 - ✅ Rendering via Remotion, so every edit is code an agent can change
 
+### Films (launch videos)
+
+- ✅ `justrec film <film.json>`: scenes (title, stats, image, slide, chart, recording, before/after compare) → one video
+- ✅ Narration from each scene's `say` (local Kokoro voice, macOS `say` fallback), scenes stretch to fit it
+- ✅ Captions timed per sentence, burned in and written as `.srt`
+- ✅ Background music (generated, or your file), ducked under the voice
+- ✅ `--preview`: one contact-sheet image of every scene in ~30 s
+- ✅ Recordings auto-edit on stop (idle cut, zooms) and are referenced by `--name`
+
 ### Export
 
 - ✅ `justrec render <project>` → final mp4 (1080p: about 1.3 s of work per second at 30 fps, 2.3 s at 60 fps)
