@@ -232,6 +232,13 @@ func finish(_ take: (() -> CGImage?)?) {
 
 func pick() {
   if !overlays.isEmpty { return }
+  // Without Screen Recording, shots come out as the bare wallpaper. macOS applies a new grant only to a
+  // fresh process, so: ask, show the setting, and quit; launchd starts us again (KeepAlive).
+  if !CGPreflightScreenCaptureAccess() {
+    CGRequestScreenCaptureAccess()
+    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
+    exit(0)
+  }
   for screen in NSScreen.screens {
     let overlay = Overlay(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
     overlay.level = .screenSaver
