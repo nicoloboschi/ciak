@@ -25,11 +25,11 @@
     "voice": {
       "type": "object",
       "additionalProperties": false,
-      "description": "The narrator (local Kokoro voice; macOS say if it fails).",
+      "description": "The narrator (local Kokoro voice, or your own voice from justrec voice add; macOS say if it fails).",
       "properties": {
         "name": {
           "type": "string",
-          "description": "Kokoro voice, e.g. af_heart, af_bella, am_michael, bf_emma. Default af_heart."
+          "description": "A voice from justrec voice list (your own, cloned), or a Kokoro voice, e.g. af_heart, af_bella, am_michael, bf_emma. Default af_heart."
         },
         "speed": {
           "type": "number",

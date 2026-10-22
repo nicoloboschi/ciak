@@ -64,7 +64,7 @@ export JUSTREC_DIR=~/Documents/justrec/<film-name>      # recordings, screenshot
 start each film with `"$schema": "<path from ./justrec schema --path>"`. Unknown or misspelled
 fields are errors with a "did you mean". One vocabulary everywhere: a scene's headline is
 `title`, pictures are `image`, numbers are `stats`, a recording is `recording` (its --name),
-voice settings live in `voice` {name, speed, pronounce} and music in `music` (false | file |
+voice settings live in `voice` {name, speed, pronounce} (`name` can be the user's own voice: `justrec voice list`; they add it once with `justrec voice add me`, reading aloud for 15 s — first use downloads a ~4 GB model) and music in `music` (false | file |
 {file, volume}). A scene's `speed` is playback speed of its recording.
 
 **Style.** Set `"style": "<name>"`: `./justrec styles` lists them (built-in `hindsight`, `midnight`,

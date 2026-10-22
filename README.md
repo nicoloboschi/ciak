@@ -109,6 +109,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 
 - ✅ `justrec film <film.json>`: scenes (title, stats, image, slide, chart, recording, before/after compare) → one video
 - ✅ Narration from each scene's `say` (local Kokoro voice, macOS `say` fallback), scenes stretch to fit it
+- 🧪 Your own voice: `justrec voice add me` records a 15 s sample, films with `"voice": {"name": "me"}` are cloned with Qwen3-TTS (tested with a sample voice, not yet a real one)
 - ✅ Captions timed per sentence, burned in and written as `.srt`
 - ✅ Background music (generated, or your file), ducked under the voice
 - ✅ `--preview`: one contact-sheet image of every scene in ~30 s
