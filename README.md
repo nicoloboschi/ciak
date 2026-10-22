@@ -14,6 +14,8 @@ change and re-render any part of it.
 ## Usage
 
 ```bash
+./justrec install                # once: justrec.app in the menu bar (⌘1 screenshots, Record Screen,
+                                 # recording panel; starts at login), `justrec` on PATH, the agent skill
 justrec ui                       # small local page: pick source/mic/camera, record, pause, finish
 justrec rec                      # record main display + default mic; Enter or Ctrl-C stops
 
@@ -76,7 +78,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Optional system audio, mixed into the same track (never a second track)
 - ✅ Record a single window (only while visible) or a region
 - ✅ Optional webcam bubble
-- ⬜ Global hotkey to start/stop without a terminal in front
+- 🧪 Menu bar app (`justrec install`): Record Screen / Stop without a terminal, the recording panel, Open Recordings; starts at login and holds the permissions (installed and running; the menu clicks need a human)
 - ⬜ Menu-bar indicator while recording (so you know it's on)
 - 🧪 Pick the mic by name (`--mic "Brio 100"`)
 - 🧪 Mic level check before recording starts (meter in `justrec ui`)
@@ -99,7 +101,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ⬜ Smooth pan following the cursor while zoomed
 - ✅ Smooth / enlarged cursor drawn on top, gliding onto each click
 - ✅ Click sounds: a soft tick on each click (`audio.clicks` in the project, on by default)
-- ✅ Screenshots like Cap: `justrec shot` (drag a region or press space for a window) puts it on a wallpaper with rounded corners and a shadow, saves it to `shots/`, copies it; `justrec shortcut` binds ⌘1 (a login item): instant native picker with a glowing border, shutter sound, then Finder shows the file
+- ✅ Screenshots like Cap: `justrec shot` (drag a region or press space for a window) puts it on a wallpaper with rounded corners and a shadow, saves it to `shots/`, copies it; ⌘1 in the menu bar app: instant native picker with a glowing border, shutter sound, then Finder shows the file
 - ✅ Background (wallpaper gradients: `--background aurora|sunset|ocean|meadow|graphite`, or any CSS), padding, rounded corners, shadow
 - 🧪 Burned-in captions with a clean style
 - 🧪 Intro/outro title cards (`intro` / `outro` in the project)

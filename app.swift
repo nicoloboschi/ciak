@@ -1,7 +1,8 @@
-// The screenshot shortcut (justrec shortcut, ⌘1): one global key (RegisterEventHotKey, no Accessibility
+// justrec.app: the menu bar app (justrec install). It owns Screen Recording and Microphone permission for
+// what it starts, and has the screenshot shortcut (⌘1): one global key (RegisterEventHotKey, no Accessibility
 // permission) that opens a selection overlay with a glowing border, captures the area (or a window: space),
 // puts it on the wallpaper with rounded corners and a shadow, saves it, copies it, and shows it in Finder.
-// Usage: justrec-hotkey <key, e.g. cmd+1> <wallpaper.png> <output dir>
+// Settings come as arguments: -key cmd+1 -wallpaper <png> -shots <dir> -recordings <dir> -cli <justrec>
 import AppKit
 import Carbon
 
@@ -15,17 +16,19 @@ let keyCodes: [String: Int] = [
 ]
 let modifierFlags: [String: Int] = ["cmd": cmdKey, "shift": shiftKey, "opt": optionKey, "alt": optionKey, "ctrl": controlKey]
 
-let arguments = CommandLine.arguments
-guard arguments.count == 4 else { fputs("usage: justrec-hotkey <cmd+1> <wallpaper.png> <output dir>\n", stderr); exit(2) }
+let settings = UserDefaults.standard
+let key = settings.string(forKey: "key") ?? "cmd+1"
 var keyCode: Int?
 var modifiers = 0
-for part in arguments[1].lowercased().split(separator: "+").map(String.init) {
+for part in key.lowercased().split(separator: "+").map(String.init) {
   if let flag = modifierFlags[part] { modifiers |= flag } else { keyCode = keyCodes[part] }
 }
 let code = keyCode ?? 0
-guard keyCode != nil && modifiers != 0 || arguments[1] == "--frame" else { fputs("Shortcut must be modifiers plus a letter or digit, e.g. cmd+1\n", stderr); exit(2) }
-let wallpaper = NSImage(contentsOfFile: arguments[2])?.cgImage(forProposedRect: nil, context: nil, hints: nil)
-let outputDir = URL(fileURLWithPath: arguments[3])
+guard keyCode != nil, modifiers != 0 else { fputs("Shortcut must be modifiers plus a letter or digit, e.g. cmd+1\n", stderr); exit(2) }
+let wallpaper = settings.string(forKey: "wallpaper").flatMap { NSImage(contentsOfFile: $0)?.cgImage(forProposedRect: nil, context: nil, hints: nil) }
+let home = FileManager.default.homeDirectoryForCurrentUser
+let recordingsDir = URL(fileURLWithPath: settings.string(forKey: "recordings") ?? home.appendingPathComponent("Documents/justrec").path)
+let outputDir = URL(fileURLWithPath: settings.string(forKey: "shots") ?? recordingsDir.appendingPathComponent("shots").path)
 func color(_ hex: Int) -> CGColor {
   CGColor(srgbRed: CGFloat(hex >> 16) / 255, green: CGFloat((hex >> 8) & 255) / 255, blue: CGFloat(hex & 255) / 255, alpha: 1)
 }
@@ -230,15 +233,21 @@ func finish(_ take: (() -> CGImage?)?) {
   }
 }
 
+// Without Screen Recording, captures come out as the bare wallpaper. macOS applies a new grant only to a
+// fresh process, so: ask, show the setting, and restart (launchd starts us again).
+func permitted() -> Bool {
+  if CGPreflightScreenCaptureAccess() { return true }
+  CGRequestScreenCaptureAccess()
+  NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
+  let restart = Process()
+  restart.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+  restart.arguments = ["kickstart", "-k", "gui/\(getuid())/com.justrec.app"]
+  try? restart.run()
+  return false
+}
+
 func pick() {
-  if !overlays.isEmpty { return }
-  // Without Screen Recording, shots come out as the bare wallpaper. macOS applies a new grant only to a
-  // fresh process, so: ask, show the setting, and quit; launchd starts us again (KeepAlive).
-  if !CGPreflightScreenCaptureAccess() {
-    CGRequestScreenCaptureAccess()
-    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
-    exit(0)
-  }
+  if !overlays.isEmpty || !permitted() { return }
   for screen in NSScreen.screens {
     let overlay = Overlay(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
     overlay.level = .screenSaver
@@ -257,13 +266,91 @@ func pick() {
   current.makeFirstResponder(current.contentView)
 }
 
-// Check the frame without a key press: justrec-hotkey --frame <wallpaper.png> <shot.png> writes <shot>.framed.png
-if arguments[1] == "--frame" {
-  guard let shot = NSImage(contentsOfFile: arguments[3])?.cgImage(forProposedRect: nil, context: nil, hints: nil), let png = framed(shot) else { exit(1) }
-  try! png.write(to: URL(fileURLWithPath: arguments[3] + ".framed.png"))
+// Runs the justrec command in the background; hands its JSON output back on the main thread.
+func justrec(_ arguments: [String], then done: @escaping ([String: Any]?) -> Void = { _ in }) {
+  DispatchQueue.global().async {
+    let process = Process(), pipe = Pipe()
+    process.executableURL = URL(fileURLWithPath: settings.string(forKey: "cli") ?? "justrec")
+    process.arguments = arguments
+    process.standardOutput = pipe
+    try? process.run()
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    process.waitUntilExit()
+    let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+    DispatchQueue.main.async { done(json) }
+  }
+}
+
+// The menu bar icon: screenshot, record the main display (with the default mic), the recording panel.
+final class Menu: NSObject, NSMenuDelegate {
+  let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+  var recording: Date?
+  var busy = false
+  var timer: Timer?
+
+  override init() {
+    super.init()
+    let menu = NSMenu()
+    menu.delegate = self
+    item.menu = menu
+    show()
+  }
+  func show() {
+    let symbol = recording == nil ? "record.circle" : "stop.circle.fill"
+    item.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: "justrec")
+    item.button?.contentTintColor = recording == nil ? nil : .systemRed
+    item.button?.title = recording.map { String(format: " %d:%02d", Int(-$0.timeIntervalSinceNow) / 60, Int(-$0.timeIntervalSinceNow) % 60) } ?? ""
+  }
+  func menuNeedsUpdate(_ menu: NSMenu) {
+    menu.removeAllItems()
+    let shot = NSMenuItem(title: "Take Screenshot", action: #selector(screenshot), keyEquivalent: keyCodes.first { $0.value == code }?.key ?? "")
+    shot.keyEquivalentModifierMask = NSEvent.ModifierFlags(rawValue: (modifiers & cmdKey != 0 ? NSEvent.ModifierFlags.command.rawValue : 0)
+      | (modifiers & shiftKey != 0 ? NSEvent.ModifierFlags.shift.rawValue : 0) | (modifiers & optionKey != 0 ? NSEvent.ModifierFlags.option.rawValue : 0)
+      | (modifiers & controlKey != 0 ? NSEvent.ModifierFlags.control.rawValue : 0))
+    let record = NSMenuItem(title: busy ? "Saving…" : recording == nil ? "Record Screen" : "Stop Recording", action: busy ? nil : #selector(toggle), keyEquivalent: "")
+    for entry in [shot, record, NSMenuItem(title: "Recording Panel…", action: #selector(panel), keyEquivalent: ""), .separator(),
+                  NSMenuItem(title: "Open Recordings", action: #selector(folder), keyEquivalent: ""), .separator(),
+                  NSMenuItem(title: "Quit justrec", action: #selector(quit), keyEquivalent: "q")] {
+      entry.target = self
+      menu.addItem(entry)
+    }
+  }
+  @objc func screenshot() { DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: pick) } // after the menu closes
+  @objc func panel() { justrec(["ui"]) }
+  @objc func folder() { NSWorkspace.shared.open(recordingsDir) }
+  @objc func quit() { NSApp.terminate(nil) }
+  @objc func toggle() {
+    if recording == nil {
+      guard permitted() else { return }
+      busy = true
+      justrec(["start", "--display", "0", "--name", "screen"]) { result in
+        self.busy = false
+        guard result?["id"] != nil else { return }
+        self.recording = Date()
+        self.timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in self.show() }
+        self.show()
+      }
+    } else {
+      busy = true
+      timer?.invalidate()
+      recording = nil
+      show()
+      justrec(["stop"]) { result in
+        self.busy = false
+        if let output = result?["output"] as? String { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: output)]) }
+      }
+    }
+  }
+}
+
+// Check the frame without a key press: justrec.app/Contents/MacOS/justrec -frame <shot.png> -wallpaper <png> writes <shot>.framed.png
+if let file = settings.string(forKey: "frame") {
+  guard let shot = NSImage(contentsOfFile: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil), let png = framed(shot) else { exit(1) }
+  try! png.write(to: URL(fileURLWithPath: file + ".framed.png"))
   exit(0)
 }
 NSApplication.shared.setActivationPolicy(.accessory)
+let menu = Menu()
 signal(SIGUSR1, SIG_IGN) // kill -USR1 <pid> opens the picker too (for testing)
 let usr1 = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
 usr1.setEventHandler(handler: pick)
@@ -272,6 +359,6 @@ var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind
 InstallEventHandler(GetApplicationEventTarget(), { _, _, _ in DispatchQueue.main.async(execute: pick); return noErr }, 1, &eventType, nil, nil)
 var reference: EventHotKeyRef?
 let status = RegisterEventHotKey(UInt32(code), UInt32(modifiers), EventHotKeyID(signature: OSType(0x4A524543), id: 1), GetApplicationEventTarget(), 0, &reference)
-guard status == noErr else { fputs("That shortcut is taken by another app (error \(status)). Pick another with --key.\n", stderr); exit(1) }
-print("ready \(arguments[1])"); fflush(stdout)
+if status != noErr { fputs("The shortcut \(key) is taken by another app (error \(status)): screenshots only from the menu. Pick another with justrec install --key.\n", stderr) }
+print("ready \(key)"); fflush(stdout)
 NSApplication.shared.run()

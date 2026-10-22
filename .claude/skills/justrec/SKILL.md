@@ -1,12 +1,19 @@
 ---
 name: justrec
-description: Record the screen, a window or a browser while doing a task, and edit recordings into polished demo videos with justrec (zooms, cuts, captions, webcam, presets). Use when the user says "record yourself doing X", "make a demo of X", "edit my last recording", "zoom less at 1:20", "cut the pause", or names a justrec project/recording.
+description: justrec, the one entrypoint for screen work on this Mac — record the screen, a window, a browser or a terminal while doing a task; edit recordings into polished demo and launch videos (zooms, cuts, captions, narration in the user's own cloned voice, music); take framed screenshots. Use when the user says "record yourself doing X", "make a demo/launch video of X", "edit my last recording", "zoom less at 1:20", "cut the pause", "screenshot this nicely", "say it in my voice", or names a justrec project/recording.
 ---
 
 # justrec
 
-All commands print JSON. Run from the justrec repo: `./justrec <command>`.
+All commands print JSON: `justrec <command>` (`justrec help` lists them all).
 Recordings and their files live in `~/Documents/justrec/` (`JUSTREC_DIR`).
+
+**Setup (once per Mac):** if `justrec` is not found, run `<repo>/justrec install`
+(repo: github.com/nicoloboschi/justrec). It puts justrec.app in the menu bar (⌘1 screenshots,
+Record Screen, the recording panel; starts at login), links the command and this skill.
+`justrec uninstall` undoes it. The app holds the Screen Recording/Microphone permission for what
+it starts; commands an agent runs use the terminal's permission. If a capture says the user declined,
+the permission is missing: tell the user which app needs it, don't work around it.
 
 ## A. Record yourself doing a task in a browser (preferred)
 
@@ -16,28 +23,28 @@ itself, so it records fine while covered by other windows. Never use the user's 
 browser window for this.
 
 ```bash
-./justrec browser https://example.com/start    # start it (first run copies the profile) + open a tab
-./justrec start --browser --fps 60 --system-audio --name <short-name>  # record the current tab (+ its sound; --mic for voice)
-./justrec browser click "Sign in"              # CSS selector or visible text; the mouse glides there
-./justrec browser type "Search" "my query"     # click a field, then type; or: type "text" into the focused field
-./justrec browser key Enter                    # Enter Tab Escape Backspace Arrow* Space
-./justrec browser scroll 600 | go <url> | eval <js> | tabs | switch <tab>   # recordings follow the active tab
-./justrec browser shot /tmp/look.png           # see the page before deciding the next step
-./justrec stop
+justrec browser https://example.com/start    # start it (first run copies the profile) + open a tab
+justrec start --browser --fps 60 --system-audio --name <short-name>  # record the current tab (+ its sound; --mic for voice)
+justrec browser click "Sign in"              # CSS selector or visible text; the mouse glides there
+justrec browser type "Search" "my query"     # click a field, then type; or: type "text" into the focused field
+justrec browser key Enter                    # Enter Tab Escape Backspace Arrow* Space
+justrec browser scroll 600 | go <url> | eval <js> | tabs | switch <tab>   # recordings follow the active tab
+justrec browser shot /tmp/look.png           # see the page before deciding the next step
+justrec stop
 ```
 
 Clicks, mouse moves and typing on the page are logged automatically: zooms and the
 drawn cursor need no marks. `--system-audio` records only this browser's sound, never other apps.
 The render adds a soft tick on each click (`audio.clicks: false` in the project turns it off).
-If the user's logins changed, `./justrec browser --refresh-login <url>` re-copies the profile.
+If the user's logins changed, `justrec browser --refresh-login <url>` re-copies the profile.
 
 ## A2. Record the screen, a window or a region
 
-1. `./justrec sources` → a display index or a window `id` (`onScreen: false` = other Space).
-2. `./justrec start --window <id> --name <short-name>` (`--display <i>`, `--region x,y,w,h`,
+1. `justrec sources` → a display index or a window `id` (`onScreen: false` = other Space).
+2. `justrec start --window <id> --name <short-name>` (`--display <i>`, `--region x,y,w,h`,
    `--no-mic`, `--system-audio`, `--camera default`).
-3. When an action doesn't move the real mouse, mark it: `./justrec mark "<what>" --at <x>,<y>` (0–1).
-4. `./justrec stop` → returns `output` (mp4) and `project` (JSON).
+3. When an action doesn't move the real mouse, mark it: `justrec mark "<what>" --at <x>,<y>` (0–1).
+4. `justrec stop` → returns `output` (mp4) and `project` (JSON).
 
 A covered window stops updating in a screen recording: keep it visible.
 
@@ -48,27 +55,27 @@ Everything for one film lives in one folder. Recordings auto-edit when they stop
 
 ```bash
 export JUSTREC_DIR=~/Documents/justrec/<film-name>      # recordings, screenshots and film.json together
-./justrec browser <url>                                  # set the page up as it should look first
-./justrec start --browser --name before  …actions…  ./justrec stop
-./justrec terminal open --blur 'sk_\w+'                 # the user's own zsh (prompt, iTerm colors) in the justrec browser
-./justrec start --terminal --name calls                  # …then: ./justrec terminal run "<command>" … ./justrec stop
-./justrec browser shot $JUSTREC_DIR/<name>.png           # stills for image/slide scenes
-./justrec shot --from $JUSTREC_DIR/<name>.png --no-copy  # a still framed on a wallpaper (the user's ⌘1 shortcut has the same look)
-# write $JUSTREC_DIR/launch.film.json (see `./justrec schema`)
-./justrec film $JUSTREC_DIR/launch.film.json --live      # player + scene list + schema-driven editor for the human; reloads on save
-./justrec film $JUSTREC_DIR/launch.film.json --preview   # ~20 s: contact sheet + layout check
-./justrec frames $JUSTREC_DIR/launch.film.json --scene 3 # labelled frames of one scene (or --from/--to, --at)
-./justrec film $JUSTREC_DIR/launch.film.json             # final mp4 + .srt + .report.json, then the check
+justrec browser <url>                                  # set the page up as it should look first
+justrec start --browser --name before  …actions…  justrec stop
+justrec terminal open --blur 'sk_\w+'                 # the user's own zsh (prompt, iTerm colors) in the justrec browser
+justrec start --terminal --name calls                  # …then: justrec terminal run "<command>" … justrec stop
+justrec browser shot $JUSTREC_DIR/<name>.png           # stills for image/slide scenes
+justrec shot --from $JUSTREC_DIR/<name>.png --no-copy  # a still framed on a wallpaper (the user's ⌘1 shortcut has the same look)
+# write $JUSTREC_DIR/launch.film.json (see `justrec schema`)
+justrec film $JUSTREC_DIR/launch.film.json --live      # player + scene list + schema-driven editor for the human; reloads on save
+justrec film $JUSTREC_DIR/launch.film.json --preview   # ~20 s: contact sheet + layout check
+justrec frames $JUSTREC_DIR/launch.film.json --scene 3 # labelled frames of one scene (or --from/--to, --at)
+justrec film $JUSTREC_DIR/launch.film.json             # final mp4 + .srt + .report.json, then the check
 ```
 
-**The schema is the reference**: `./justrec schema` prints every field with a description;
-start each film with `"$schema": "<path from ./justrec schema --path>"`. Unknown or misspelled
+**The schema is the reference**: `justrec schema` prints every field with a description;
+start each film with `"$schema": "<path from justrec schema --path>"`. Unknown or misspelled
 fields are errors with a "did you mean". One vocabulary everywhere: a scene's headline is
 `title`, pictures are `image`, numbers are `stats`, a recording is `recording` (its --name),
 voice settings live in `voice` {name, speed, pronounce} (`name` can be the user's own voice: `justrec voice list`; they add it once with `justrec voice add me`, reading aloud for 15 s — first use downloads a ~4 GB model) and music in `music` (false | file |
 {file, volume}). A scene's `speed` is playback speed of its recording.
 
-**Style.** Set `"style": "<name>"`: `./justrec styles` lists them (built-in `hindsight`, `midnight`,
+**Style.** Set `"style": "<name>"`: `justrec styles` lists them (built-in `hindsight`, `midnight`,
 `keynote` in styles/; your own as JSON in `~/.justrec/styles`), or a path to a style .json. A style
 is theme fields: fonts (`font`, `headingFont`, `monoFont` + `fontUrl` to load them), colors, `panel`
 / `card` / `border` / `radius`, `backdrop`. `theme` fine-tunes on top. Custom scenes get it via
@@ -101,16 +108,16 @@ voice; words a listener would mishear; captions too fast. Fix and re-render unti
 - Terminal: `terminal run` types the command key by key into a real zsh (multi-line commands show zsh's
   own `>` / `quote>` prompts), waits for it, returns `{code, output}`. Pagers are off; a command still
   running after `--timeout` (120 s) gets Ctrl-C. Pass secrets through the environment of
-  `terminal open` (e.g. `KEY=$(cat file) ./justrec terminal open --blur 'hsk_\w+'`), never type them.
+  `terminal open` (e.g. `KEY=$(cat file) justrec terminal open --blur 'hsk_\w+'`), never type them.
 - Auto-zooms land on every click; delete a pointless one from the recording's `zooms` in its project JSON.
 
 ## B. Edit
 
 ```bash
-./justrec captions <mp4>                 # only if someone talked; writes <name>.json transcript
-./justrec edit <project> --cut-idle --auto-zoom
-./justrec preview <project> --frame 90   # look at a frame (png) before a full render
-./justrec render <project>               # → <name>.edited.mp4, verified: 1 video + 1 audio track
+justrec captions <mp4>                 # only if someone talked; writes <name>.json transcript
+justrec edit <project> --cut-idle --auto-zoom
+justrec preview <project> --frame 90   # look at a frame (png) before a full render
+justrec render <project>               # → <name>.edited.mp4, verified: 1 video + 1 audio track
 ```
 
 - `--cut-idle`: removes 1 s+ stretches where the picture is still, nobody talks and nothing is clicked or typed (agent think-time). Use it for agent recordings.
@@ -137,3 +144,20 @@ ffprobe -v error -show_entries stream=codec_type,duration -of compact <edited.mp
 ffmpeg -hide_banner -i <edited.mp4> -vn -af volumedetect -f null - 2>&1 | grep mean_volume   # voice: well above -60 dB
 ```
 Look at 2–3 frames around the zooms. Report the path of the edited mp4.
+
+## D. Screenshots
+
+The user takes them with ⌘1 (menu bar app): drag an area or press space for a window; the shot
+is framed on a wallpaper, saved to `~/Documents/justrec/shots/`, copied, and shown in Finder.
+For an agent: `justrec browser shot <file.png>` (page) then `justrec shot --from <file.png> --no-copy
+[--background sunset] [--out file]` for the framed version; `--plain` skips the frame.
+
+## E. The user's own voice
+
+`justrec voice list` shows cloned voices. `"voice": {"name": "me"}` in a film narrates in it
+(Qwen3-TTS, local, ~30 s per sentence; short sentences sound most natural). The user records one
+with `justrec voice add me` (reads a paragraph aloud for 15–20 s; it's cleaned and cut
+automatically) — it records the mic, so ask the user and tell them when to start.
+`justrec voice say me "text"` writes `voice-me.wav` to try it. Use `pronounce` for names
+(e.g. `{"Claude": "Clawd"}`).
+

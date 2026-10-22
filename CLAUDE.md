@@ -18,11 +18,15 @@ the output, not just that it compiles.
 - `lib/browser.mjs` — the justrec browser (Brave on a profile copy, debugging port 9333):
   `justrec browser ...` driving commands, and the page recorder used by `start --browser`
   (same JSON-lines protocol as `rec.swift`).
-- `lib/shot.mjs` + `hotkey.swift` — framed screenshots (`justrec shot`) and the ⌘1 shortcut (native picker, frame, sound, Finder).
+- `app.swift` + `lib/app.mjs` — justrec.app, the menu bar app (`justrec install`): ⌘1 screenshots (native
+  picker, frame, sound, Finder), Record Screen, the recording panel; a launchd agent at login. Installed to
+  ~/Applications only when the build changes: a new build needs the Screen Recording grant again.
+- `lib/shot.mjs` — framed screenshots from the command line (`justrec shot`).
 - `lib/voice.mjs` — the user's own cloned voice for narration (Qwen3-TTS via mlx-audio).
 - `lib/project.mjs` — project JSON and edits (`justrec edit`); `lib/render.mjs` +
   `render/index.jsx` — Remotion render; `lib/ui.mjs` + `ui/index.html` — record panel.
-- `.claude/skills/justrec/SKILL.md` — how an agent records and edits.
+- `.claude/skills/justrec/SKILL.md` — the one skill: everything an agent can do with justrec
+  (linked into ~/.claude/skills by `justrec install`). New commands get a line there.
 - Recordings go to `~/Documents/justrec/` (`JUSTREC_DIR`). Every artifact for a
   recording sits next to it with the same base name: `X.mp4`, `X.project.json`,
   `X.cursor.jsonl`, `X.srt`/`X.json` (captions), `X.edited.mp4` (render).
