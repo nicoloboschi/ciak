@@ -18,7 +18,7 @@ the output, not just that it compiles.
 - `lib/browser.mjs` — the justrec browser (Brave on a profile copy, debugging port 9333):
   `justrec browser ...` driving commands, and the page recorder used by `start --browser`
   (same JSON-lines protocol as `rec.swift`).
-- `lib/shot.mjs` + `hotkey.swift` — framed screenshots (`justrec shot`) and the global shortcut for them.
+- `lib/shot.mjs` + `hotkey.swift` — framed screenshots (`justrec shot`) and the ⌘1 shortcut (native picker, frame, sound, Finder).
 - `lib/voice.mjs` — the user's own cloned voice for narration (Qwen3-TTS via mlx-audio).
 - `lib/project.mjs` — project JSON and edits (`justrec edit`); `lib/render.mjs` +
   `render/index.jsx` — Remotion render; `lib/ui.mjs` + `ui/index.html` — record panel.

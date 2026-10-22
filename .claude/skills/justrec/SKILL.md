@@ -53,7 +53,7 @@ export JUSTREC_DIR=~/Documents/justrec/<film-name>      # recordings, screenshot
 ./justrec terminal open --blur 'sk_\w+'                 # the user's own zsh (prompt, iTerm colors) in the justrec browser
 ./justrec start --terminal --name calls                  # …then: ./justrec terminal run "<command>" … ./justrec stop
 ./justrec browser shot $JUSTREC_DIR/<name>.png           # stills for image/slide scenes
-./justrec shot --from $JUSTREC_DIR/<name>.png --no-copy  # a still framed on a wallpaper (also: the user's ⌘⇧6 shortcut)
+./justrec shot --from $JUSTREC_DIR/<name>.png --no-copy  # a still framed on a wallpaper (the user's ⌘1 shortcut has the same look)
 # write $JUSTREC_DIR/launch.film.json (see `./justrec schema`)
 ./justrec film $JUSTREC_DIR/launch.film.json --live      # player + scene list + schema-driven editor for the human; reloads on save
 ./justrec film $JUSTREC_DIR/launch.film.json --preview   # ~20 s: contact sheet + layout check
