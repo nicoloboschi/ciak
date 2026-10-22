@@ -99,7 +99,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ⬜ Smooth pan following the cursor while zoomed
 - ✅ Smooth / enlarged cursor drawn on top, gliding onto each click
 - ✅ Click sounds: a soft tick on each click (`audio.clicks` in the project, on by default)
-- 🧪 Screenshots like Cap: `justrec shot` (drag a region or press space for a window) puts it on a wallpaper with rounded corners and a shadow, saves it to `shots/`, copies it; `justrec shortcut` binds ⌘1 (a login item): instant native picker with a glowing border, shutter sound, then Finder shows the file (overlay, frame and login item tested; a real drag needs a human)
+- ✅ Screenshots like Cap: `justrec shot` (drag a region or press space for a window) puts it on a wallpaper with rounded corners and a shadow, saves it to `shots/`, copies it; `justrec shortcut` binds ⌘1 (a login item): instant native picker with a glowing border, shutter sound, then Finder shows the file
 - ✅ Background (wallpaper gradients: `--background aurora|sunset|ocean|meadow|graphite`, or any CSS), padding, rounded corners, shadow
 - 🧪 Burned-in captions with a clean style
 - 🧪 Intro/outro title cards (`intro` / `outro` in the project)
