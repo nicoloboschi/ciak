@@ -202,6 +202,8 @@ const token = '__TOKEN__';
 const $ = id => document.getElementById(id);
 const api = async (action, body = {}) => {
   const response = await fetch('/' + action, {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + token}, body: JSON.stringify(body)});
+  // A tab left open from an earlier panel has an old key: load the page again for the current one.
+  if (response.status === 403) { location.reload(); throw Error('Reconnecting to the panel…'); }
   const result = await response.json();
   if (!response.ok) throw Error(result.error);
   return result;
@@ -331,6 +333,7 @@ $('startButton').onclick = async () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
     $('count').style.display = 'none';
+    $('startButton').textContent = 'Starting…';
     stopPreview(true);  // the recorder takes the camera; keep the mic meter running
     const [kind, value] = $('source').value.split(':');
     const body = {[kind]: Number(value), microphone: $('mic').value, systemAudio: $('systemAudio').checked, camera: $('camera').value, fps: Number($('fps').value), name: $('name').value.trim() || 'My demo'};
@@ -338,7 +341,7 @@ $('startButton').onclick = async () => {
     const session = await api('start', body);
     location.hash = '#project/' + session.id;
   } catch (failure) { toast(failure.message); $('count').style.display = 'none'; preview(); }
-  finally { busy = false; $('startButton').disabled = false; $('setup').disabled = false; }
+  finally { busy = false; $('startButton').disabled = false; $('setup').disabled = false; $('startButton').textContent = '● Start recording'; }
 };
 
 // ---- A project: live recording, then the steps, the video and the id ----
@@ -413,13 +416,14 @@ $('finishButton').onclick = async () => {
   if (busy) return; busy = true; toast('');
   const id = current.id;
   $('finishButton').disabled = $('pauseButton').disabled = true;
+  $('finishButton').textContent = 'Finishing…';
   stopPreview();
   try {
     await api('stop', {id});
     await refresh();
     await api('render', {id});
   } catch (failure) { toast(failure.message); }
-  finally { busy = false; $('finishButton').disabled = $('pauseButton').disabled = false; refresh(); loadList(); }
+  finally { busy = false; $('finishButton').disabled = $('pauseButton').disabled = false; $('finishButton').textContent = '■ Finish'; refresh(); loadList(); }
 };
 $('renderAgain').onclick = async () => {
   if (busy) return; busy = true; toast('');
