@@ -194,7 +194,8 @@ struct Rec {
         configuration.height = max(2, Int(bounds.height * scale) / 2 * 2)
         if options.audioApps != nil { configuration.width = 64; configuration.height = 64 }
         configuration.minimumFrameInterval = CMTime(value: 1, timescale: CMTimeScale(options.fps))
-        configuration.queueDepth = 3
+        // Frames still being encoded hold queue slots; at 3, macOS sent 4 frames in 4 s and recordings froze.
+        configuration.queueDepth = 8
         configuration.showsCursor = options.cursorVisible
         configuration.capturesAudio = options.systemAudio
         configuration.excludesCurrentProcessAudio = true

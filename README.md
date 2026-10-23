@@ -78,7 +78,8 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Optional system audio, mixed into the same track (never a second track)
 - ✅ Record a single window (only while visible) or a region
 - ✅ Optional webcam bubble
-- 🧪 Menu bar app (`justrec install`): Record Screen / Stop without a terminal, the recording panel, Open Recordings; starts at login and holds the permissions (installed and running; the menu clicks need a human)
+- ✅ Menu bar app (`justrec install`): Record Screen / Stop without a terminal, the recording panel, Open Recordings; starts at login and holds the permissions (recorded through the app and the panel with a moving clock on screen)
+- ✅ Recordings follow the screen: they used to freeze on the first picture (macOS ran out of frame slots)
 - ⬜ Menu-bar indicator while recording (so you know it's on)
 - 🧪 Pick the mic by name (`--mic "Brio 100"`)
 - 🧪 Mic level check before recording starts (meter in `justrec ui`)
