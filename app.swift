@@ -45,7 +45,7 @@ func permitted() -> Bool {
   if CGPreflightScreenCaptureAccess() { return true }
   CGRequestScreenCaptureAccess()
   NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
-  if tell("justrec needs Screen Recording", "Turn on justrec in System Settings › Privacy & Security › Screen Recording, then restart justrec.", button: "Restart justrec") {
+  if tell("justrec needs Screen Recording", "Turn on justrec in System Settings › Privacy & Security › Screen Recording, then restart justrec.\n\nAlready on? It belongs to an older justrec: select it, remove it with −, and add it again (or run: tccutil reset ScreenCapture com.justrec.app).", button: "Restart justrec") {
     let restart = Process()
     restart.executableURL = URL(fileURLWithPath: "/bin/launchctl")
     restart.arguments = ["kickstart", "-k", "gui/\(getuid())/com.justrec.app"]
