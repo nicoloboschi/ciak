@@ -14,6 +14,10 @@ the recording panel and says "edit project 3f9a1c2e"). Its files live in `~/.jus
 or a path). The user's folder `~/Documents/justrec/` (`JUSTREC_DIR`) only gets finished videos:
 `justrec render <id>` writes `<name>-<id>.mp4` there (re-rendering replaces it) and screenshots.
 
+**The user names a project** ("edit project 3f9a1c2e: …") → go to **B. Edit**: one `justrec edit <id>` call takes
+several options at once, then `justrec render <id>`. No film needed. The user's recording panel follows along:
+it shows each render step with its timing and plays the new video when it's done.
+
 **Setup (once per Mac):** if `justrec` is not found, run `<repo>/justrec install`
 (repo: github.com/nicoloboschi/justrec). It puts justrec.app in the menu bar (⌘1 screenshots,
 Record… which opens the recording panel; starts at login), links the command and this skill.
@@ -131,7 +135,9 @@ justrec render <id>                    # → ~/Documents/justrec/<name>-<id>.mp4
 - `--cut-silence`: removes pauses in speech. Use it for human talking-head demos.
 - `--cut start,end`: remove a range (source seconds).
 - `--auto-zoom`: zooms on clicks and marks; close actions pan instead of zooming out.
-- `--preset landscape|vertical|square`.
+- `--preset landscape|vertical|square`. A wide screen recording in `vertical` is fitted inside the tall frame: a thin strip
+  with small text (a 2560×1080 recording leaves ~80% background). Add `--auto-zoom` (zooms on clicks) or zooms by hand
+  on what matters, and tell the user how it reads on a phone.
 - `--background aurora|sunset|ocean|meadow|graphite|midnight` (or any CSS background): the wallpaper behind the recording. Default aurora.
 
 Everything else is a direct edit of the project JSON, then re-render:
@@ -140,6 +146,9 @@ Everything else is a direct edit of the project JSON, then re-render:
 - `style`: `background`, `padding`, `radius`, `shadow`, `cursorSize`, `clickColor`.
 - `captions.enabled`, `audio.normalize`, `intro`/`outro`: `{text, duration}`.
 - `webcam`: `size` (fraction of width), `position` `bottom-right|bottom-left`.
+
+- The first `preview`/`render` on a Mac downloads a headless Chrome (~170 MB, ~40 s), once.
+- Paths contain the recording's name (spaces): quote them.
 
 Times the user says ("at 1:20") refer to the **rendered** video; map them back to
 source time through `clips` (and the intro length) before editing.
@@ -150,7 +159,8 @@ source time through `clips` (and the intro length) before editing.
 ffprobe -v error -show_entries stream=codec_type,duration -of compact <edited.mp4>   # exactly 1 video + 1 audio
 ffmpeg -hide_banner -i <edited.mp4> -vn -af volumedetect -f null - 2>&1 | grep mean_volume   # voice: well above -60 dB
 ```
-Look at 2–3 frames around the zooms. Report the path of the finished mp4.
+Look at 2–3 frames around the zooms. Report the path of the finished mp4. A silent result is fine when the raw
+recording is silent too (recorded without a mic): check `recording.mp4` in the project folder before calling a voice lost.
 
 ## D. Screenshots
 

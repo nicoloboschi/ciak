@@ -2,58 +2,399 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Justrec — Make a demo</title>
+<title>justrec</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='6' fill='%23d8f58b'/></svg>">
 <style>
-:root{color-scheme:dark;--bg:#111317;--panel:#1a1d23;--line:#30343e;--muted:#9da4b2;--ink:#f4f3ef;--accent:#d8f58b;--red:#ff776c}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1080px;margin:0 auto;padding:36px 32px 72px}header{display:flex;align-items:center;justify-content:space-between;margin-bottom:66px}.brand{font-size:24px;font-weight:750;letter-spacing:-1px}.brand span{display:inline-block;background:var(--accent);width:12px;height:12px;border-radius:50%;margin-right:10px}.tag{font-size:12px;border:1px solid var(--line);padding:6px 12px;border-radius:30px;color:var(--muted)}.eyebrow{color:var(--accent);font-size:12px;letter-spacing:2px;font-weight:600}h1{font-size:44px;letter-spacing:-1.8px;line-height:1.12;margin:14px 0}p{color:var(--muted);margin:12px 0 28px}.layout{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;margin-top:36px}.panel{border:1px solid var(--line);border-radius:20px;background:var(--panel);padding:26px}h2{font-size:16px;margin:0 0 22px;font-weight:600}.field{margin-bottom:20px}label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}select,input[type=text],input[type=number]{width:100%;background:#111318;border:1px solid #3b414e;border-radius:9px;padding:12px;color:var(--ink);font:inherit;min-height:44px}select:focus,input:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}.row{display:flex;gap:14px}.row>.field{flex:1;min-width:0}.toggle{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:18px 0}.toggle label{color:var(--ink);margin:0}.toggle small{display:block;color:var(--muted);font-size:12px;margin-top:2px}input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent)}button{border:1px solid var(--line);border-radius:10px;background:#252933;color:var(--ink);padding:12px 18px;font:600 14px inherit;cursor:pointer;min-height:44px}button:hover{filter:brightness(1.12)}button:disabled{opacity:.45;cursor:default}.primary{background:var(--accent);color:#1b2410;border:0;width:100%;font-size:16px;font-weight:650}.stop{background:var(--red);color:#28100c}.preview{aspect-ratio:16/10;background:radial-gradient(ellipse at 50% 40%,#303849,#191d27 70%);border:1px solid var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}.preview video{width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)}.placeholder{text-align:center;color:var(--muted);font-size:13px}.placeholder svg{display:block;margin:0 auto 16px;color:#bac4d5}.status-pill{position:absolute;left:14px;top:14px;background:#101318d9;padding:6px 11px;border-radius:20px;font-size:11px;letter-spacing:1px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#8b93a2;margin-right:6px}.live .dot{background:var(--red);animation:pulse 1.5s infinite}.meter{height:6px;background:#333946;border-radius:5px;overflow:hidden;margin-top:10px}.meter div{height:100%;width:0;background:var(--accent);transition:width .08s}.hint{font-size:12px;color:var(--muted);margin:10px 0 0}.time{font-size:48px;letter-spacing:-2px;font-variant-numeric:tabular-nums;text-align:center;margin:26px 0 6px}.state-label{text-align:center;color:var(--muted);font-size:13px;margin-bottom:24px}.actions{display:flex;gap:10px}.actions button{flex:1}.footer-note{margin-top:22px;border-top:1px solid var(--line);padding-top:20px;color:var(--muted);font-size:13px}.footer-note strong{color:var(--ink);font-weight:500}#error{display:none;margin-top:20px;padding:14px;background:#462724;border:1px solid #9c534d;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}#result{display:none;margin-top:24px}.path{font:12px/1.6 ui-monospace,monospace;overflow-wrap:anywhere;background:#101318;padding:12px;border-radius:8px}.countdown{position:absolute;font-size:80px;font-weight:700;display:none}.subbutton{border:0;padding:0;min-height:30px;color:var(--accent);background:none;font-size:12px}.region{display:none}.region .row{gap:8px}.region input{padding:9px}.region label{font-size:11px}.preview-bar{display:flex;justify-content:space-between;align-items:center;margin:14px 0 4px}#final{display:none;width:100%;border-radius:12px;margin-bottom:16px;background:#000}.project{display:flex;align-items:center;gap:12px}.project code{font:600 22px ui-monospace,monospace;color:var(--accent);letter-spacing:1px}@keyframes pulse{50%{opacity:.3}}@media(max-width:760px){main{padding:24px 20px}header{margin-bottom:42px}.layout{grid-template-columns:1fr}h1{font-size:36px}.panel{padding:20px}}
+:root{color-scheme:dark;--bg:#0f1115;--side:#14171d;--panel:#1a1d24;--panel2:#20242c;--line:#2c313b;--muted:#9099a8;--ink:#f3f2ee;--accent:#d8f58b;--red:#ff6b61;--ok:#7ee0a1;--warn:#ffc46b}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:300px 1fr}
+button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:10px;padding:9px 14px;cursor:pointer;min-height:38px}
+button:hover{filter:brightness(1.15)}button:disabled{opacity:.45;cursor:default;filter:none}
+button.primary{background:var(--accent);border-color:var(--accent);color:#17200b}button.danger{background:var(--red);border-color:var(--red);color:#2a0d0a}
+button.link{background:none;border:0;color:var(--accent);padding:0 4px;min-height:0;font-size:12px}
+select,input[type=text],input[type=number]{width:100%;background:#12151a;border:1px solid var(--line);border-radius:9px;padding:9px 11px;color:var(--ink);font:inherit;min-height:38px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+h1{font-size:24px;letter-spacing:-.6px;margin:0}h2{font-size:13px;margin:0 0 14px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.muted{color:var(--muted)}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* Sidebar: new recording + projects */
+aside{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;height:100vh;position:sticky;top:0}
+.brand{display:flex;align-items:center;gap:9px;font-weight:750;font-size:18px;letter-spacing:-.4px;padding:20px 18px 16px}
+.brand i{width:11px;height:11px;border-radius:50%;background:var(--accent);display:block}
+#newButton{margin:0 14px 14px;width:calc(100% - 28px)}
+.list-title{padding:4px 18px 8px;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+#list{overflow-y:auto;flex:1;padding:0 8px 16px}
+.item{display:grid;grid-template-columns:96px 1fr;gap:10px;padding:8px;border-radius:10px;cursor:pointer;text-decoration:none;color:inherit;align-items:center}
+.item:hover{background:#1b1f26}.item.on{background:#232833}
+.thumb{width:96px;aspect-ratio:16/10;border-radius:6px;background:#0b0d10 center/cover no-repeat;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:18px}
+.item b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item small{display:block;color:var(--muted);font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;border-radius:20px;padding:1px 8px;margin-top:3px;background:#262b35;color:var(--muted)}
+.chip.ready{color:var(--ok)}.chip.recording,.chip.paused{color:var(--red)}.chip.rendering,.chip.finalizing{color:var(--warn)}.chip.error{color:var(--red)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}.recording .dot{animation:pulse 1.2s infinite}
+.empty{color:var(--muted);font-size:13px;padding:10px 12px}
+
+/* Main */
+main{padding:28px 32px 60px;min-width:0;max-width:1240px}
+.view{display:none}.view.on{display:block}
+.head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px}
+.field{margin-bottom:14px}.row{display:flex;gap:12px}.row>*{flex:1;min-width:0}
+.toggle{display:flex;justify-content:space-between;align-items:center;margin:4px 0 14px}.toggle label{margin:0;color:var(--ink);font-size:14px}
+.toggle small{display:block;color:var(--muted);font-size:12px}input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.region{display:none}.region.on{display:flex}
+.stage{aspect-ratio:16/10;background:radial-gradient(ellipse at 50% 40%,#283040,#141821 70%);border:1px solid var(--line);border-radius:12px;position:relative;overflow:hidden;display:grid;place-items:center}
+.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.stage .note{color:var(--muted);font-size:13px;text-align:center}
+.count{position:absolute;inset:0;display:none;place-items:center;font-size:96px;font-weight:800;background:#0009}
+.meter{height:8px;background:#2a303b;border-radius:6px;overflow:hidden;margin:6px 0 4px}.meter div{height:100%;width:0;background:var(--accent);transition:width .08s}
+.check{display:grid;gap:14px;margin:16px 0}
+#startButton{width:100%;font-size:16px;min-height:48px}
+
+/* Recording */
+.live{text-align:center;padding:48px 20px}
+.live .state{display:inline-flex;align-items:center;gap:8px;color:var(--red);font-weight:700;letter-spacing:.1em;font-size:12px}
+.live .state .dot{width:10px;height:10px}
+.timer{font-size:84px;font-weight:300;letter-spacing:-4px;font-variant-numeric:tabular-nums;margin:6px 0}
+.live .meter{max-width:340px;margin:18px auto 28px}
+.live .actions{display:flex;gap:12px;justify-content:center}.live .actions button{min-width:150px;min-height:46px}
+
+/* Project */
+.idbox{display:flex;align-items:center;gap:8px;background:#12151a;border:1px solid var(--line);border-radius:10px;padding:4px 6px 4px 12px}
+.idbox code{font:700 18px ui-monospace,Menlo,monospace;color:var(--accent);letter-spacing:1px}
+.player{width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;display:block}
+.banner{font-size:12px;color:var(--warn);margin:8px 0 0}
+.agent{margin-top:16px}.agent .prompt{display:flex;gap:10px;align-items:center;background:#12151a;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.agent .prompt span{flex:1;font-family:ui-monospace,Menlo,monospace;font-size:13px;overflow-wrap:anywhere}
+.phase{margin-bottom:18px}.phase h3{display:flex;justify-content:space-between;font-size:13px;margin:0 0 8px}
+.step{display:grid;grid-template-columns:22px 1fr auto;gap:10px;padding:8px 0;border-top:1px solid #262b34;align-items:start}
+.step:first-of-type{border-top:0}
+.step .icon{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;margin-top:1px}
+.step.done .icon{background:#1f3a2a;color:var(--ok)}.step.failed .icon{background:#43201d;color:var(--red)}
+.step.running .icon{border:2px solid #4a4f5a;border-top-color:var(--warn);animation:spin .8s linear infinite}
+.step b{font-weight:600;display:block}.step small{color:var(--muted);font-size:12px;display:block;overflow-wrap:anywhere}
+.step.failed small{color:var(--red)}
+.step time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;white-space:nowrap}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin:0}.facts dt{color:var(--muted);font-size:12px}.facts dd{margin:0;font-weight:600}
+#toast{display:none;background:#3c1f1c;border:1px solid #8c4a44;color:#ffd9d4;border-radius:10px;padding:12px 14px;margin-bottom:18px;white-space:pre-wrap;overflow-wrap:anywhere}
+@keyframes pulse{50%{opacity:.25}}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){body{grid-template-columns:1fr}aside{position:static;height:auto;max-height:42vh}.cols{grid-template-columns:1fr}main{padding:20px 16px}}
 </style>
 </head>
-<body><main>
-<header><div class="brand"><span></span>justrec</div><div class="tag">LOCAL FIRST · AGENT EDITED</div></header>
-<div class="eyebrow">LESS SETUP. MORE SHOWING.</div><h1>Your next demo starts here.</h1><p>Record your screen. Tell your story. Let your agent handle the edit.</p>
-<div class="layout">
-<section class="panel"><h2>Set the scene</h2><fieldset id="settings" style="border:0;padding:0;margin:0;min-width:0">
-<div class="field"><label for="name">Recording name</label><input id="name" type="text" value="My demo" maxlength="80"></div>
-<div class="field"><label for="source">What to record</label><select id="source"><option>Loading sources…</option></select></div>
-<div class="toggle"><label for="region">Record a region<small>Crop inside the selected source</small></label><input id="region" type="checkbox"></div>
-<div class="region" id="regionFields"><div class="row"><div class="field"><label for="regionX">Left (pt)</label><input id="regionX" type="number" value="0" min="0"></div><div class="field"><label for="regionY">Top (pt)</label><input id="regionY" type="number" value="0" min="0"></div><div class="field"><label for="regionW">Width (pt)</label><input id="regionW" type="number" value="960" min="2"></div><div class="field"><label for="regionH">Height (pt)</label><input id="regionH" type="number" value="540" min="2"></div></div></div>
-<div class="field"><label for="mic">Microphone</label><select id="mic"><option value="">Off</option></select><div class="meter" aria-label="Microphone level"><div id="level"></div></div><div class="hint" id="micHint">Check your mic before you start.</div></div>
-<div class="toggle"><label for="systemAudio">System audio<small>Include sounds from your Mac</small></label><input id="systemAudio" type="checkbox"></div>
-<div class="field"><label for="camera">Camera bubble</label><select id="camera"><option value="">Off</option></select></div>
-<div class="row"><div class="field"><label for="fps">Frame rate</label><select id="fps"><option value="60">60 fps · Recommended</option><option value="30">30 fps · Smaller files</option><option value="24">24 fps</option></select></div><div class="field"><label for="delay">Countdown</label><select id="delay"><option value="3">3 seconds</option><option value="5">5 seconds</option><option value="0">None</option></select></div></div>
-</fieldset><button class="subbutton" id="refresh">↻ Refresh devices & windows</button></section>
-<section class="panel"><h2>Ready when you are</h2><div class="preview"><video id="cameraPreview" autoplay muted playsinline></video><div class="placeholder" id="placeholder"><svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="5" y="9" width="38" height="26" rx="4" stroke="currentColor" stroke-width="2"/><path d="M17 41h14M24 35v6" stroke="currentColor" stroke-width="2"/><circle cx="24" cy="22" r="5" fill="#d8f58b"/></svg>Your screen, your story.<br>Camera preview appears here when enabled.</div><div class="status-pill" id="badge"><span class="dot"></span><span id="badgeText">STANDBY</span></div><div class="countdown" id="countdown"></div></div>
-<div class="preview-bar"><span class="hint">Camera preview & mic check</span><button class="subbutton" id="check">Enable preview</button></div>
-<div class="time" id="timer">00:00</div><div class="state-label" id="stateLabel">Everything stays on this Mac.</div>
-<button class="primary" id="record">● Start recording</button><div class="actions" id="recordingActions" style="display:none"><button id="pause">Pause</button><button class="stop" id="stop">■ Finish recording</button></div>
-<div id="error" role="alert"></div>
-<div id="result"><h2 id="resultTitle">Editing your recording…</h2><video id="final" controls playsinline></video><label>Project</label><div class="project"><code id="projectId"></code><button class="subbutton" id="copyId">Copy</button></div><p class="hint">Ask your agent: “<span id="prompt"></span>…”</p><div class="actions" style="margin-top:12px"><button id="copy">Copy agent prompt</button><button id="reveal" disabled>Show in Finder</button></div></div>
-<div class="footer-note"><strong>You record. Your agent edits.</strong><br>Ask for tighter cuts, smooth zooms, captions, or a different background. No timeline required.</div></section>
-</div></main>
+<body>
+<aside>
+  <div class="brand"><i></i>justrec</div>
+  <button class="primary" id="newButton">● New recording</button>
+  <div class="list-title">Projects</div>
+  <div id="list"></div>
+</aside>
+<main>
+  <div id="toast" role="alert"></div>
+
+  <!-- New recording: setup on the left, camera and mic check on the right -->
+  <section class="view" id="newView">
+    <div class="head"><h1>New recording</h1><span class="muted">Everything stays on this Mac. Your agent does the editing.</span></div>
+    <div class="cols">
+      <div class="card"><h2>Setup</h2>
+        <fieldset id="setup" style="border:0;padding:0;margin:0;min-width:0">
+          <div class="field"><label for="name">Name</label><input id="name" type="text" value="My demo" maxlength="80"></div>
+          <div class="field"><label for="source">What to record</label><select id="source"><option>Loading…</option></select></div>
+          <div class="toggle"><label for="useRegion">Only a region<small>Crop inside the screen or window</small></label><input id="useRegion" type="checkbox"></div>
+          <div class="row region field" id="region">
+            <div><label for="rx">Left</label><input id="rx" type="number" value="0" min="0"></div><div><label for="ry">Top</label><input id="ry" type="number" value="0" min="0"></div>
+            <div><label for="rw">Width</label><input id="rw" type="number" value="1280" min="2"></div><div><label for="rh">Height</label><input id="rh" type="number" value="720" min="2"></div>
+          </div>
+          <div class="field"><label for="mic">Microphone</label><select id="mic"><option value="">Off</option></select></div>
+          <div class="field"><label for="camera">Camera bubble</label><select id="camera"><option value="">Off</option></select></div>
+          <div class="toggle"><label for="systemAudio">Mac sound<small>Mixed into the same audio track</small></label><input id="systemAudio" type="checkbox"></div>
+          <div class="row">
+            <div class="field"><label for="fps">Frame rate</label><select id="fps"><option value="60">60 fps</option><option value="30">30 fps · smaller</option></select></div>
+            <div class="field"><label for="delay">Countdown</label><select id="delay"><option value="3">3 s</option><option value="5">5 s</option><option value="0">None</option></select></div>
+          </div>
+        </fieldset>
+        <button class="link" id="refresh">↻ Refresh screens, windows and devices</button>
+      </div>
+      <div class="card"><h2>Check</h2>
+        <div class="stage"><video id="cameraPreview" autoplay muted playsinline hidden></video><div class="note" id="cameraNote">Camera off</div><div class="count" id="count"></div></div>
+        <div class="check">
+          <div><label>Microphone level</label><div class="meter"><div id="level"></div></div><small class="muted" id="micNote">Pick a microphone to test it.</small></div>
+        </div>
+        <button class="primary" id="startButton">● Start recording</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- A project: recording live, or its video, steps and id -->
+  <section class="view" id="projectView">
+    <div class="head">
+      <div><h1 id="pName"></h1><span class="muted" id="pWhen"></span></div>
+      <div class="idbox"><span class="muted">Project</span><code id="pId"></code><button class="link" id="copyId">Copy</button></div>
+    </div>
+    <div class="card live" id="live">
+      <div class="state"><span class="dot"></span><span id="liveState">RECORDING</span></div>
+      <div class="timer" id="timer">00:00</div>
+      <div class="muted" id="liveNote">Show what you're building. Pause any time.</div>
+      <div class="meter"><div id="liveLevel"></div></div>
+      <div class="actions"><button id="pauseButton">Pause</button><button class="danger" id="finishButton">■ Finish</button></div>
+    </div>
+    <div class="cols" id="made">
+      <div>
+        <video class="player" id="player" controls playsinline></video>
+        <div class="banner" id="banner"></div>
+        <div class="card agent"><h2>Continue with your agent</h2>
+          <div class="prompt"><span id="prompt"></span><button class="link" id="copyPrompt">Copy</button></div>
+          <p class="muted" style="margin:10px 0 0;font-size:13px">Then say what you want: tighter cuts, less zoom, captions, a different background. The agent edits this project and renders it again; this page follows along.</p>
+        </div>
+      </div>
+      <div class="card"><h2>How it was made</h2>
+        <div id="steps"></div>
+        <dl class="facts" id="facts"></dl>
+        <div class="row" style="margin-top:16px"><button id="revealFinal">Show in Finder</button><button id="revealFolder">Project folder</button><button id="renderAgain">Render again</button></div>
+      </div>
+    </div>
+  </section>
+</main>
 <script>
-const token='__TOKEN__';
-const element=id=>document.getElementById(id);
-let session=null, preview=null, audioContext=null, meterFrame=null, ticking=null, recording=false, operation=false;
-const api=async(action,body={})=>{const response=await fetch('/'+action,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});const result=await response.json();if(!response.ok)throw Error(result.error);return result;};
-const error=message=>{element('error').textContent=message;element('error').style.display=message?'block':'none';};
-const guarded=handler=>async()=>{if(operation)return;operation=true;error('');try{await handler();}catch(failure){error(failure.message);}finally{operation=false;}};
-function option(select,value,text){const item=document.createElement('option');item.value=value;item.textContent=text;select.append(item);}
-async function sources(){const data=await api('sources');element('source').replaceChildren();for(const display of data.displays)option(element('source'),'display:'+display.index,'Display '+(display.index+1)+' · '+display.width+' × '+display.height);for(const item of data.windows)option(element('source'),'window:'+item.id,item.app+' — '+(item.title||'Untitled'));for(const kind of ['mic','camera']){const select=element(kind);const selected=select.value;select.replaceChildren();option(select,'','Off');for(const item of data[kind==='mic'?'microphones':'cameras'])option(select,item.id,item.name);if(selected)select.value=selected;else if(kind==='mic'&&select.options.length>1)select.selectedIndex=1;}}
-function stopPreview(){preview?.getTracks().forEach(track=>track.stop());preview=null;audioContext?.close();audioContext=null;cancelAnimationFrame(meterFrame);element('cameraPreview').srcObject=null;element('cameraPreview').style.display='none';element('placeholder').style.display='block';element('level').style.width='0';}
-async function check(){stopPreview();const wantAudio=Boolean(element('mic').value),wantVideo=Boolean(element('camera').value);if(!wantAudio&&!wantVideo)return;let warm=await navigator.mediaDevices.getUserMedia({audio:wantAudio,video:wantVideo});warm.getTracks().forEach(track=>track.stop());const devices=await navigator.mediaDevices.enumerateDevices();const find=(kind,label)=>devices.find(device=>device.kind===kind&&device.label.includes(label))?.deviceId;const micLabel=element('mic').selectedOptions[0].textContent,cameraLabel=element('camera').selectedOptions[0].textContent;const mic=find('audioinput',micLabel),camera=find('videoinput',cameraLabel);preview=await navigator.mediaDevices.getUserMedia({audio:wantAudio?{deviceId:mic?{exact:mic}:undefined}:false,video:wantVideo?{deviceId:camera?{exact:camera}:undefined,width:640,height:360}:false});if(wantVideo){element('cameraPreview').srcObject=preview;element('cameraPreview').style.display='block';element('placeholder').style.display='none';}if(wantAudio){audioContext=new AudioContext();const analyser=audioContext.createAnalyser();analyser.fftSize=1024;audioContext.createMediaStreamSource(preview).connect(analyser);const buffer=new Float32Array(analyser.fftSize);let highest=0;const meter=()=>{if(!audioContext)return;analyser.getFloatTimeDomainData(buffer);const rms=Math.sqrt(buffer.reduce((total,value)=>total+value*value,0)/buffer.length);highest=Math.max(highest,rms);element('level').style.width=Math.min(100,rms*500)+'%';element('micHint').textContent=highest>.005?'Mic is picking up sound.':'Speak a few words — your mic is quiet.';meterFrame=requestAnimationFrame(meter);};meter();}}
-function update(){const elapsed=(session?.elapsed||0)+(session?.state==='recording'?Date.now()/1000-session.startedAt:0);element('timer').textContent=Math.floor(elapsed/60).toString().padStart(2,'0')+':'+Math.floor(elapsed%60).toString().padStart(2,'0');element('badgeText').textContent=session?.state==='recording'?'RECORDING':session?.state==='paused'?'PAUSED':'STANDBY';element('badge').classList.toggle('live',session?.state==='recording');document.title=recording?'● '+element('timer').textContent+' — Justrec':'Justrec — Make a demo';}
-function controls(){element('settings').disabled=recording;element('refresh').disabled=recording;element('check').disabled=recording;element('record').style.display=recording?'none':'block';element('recordingActions').style.display=recording?'flex':'none';element('pause').textContent=session?.state==='paused'?'Resume':'Pause';update();}
-element('record').onclick=guarded(async()=>{stopPreview();element('record').disabled=true;element('result').style.display='none';try{let seconds=Number(element('delay').value);element('countdown').style.display='block';while(seconds>0){element('countdown').textContent=seconds--;await new Promise(resolve=>setTimeout(resolve,1000));}element('countdown').textContent='';element('countdown').style.display='none';const [kind,id]=element('source').value.split(':');const body={[kind]:Number(id),microphone:element('mic').value,systemAudio:element('systemAudio').checked,camera:element('camera').value,fps:Number(element('fps').value),name:element('name').value};if(element('region').checked)body.region=['regionX','regionY','regionW','regionH'].map(id=>element(id).value).join(',');element('stateLabel').textContent='Starting capture…';session=await api('start',body);localStorage.setItem('justrec-session',session.id);recording=true;controls();element('stateLabel').textContent='Go ahead. Show us what you’re building.';clearInterval(ticking);ticking=setInterval(update,250);}finally{element('record').disabled=false;}});
-element('pause').onclick=guarded(async()=>{session=await api(session.state==='paused'?'resume':'pause',{id:session.id});controls();element('stateLabel').textContent=session.state==='paused'?'Take your time. This part won’t be recorded.':'Recording your demo.';});
-// Stop → the project is saved (raw files stay in justrec's project folder) → render the edited video into the
-// recordings folder and play it here, with the project id to hand to an agent.
-let final=null;const prompt=()=>'Use /justrec to edit project '+session.id;
-element('stop').onclick=guarded(async()=>{element('stop').disabled=true;element('pause').disabled=true;element('stateLabel').textContent='Finishing your recording…';try{session=await api('stop',{id:session.id});recording=false;clearInterval(ticking);controls();localStorage.removeItem('justrec-session');final=null;element('result').style.display='block';element('resultTitle').textContent='Editing your recording…';element('final').style.display='none';element('reveal').disabled=true;element('projectId').textContent=session.id;element('prompt').textContent=prompt();element('stateLabel').textContent='Adding zooms and polish. This takes about as long as the recording.';const rendered=await api('render',{id:session.id});final=rendered.output;element('final').src='/media?token='+token+'&file='+encodeURIComponent(final);element('final').style.display='block';element('resultTitle').textContent='That’s a wrap.';element('reveal').disabled=false;element('stateLabel').textContent='Saved to your recordings folder. Your agent can take it from here.';}finally{element('stop').disabled=false;element('pause').disabled=false;}});
-element('copy').onclick=guarded(async()=>{await navigator.clipboard.writeText(prompt()+': ');element('copy').textContent='Copied';});
-element('copyId').onclick=guarded(async()=>{await navigator.clipboard.writeText(session.id);element('copyId').textContent='Copied';});
-element('reveal').onclick=guarded(()=>api('reveal',{file:final}));
-element('region').onchange=()=>element('regionFields').style.display=element('region').checked?'block':'none';
-element('check').onclick=guarded(check);element('refresh').onclick=guarded(sources);
-element('camera').onchange=()=>stopPreview();element('mic').onchange=()=>stopPreview();
-window.addEventListener('beforeunload',event=>{if(recording){event.preventDefault();event.returnValue='Recording continues in the background.';}});
-(async()=>{try{await sources();const id=localStorage.getItem('justrec-session');if(id){session=await api('status',{id});recording=['recording','paused'].includes(session.state);controls();if(recording)ticking=setInterval(update,250);}}catch(failure){error(failure.message);}})();
-</script></body></html>
+const token = '__TOKEN__';
+const $ = id => document.getElementById(id);
+const api = async (action, body = {}) => {
+  const response = await fetch('/' + action, {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + token}, body: JSON.stringify(body)});
+  const result = await response.json();
+  if (!response.ok) throw Error(result.error);
+  return result;
+};
+const toast = message => { $('toast').textContent = message || ''; $('toast').style.display = message ? 'block' : 'none'; };
+const clock = seconds => { seconds = Math.max(0, Math.round(seconds || 0)); return Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0'); };
+const when = time => {
+  const date = new Date(time), today = new Date();
+  const day = date.toDateString() === today.toDateString() ? 'Today' : date.toDateString() === new Date(today - 864e5).toDateString() ? 'Yesterday' : date.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
+  return day + ' ' + date.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'});
+};
+const media = (id, kind) => '/media?token=' + token + '&id=' + id + '&kind=' + kind;
+const labels = {recording: 'Recording', paused: 'Paused', finalizing: 'Finishing', rendering: 'Rendering', ready: 'Ready', saved: 'Not rendered', error: 'Failed', starting: 'Starting'};
+let projects = [], current = null, view = null, busy = false;
+
+// ---- Sidebar ----
+async function loadList() {
+  projects = await api('projects');
+  $('list').replaceChildren(...projects.map(item => {
+    const link = document.createElement('a');
+    link.className = 'item' + (view === 'project' && current?.id === item.id ? ' on' : '');
+    link.href = '#project/' + item.id;
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    if (item.duration) thumb.style.backgroundImage = `url("/thumb?token=${token}&id=${item.id}")`; else thumb.textContent = '●';
+    const text = document.createElement('div');
+    text.innerHTML = '<b></b><small></small><span class="chip"><span class="dot"></span><span></span></span>';
+    text.querySelector('b').textContent = item.name;
+    text.querySelector('small').textContent = when(item.created) + (item.final ? ' · ' + clock(item.final.duration) : item.duration ? ' · ' + clock(item.duration) : '');
+    text.querySelector('.chip').classList.add(item.state);
+    text.querySelector('.chip span:last-child').textContent = labels[item.state] || item.state;
+    link.append(thumb, text);
+    return link;
+  }));
+  if (!projects.length) $('list').innerHTML = '<div class="empty">No recordings yet.</div>';
+}
+
+// ---- Views (#new, #project/<id>) ----
+function route() {
+  const [, id] = location.hash.match(/^#project\/([\w-]+)/) || [];
+  view = id ? 'project' : 'new';
+  $('newView').classList.toggle('on', view === 'new');
+  $('projectView').classList.toggle('on', view === 'project');
+  $('newButton').disabled = view === 'new';
+  toast('');
+  if (view === 'project') { current = {id}; refresh(); } else { current = null; preview(); }
+  loadList().catch(failure => toast(failure.message));
+}
+addEventListener('hashchange', route);
+$('newButton').onclick = () => location.hash = '#new';
+
+// ---- New recording: devices, camera and mic check ----
+function option(select, value, text) { const item = document.createElement('option'); item.value = value; item.textContent = text; select.append(item); }
+const remember = ['name', 'source', 'mic', 'camera', 'fps', 'delay', 'systemAudio'];
+function restore() { try { const saved = JSON.parse(localStorage.getItem('justrec-setup') || '{}'); for (const key of remember) if (key in saved) $(key)[$(key).type === 'checkbox' ? 'checked' : 'value'] = saved[key]; } catch {} }
+function store() { try { localStorage.setItem('justrec-setup', JSON.stringify(Object.fromEntries(remember.map(key => [key, $(key).type === 'checkbox' ? $(key).checked : $(key).value])))); } catch {} }
+async function sources() {
+  const data = await api('sources');
+  $('source').replaceChildren();
+  for (const display of data.displays) option($('source'), 'display:' + display.index, 'Screen ' + (display.index + 1) + ' · ' + display.width + ' × ' + display.height);
+  for (const item of data.windows) option($('source'), 'window:' + item.id, item.app + ' — ' + (item.title || 'Untitled'));
+  for (const [kind, list] of [['mic', data.microphones], ['camera', data.cameras]]) {
+    $(kind).replaceChildren(); option($(kind), '', 'Off');
+    for (const item of list) option($(kind), item.id, item.name);
+  }
+  if ($('mic').options.length > 1) $('mic').selectedIndex = 1;
+  restore();
+}
+
+let stream = null, audio = null, frame = 0;
+function stopPreview(keepMic) {
+  if (stream) for (const track of stream.getTracks()) if (!(keepMic && track.kind === 'audio')) track.stop();
+  if (!keepMic) { audio?.close(); audio = null; cancelAnimationFrame(frame); stream = null; }
+  $('cameraPreview').srcObject = null; $('cameraPreview').hidden = true; $('cameraNote').hidden = false;
+}
+// The browser's own view of the chosen camera and mic (matched by name), so you see and hear what will be recorded.
+async function preview() {
+  stopPreview();
+  const wantMic = Boolean($('mic').value), wantCamera = Boolean($('camera').value);
+  $('cameraNote').textContent = wantCamera ? 'Starting camera…' : 'Camera off';
+  $('micNote').textContent = wantMic ? 'Say a few words.' : 'Microphone off: the recording will have no voice.';
+  if (!wantMic && !wantCamera) return;
+  try {
+    const warm = await navigator.mediaDevices.getUserMedia({audio: wantMic, video: wantCamera});
+    warm.getTracks().forEach(track => track.stop());
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const find = (kind, select) => devices.find(device => device.kind === kind && device.label.includes(select.selectedOptions[0].textContent))?.deviceId;
+    const mic = find('audioinput', $('mic')), camera = find('videoinput', $('camera'));
+    stream = await navigator.mediaDevices.getUserMedia({audio: wantMic && {deviceId: mic ? {exact: mic} : undefined}, video: wantCamera && {deviceId: camera ? {exact: camera} : undefined, width: 1280, height: 720}});
+    if (wantCamera) { $('cameraPreview').srcObject = stream; $('cameraPreview').hidden = false; $('cameraNote').hidden = true; }
+    if (wantMic) meter();
+  } catch (failure) { $('micNote').textContent = 'Can’t open the mic or camera here: ' + failure.message; }
+}
+function meter() {
+  audio = new AudioContext();
+  const analyser = audio.createAnalyser(); analyser.fftSize = 1024;
+  audio.createMediaStreamSource(stream).connect(analyser);
+  const buffer = new Float32Array(analyser.fftSize);
+  let loudest = 0;
+  const tick = () => {
+    if (!audio) return;
+    analyser.getFloatTimeDomainData(buffer);
+    const level = Math.sqrt(buffer.reduce((total, value) => total + value * value, 0) / buffer.length);
+    loudest = Math.max(loudest, level);
+    const width = Math.min(100, level * 500) + '%';
+    $('level').style.width = width; $('liveLevel').style.width = width;
+    if (view === 'new') $('micNote').textContent = loudest > .01 ? 'Mic is picking up your voice.' : 'Say a few words — the mic is quiet so far.';
+    frame = requestAnimationFrame(tick);
+  };
+  tick();
+}
+for (const id of ['mic', 'camera']) $(id).onchange = () => { store(); preview(); };
+for (const id of ['name', 'source', 'fps', 'delay', 'systemAudio']) $(id).onchange = store;
+$('useRegion').onchange = () => $('region').classList.toggle('on', $('useRegion').checked);
+$('refresh').onclick = () => sources().then(preview).catch(failure => toast(failure.message));
+
+$('startButton').onclick = async () => {
+  if (busy) return; busy = true; toast('');
+  $('startButton').disabled = true; $('setup').disabled = true;
+  try {
+    for (let seconds = Number($('delay').value); seconds > 0; seconds--) {
+      $('count').style.display = 'grid'; $('count').textContent = seconds;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    $('count').style.display = 'none';
+    stopPreview(true);  // the recorder takes the camera; keep the mic meter running
+    const [kind, value] = $('source').value.split(':');
+    const body = {[kind]: Number(value), microphone: $('mic').value, systemAudio: $('systemAudio').checked, camera: $('camera').value, fps: Number($('fps').value), name: $('name').value.trim() || 'My demo'};
+    if ($('useRegion').checked) body.region = ['rx', 'ry', 'rw', 'rh'].map(id => $(id).value).join(',');
+    const session = await api('start', body);
+    location.hash = '#project/' + session.id;
+  } catch (failure) { toast(failure.message); $('count').style.display = 'none'; preview(); }
+  finally { busy = false; $('startButton').disabled = false; $('setup').disabled = false; }
+};
+
+// ---- A project: live recording, then the steps, the video and the id ----
+async function refresh() {
+  if (!current) return;
+  const id = current.id;
+  let project;
+  try { project = await api('project', {id}); } catch (failure) { if (current?.id === id) toast(failure.message); return; }
+  if (current?.id !== id) return;
+  const fresh = current.final?.output !== project.final?.output || current.recording !== project.recording;
+  current = project;
+  $('pName').textContent = project.name;
+  $('pWhen').textContent = when(project.created) + (project.duration ? ' · recorded ' + clock(project.duration) : '');
+  $('pId').textContent = project.id;
+  $('prompt').textContent = project.prompt + '…';
+  const live = ['starting', 'recording', 'paused'].includes(project.state);
+  $('live').style.display = live ? 'block' : 'none';
+  $('made').style.display = live ? 'none' : 'grid';
+  $('live').classList.toggle('recording', project.state === 'recording');
+  $('liveState').textContent = project.state === 'paused' ? 'PAUSED' : 'RECORDING';
+  $('pauseButton').textContent = project.state === 'paused' ? 'Resume' : 'Pause';
+  $('liveNote').textContent = project.state === 'paused' ? 'Paused: this part won’t be in the video.' : 'Show what you’re building. Pause any time.';
+  if (!live) {
+    if (fresh && (project.final || project.recording)) $('player').src = media(project.id, project.final ? 'final' : 'raw') + '&v=' + encodeURIComponent(project.final?.output || '');
+    $('banner').textContent = project.state === 'rendering' ? 'Rendering the edited video… the raw recording plays meanwhile.' : project.final ? '' : project.recording ? 'This is the raw recording: not rendered yet.' : '';
+    steps(project);
+  }
+  $('revealFinal').disabled = !project.final;
+  $('renderAgain').disabled = busy || project.state === 'rendering' || !project.recording;
+}
+function timer() {
+  if (view !== 'project' || !current || !['recording', 'paused'].includes(current.state)) return;
+  $('timer').textContent = clock((current.elapsed || 0) + (current.state === 'recording' ? Date.now() / 1000 - current.startedAt : 0));
+}
+function steps(project) {
+  const phases = [['record', 'Finishing the recording'], ['render', 'Rendering the video']];
+  // Projects from before steps were logged have none to show.
+  $('steps').replaceChildren(...(project.steps.length || project.state !== 'ready' ? phases : []).map(([phase, title]) => {
+    const list = project.steps.filter(step => step.phase === phase);
+    const box = document.createElement('div'); box.className = 'phase';
+    if (!list.length) { box.innerHTML = `<h3><span></span><span class="muted">waiting</span></h3>`; box.querySelector('span').textContent = title; return box; }
+    const total = (Math.max(...list.map(step => step.ended || Date.now())) - list[0].started) / 1000;
+    box.innerHTML = '<h3><span></span><span class="muted"></span></h3>';
+    box.querySelector('span').textContent = title;
+    box.querySelector('.muted').textContent = total.toFixed(1) + ' s';
+    for (const step of list) {
+      const row = document.createElement('div');
+      row.className = 'step ' + (step.error ? 'failed' : step.ended ? 'done' : 'running');
+      row.innerHTML = '<span class="icon"></span><div><b></b><small></small></div><time></time>';
+      row.querySelector('.icon').textContent = step.error ? '✕' : step.ended ? '✓' : '';
+      row.querySelector('b').textContent = step.name;
+      row.querySelector('small').textContent = step.error || step.detail || '';
+      row.querySelector('time').textContent = (((step.ended || Date.now()) - step.started) / 1000).toFixed(1) + ' s';
+      box.append(row);
+    }
+    return box;
+  }));
+  const facts = [['Recorded', project.duration && clock(project.duration)], ['Final video', project.final && clock(project.final.duration)],
+    ['Cut', project.kept != null && project.duration ? (project.duration - project.kept).toFixed(1) + ' s removed' : null],
+    ['Zooms', project.zooms], ['Source', project.size && project.size + ' @ ' + project.fps + ' fps'], ['Output', project.final && project.final.width + '×' + project.final.height]];
+  $('facts').replaceChildren(...facts.filter(([, value]) => value != null && value !== '').flatMap(([name, value]) => {
+    const term = document.createElement('dt'), data = document.createElement('dd');
+    term.textContent = name; data.textContent = value; return [term, data];
+  }));
+}
+
+$('pauseButton').onclick = async () => {
+  try { await api(current.state === 'paused' ? 'resume' : 'pause', {id: current.id}); refresh(); } catch (failure) { toast(failure.message); }
+};
+// Finish: stop (the recording is mixed, cursor saved, auto-edited) then render; the steps fill in as they happen.
+$('finishButton').onclick = async () => {
+  if (busy) return; busy = true; toast('');
+  const id = current.id;
+  $('finishButton').disabled = $('pauseButton').disabled = true;
+  stopPreview();
+  try {
+    await api('stop', {id});
+    await refresh();
+    await api('render', {id});
+  } catch (failure) { toast(failure.message); }
+  finally { busy = false; $('finishButton').disabled = $('pauseButton').disabled = false; refresh(); loadList(); }
+};
+$('renderAgain').onclick = async () => {
+  if (busy) return; busy = true; toast('');
+  const id = current.id;
+  $('renderAgain').disabled = true;
+  try { await api('render', {id}); } catch (failure) { toast(failure.message); }
+  finally { busy = false; refresh(); loadList(); }
+};
+$('copyId').onclick = () => navigator.clipboard.writeText(current.id).then(() => $('copyId').textContent = 'Copied');
+$('copyPrompt').onclick = () => navigator.clipboard.writeText(current.prompt).then(() => $('copyPrompt').textContent = 'Copied');
+$('revealFinal').onclick = () => api('reveal', {id: current.id, kind: 'final'}).catch(failure => toast(failure.message));
+$('revealFolder').onclick = () => api('reveal', {id: current.id, kind: 'folder'}).catch(failure => toast(failure.message));
+addEventListener('beforeunload', event => { if (current && ['recording', 'paused'].includes(current.state)) { event.preventDefault(); event.returnValue = 'The recording keeps going in the background.'; } });
+
+// Live: the open project every 0.7 s (steps, recording timer), the list every 3 s (an agent may render meanwhile).
+setInterval(() => { if (view === 'project') refresh(); }, 700);
+setInterval(timer, 250);
+setInterval(() => loadList().catch(() => {}), 3000);
+if (!location.hash) history.replaceState(null, '', '#new');
+sources().catch(failure => toast(failure.message)).finally(route);
+</script>
+</body>
+</html>
