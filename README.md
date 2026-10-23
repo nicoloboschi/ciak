@@ -14,9 +14,10 @@ change and re-render any part of it.
 ## Usage
 
 ```bash
-./justrec install                # once: justrec.app in the menu bar (⌘1 screenshots, Record Screen,
+./justrec install                # once: justrec.app in the menu bar (⌘1 screenshots, Record…:
                                  # recording panel; starts at login), `justrec` on PATH, the agent skill
-justrec ui                       # small local page: pick source/mic/camera, record, pause, finish
+justrec ui                       # the recording panel (menu bar: Record…): pick source/mic/camera, record,
+                                 # finish → plays the edited video and shows the project id for your agent
 justrec rec                      # record main display + default mic; Enter or Ctrl-C stops
 
 # what an agent does: record itself using a logged-in browser
@@ -32,15 +33,16 @@ justrec mark "click Save" --at 0.4,0.2           # where an action happens if th
 justrec captions <mp4>           # <name>.srt, .txt, .json (word timestamps)
 justrec edit <project> --cut-idle --auto-zoom    # or --cut-silence, --cut a,b, --preset vertical, --background sunset
 justrec preview <project> --frame 90             # one PNG frame
-justrec render <project>         # <name>.edited.mp4, checked: one video + one audio track
+justrec render <id>              # ~/Documents/justrec/<name>-<id>.mp4, checked: one video + one audio track
 ```
 
 `justrec help` lists every option. The agent workflow is written down as a Claude Code
 skill in `.claude/skills/justrec/SKILL.md`.
 
-Recordings land in `~/Documents/justrec/` (set `JUSTREC_DIR` to change). Each one is
-`<name>.mp4` plus `<name>.project.json` (the edit), `<name>.cursor.jsonl`, and optional
-`<name>.camera-N.mov`.
+Each recording is a project with a short id, kept in `~/.justrec/projects/<id>/`: `recording.mp4`
+(raw), `recording.project.json` (the edit), `recording.cursor.jsonl`, captions, optional
+`recording.camera-N.mov`. Commands take the id (`justrec edit 3f9a1c2e`, `justrec render 3f9a1c2e`).
+Only finished videos land in `~/Documents/justrec/` (`JUSTREC_DIR`): `<name>-<id>.mp4`.
 
 **Recording a browser:** use `justrec browser`. It is a second Brave on a copy of your
 Brave profile (in `~/Library/Application Support/justrec/browser`, so you're logged in),
@@ -78,7 +80,9 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Optional system audio, mixed into the same track (never a second track)
 - ✅ Record a single window (only while visible) or a region
 - ✅ Optional webcam bubble
-- ✅ Menu bar app (`justrec install`): Record Screen / Stop without a terminal, the recording panel, Open Recordings; starts at login and holds the permissions (recorded through the app and the panel with a moving clock on screen)
+- ✅ Menu bar app (`justrec install`): ⌘1 screenshots, Record… (the recording panel), Open Recordings; starts at login and holds the permissions
+- ✅ Panel: after Finish, the edited video plays in the page, is saved to `~/Documents/justrec/`, and the project id is shown (copy a prompt for your agent)
+- ✅ Projects by id: raw files in `~/.justrec/projects/<id>/`, every command takes the id (or the name)
 - ✅ Recordings follow the screen: they used to freeze on the first picture (macOS ran out of frame slots)
 - ⬜ Menu-bar indicator while recording (so you know it's on)
 - 🧪 Pick the mic by name (`--mic "Brio 100"`)

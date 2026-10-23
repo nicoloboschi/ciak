@@ -278,50 +278,18 @@ func pick() {
   current.makeFirstResponder(current.contentView)
 }
 
-// Runs the justrec command in the background; hands its JSON output back on the main thread, or shows
-// what went wrong (the command's last error lines) instead of failing silently.
-func justrec(_ arguments: [String], then done: @escaping ([String: Any]) -> Void = { _ in }) {
-  DispatchQueue.global().async {
-    let process = Process(), output = Pipe(), errors = Pipe()
-    process.executableURL = URL(fileURLWithPath: settings.string(forKey: "cli") ?? "justrec")
-    process.arguments = arguments
-    process.standardOutput = output
-    process.standardError = errors
-    var problem = ""
-    do { try process.run() } catch { problem = error.localizedDescription }
-    let data = output.fileHandleForReading.readDataToEndOfFile()
-    let said = String(decoding: errors.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-    if problem.isEmpty { process.waitUntilExit() }
-    let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-    DispatchQueue.main.async {
-      if let json, process.terminationStatus == 0 { return done(json) }
-      fputs("justrec \(arguments.joined(separator: " ")) failed: \(said)\n", stderr)
-      let reason = problem.isEmpty ? said.split(separator: "\n").suffix(3).joined(separator: "\n") : problem
-      _ = tell("justrec \(arguments[0]) failed", reason.isEmpty ? "No details; see ~/.justrec/app.log" : reason)
-      done([:])
-    }
-  }
-}
-
-// The menu bar icon: screenshot, record the main display (with the default mic), the recording panel.
+// The menu bar icon: screenshot, and Record… which opens the recording panel (justrec ui, one copy at a time).
 final class Menu: NSObject, NSMenuDelegate {
   let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-  var recording: Date?
-  var busy = false
-  var timer: Timer?
+  var panelProcess: Process?
+  var panelURL: URL?
 
   override init() {
     super.init()
     let menu = NSMenu()
     menu.delegate = self
     item.menu = menu
-    show()
-  }
-  func show() {
-    let symbol = recording == nil ? "record.circle" : "stop.circle.fill"
-    item.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: "justrec")
-    item.button?.contentTintColor = recording == nil ? nil : .systemRed
-    item.button?.title = recording.map { String(format: " %d:%02d", Int(-$0.timeIntervalSinceNow) / 60, Int(-$0.timeIntervalSinceNow) % 60) } ?? ""
+    item.button?.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: "justrec")
   }
   func menuNeedsUpdate(_ menu: NSMenu) {
     menu.removeAllItems()
@@ -329,8 +297,7 @@ final class Menu: NSObject, NSMenuDelegate {
     shot.keyEquivalentModifierMask = NSEvent.ModifierFlags(rawValue: (modifiers & cmdKey != 0 ? NSEvent.ModifierFlags.command.rawValue : 0)
       | (modifiers & shiftKey != 0 ? NSEvent.ModifierFlags.shift.rawValue : 0) | (modifiers & optionKey != 0 ? NSEvent.ModifierFlags.option.rawValue : 0)
       | (modifiers & controlKey != 0 ? NSEvent.ModifierFlags.control.rawValue : 0))
-    let record = NSMenuItem(title: busy ? "Saving…" : recording == nil ? "Record Screen" : "Stop Recording", action: busy ? nil : #selector(toggle), keyEquivalent: "")
-    for entry in [shot, record, NSMenuItem(title: "Recording Panel…", action: #selector(panel), keyEquivalent: ""), .separator(),
+    for entry in [shot, NSMenuItem(title: "Record…", action: #selector(panel), keyEquivalent: ""), .separator(),
                   NSMenuItem(title: "Open Recordings", action: #selector(folder), keyEquivalent: ""), .separator(),
                   NSMenuItem(title: "Quit justrec", action: #selector(quit), keyEquivalent: "q")] {
       entry.target = self
@@ -338,30 +305,24 @@ final class Menu: NSObject, NSMenuDelegate {
     }
   }
   @objc func screenshot() { DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: pick) } // after the menu closes
-  @objc func panel() { justrec(["ui"]) }
   @objc func folder() { NSWorkspace.shared.open(recordingsDir) }
-  @objc func quit() { NSApp.terminate(nil) }
-  @objc func toggle() {
-    if recording == nil {
-      guard permitted() else { return }
-      busy = true
-      justrec(["start", "--display", "0", "--name", "screen"]) { result in
-        self.busy = false
-        guard result["id"] != nil else { return }
-        self.recording = Date()
-        self.timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in self.show() }
-        self.show()
-      }
-    } else {
-      busy = true
-      timer?.invalidate()
-      recording = nil
-      show()
-      justrec(["stop"]) { result in
-        self.busy = false
-        if let output = result["output"] as? String { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: output)]) }
+  @objc func quit() { panelProcess?.terminate(); NSApp.terminate(nil) }
+  // The panel records as a child of this app, so it uses this app's Screen Recording permission.
+  @objc func panel() {
+    guard permitted() else { return }
+    if let panelURL, panelProcess?.isRunning == true { NSWorkspace.shared.open(panelURL); return }
+    let process = Process(), output = Pipe()
+    process.executableURL = URL(fileURLWithPath: settings.string(forKey: "cli") ?? "justrec")
+    process.arguments = ["ui"]  // opens the page itself, and prints {"url": …} first
+    process.standardOutput = output
+    output.fileHandleForReading.readabilityHandler = { handle in
+      let line = handle.availableData
+      if let json = try? JSONSerialization.jsonObject(with: line) as? [String: Any], let url = json["url"] as? String {
+        handle.readabilityHandler = nil
+        DispatchQueue.main.async { self.panelURL = URL(string: url) }
       }
     }
+    do { try process.run(); panelProcess = process } catch { _ = tell("Cannot open the recording panel", error.localizedDescription) }
   }
 }
 
@@ -379,9 +340,9 @@ signal(SIGUSR1, SIG_IGN) // kill -USR1 <pid> opens the picker too (for testing)
 let usr1 = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
 usr1.setEventHandler(handler: pick)
 usr1.resume()
-signal(SIGUSR2, SIG_IGN) // kill -USR2 <pid> = Record Screen / Stop Recording from the menu (for testing)
+signal(SIGUSR2, SIG_IGN) // kill -USR2 <pid> = Record… from the menu (for testing)
 let usr2 = DispatchSource.makeSignalSource(signal: SIGUSR2, queue: .main)
-usr2.setEventHandler { menu.toggle() }
+usr2.setEventHandler { menu.panel() }
 usr2.resume()
 var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
 InstallEventHandler(GetApplicationEventTarget(), { _, _, _ in DispatchQueue.main.async(execute: pick); return noErr }, 1, &eventType, nil, nil)

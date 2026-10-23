@@ -1,16 +1,22 @@
 ---
 name: justrec
-description: justrec, the one entrypoint for screen work on this Mac — record the screen, a window, a browser or a terminal while doing a task; edit recordings into polished demo and launch videos (zooms, cuts, captions, narration in the user's own cloned voice, music); take framed screenshots. Use when the user says "record yourself doing X", "make a demo/launch video of X", "edit my last recording", "zoom less at 1:20", "cut the pause", "screenshot this nicely", "say it in my voice", or names a justrec project/recording.
+description: justrec, the one entrypoint for screen work on this Mac — record the screen, a window, a browser or a terminal while doing a task; edit recordings (by project id, e.g. "edit project 3f9a1c2e") into polished demo and launch videos (zooms, cuts, captions, narration in the user's own cloned voice, music); take framed screenshots. Use when the user says "record yourself doing X", "make a demo/launch video of X", "edit my last recording", "zoom less at 1:20", "cut the pause", "screenshot this nicely", "say it in my voice", or names a justrec project/recording.
 ---
 
 # justrec
 
 All commands print JSON: `justrec <command>` (`justrec help` lists them all).
-Recordings and their files live in `~/Documents/justrec/` (`JUSTREC_DIR`).
+
+**Projects.** Every recording is a project with a short id (`justrec stop` prints it; the user sees it in
+the recording panel and says "edit project 3f9a1c2e"). Its files live in `~/.justrec/projects/<id>/`:
+`recording.mp4` (raw), `recording.project.json` (the edit), `recording.cursor.jsonl`, captions
+(`recording.srt`/`.json`). Wherever a command takes `<project>`, give the id (or the `--name`, newest wins,
+or a path). The user's folder `~/Documents/justrec/` (`JUSTREC_DIR`) only gets finished videos:
+`justrec render <id>` writes `<name>-<id>.mp4` there (re-rendering replaces it) and screenshots.
 
 **Setup (once per Mac):** if `justrec` is not found, run `<repo>/justrec install`
 (repo: github.com/nicoloboschi/justrec). It puts justrec.app in the menu bar (⌘1 screenshots,
-Record Screen, the recording panel; starts at login), links the command and this skill.
+Record… which opens the recording panel; starts at login), links the command and this skill.
 `justrec uninstall` undoes it. The app holds the Screen Recording/Microphone permission for what
 it starts; commands an agent runs use the terminal's permission. If a capture says the user declined,
 the permission is missing: tell the user which app needs it, don't work around it.
@@ -44,17 +50,18 @@ If the user's logins changed, `justrec browser --refresh-login <url>` re-copies 
 2. `justrec start --window <id> --name <short-name>` (`--display <i>`, `--region x,y,w,h`,
    `--no-mic`, `--system-audio`, `--camera default`).
 3. When an action doesn't move the real mouse, mark it: `justrec mark "<what>" --at <x>,<y>` (0–1).
-4. `justrec stop` → returns `output` (mp4) and `project` (JSON).
+4. `justrec stop` → returns the project `id` (and its `output` mp4 and `project` JSON paths).
 
 A covered window stops updating in a screen recording: keep it visible.
 
 ## B0. Make a launch video (film) — the usual goal
 
-Everything for one film lives in one folder. Recordings auto-edit when they stop
-(idle time cut, zooms on clicks), so they are ready to use as-is.
+The film's folder holds film.json, stills and the final film; recordings stay projects (refer to them
+by id, or by --name). Recordings auto-edit when they stop (idle time cut, zooms on clicks), so they are
+ready to use as-is.
 
 ```bash
-export JUSTREC_DIR=~/Documents/justrec/<film-name>      # recordings, screenshots and film.json together
+export JUSTREC_DIR=~/Documents/justrec/<film-name>      # film.json, screenshots and the film together
 justrec browser <url>                                  # set the page up as it should look first
 justrec start --browser --name before  …actions…  justrec stop
 justrec terminal open --blur 'sk_\w+'                 # the user's own zsh (prompt, iTerm colors) in the justrec browser
@@ -71,7 +78,7 @@ justrec film $JUSTREC_DIR/launch.film.json             # final mp4 + .srt + .rep
 **The schema is the reference**: `justrec schema` prints every field with a description;
 start each film with `"$schema": "<path from justrec schema --path>"`. Unknown or misspelled
 fields are errors with a "did you mean". One vocabulary everywhere: a scene's headline is
-`title`, pictures are `image`, numbers are `stats`, a recording is `recording` (its --name),
+`title`, pictures are `image`, numbers are `stats`, a recording is `recording` (its project id or --name),
 voice settings live in `voice` {name, speed, pronounce} (`name` can be the user's own voice: `justrec voice list`; they add it once with `justrec voice add me`, reading aloud for 15 s — first use downloads a ~4 GB model) and music in `music` (false | file |
 {file, volume}). A scene's `speed` is playback speed of its recording.
 
@@ -114,10 +121,10 @@ voice; words a listener would mishear; captions too fast. Fix and re-render unti
 ## B. Edit
 
 ```bash
-justrec captions <mp4>                 # only if someone talked; writes <name>.json transcript
-justrec edit <project> --cut-idle --auto-zoom
-justrec preview <project> --frame 90   # look at a frame (png) before a full render
-justrec render <project>               # → <name>.edited.mp4, verified: 1 video + 1 audio track
+justrec captions <id>                  # only if someone talked; writes the transcript into the project
+justrec edit <id> --cut-idle --auto-zoom
+justrec preview <id> --frame 90        # look at a frame (png, in the project folder) before a full render
+justrec render <id>                    # → ~/Documents/justrec/<name>-<id>.mp4, verified: 1 video + 1 audio track
 ```
 
 - `--cut-idle`: removes 1 s+ stretches where the picture is still, nobody talks and nothing is clicked or typed (agent think-time). Use it for agent recordings.
@@ -143,7 +150,7 @@ source time through `clips` (and the intro length) before editing.
 ffprobe -v error -show_entries stream=codec_type,duration -of compact <edited.mp4>   # exactly 1 video + 1 audio
 ffmpeg -hide_banner -i <edited.mp4> -vn -af volumedetect -f null - 2>&1 | grep mean_volume   # voice: well above -60 dB
 ```
-Look at 2–3 frames around the zooms. Report the path of the edited mp4.
+Look at 2–3 frames around the zooms. Report the path of the finished mp4.
 
 ## D. Screenshots
 
