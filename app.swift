@@ -233,16 +233,28 @@ func finish(_ take: (() -> CGImage?)?) {
   }
 }
 
+func tell(_ title: String, _ text: String, button: String = "OK") -> Bool {
+  NSApp.activate(ignoringOtherApps: true)
+  let alert = NSAlert()
+  alert.messageText = title
+  alert.informativeText = text
+  alert.addButton(withTitle: button)
+  if button != "OK" { alert.addButton(withTitle: "Later") }
+  return alert.runModal() == .alertFirstButtonReturn
+}
+
 // Without Screen Recording, captures come out as the bare wallpaper. macOS applies a new grant only to a
-// fresh process, so: ask, show the setting, and restart (launchd starts us again).
+// fresh process, so: say so, show the setting, and restart once the user allowed it (launchd starts us again).
 func permitted() -> Bool {
   if CGPreflightScreenCaptureAccess() { return true }
   CGRequestScreenCaptureAccess()
   NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
-  let restart = Process()
-  restart.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-  restart.arguments = ["kickstart", "-k", "gui/\(getuid())/com.justrec.app"]
-  try? restart.run()
+  if tell("justrec needs Screen Recording", "Turn on justrec in System Settings › Privacy & Security › Screen Recording, then restart justrec.", button: "Restart justrec") {
+    let restart = Process()
+    restart.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+    restart.arguments = ["kickstart", "-k", "gui/\(getuid())/com.justrec.app"]
+    try? restart.run()
+  }
   return false
 }
 
@@ -266,18 +278,28 @@ func pick() {
   current.makeFirstResponder(current.contentView)
 }
 
-// Runs the justrec command in the background; hands its JSON output back on the main thread.
-func justrec(_ arguments: [String], then done: @escaping ([String: Any]?) -> Void = { _ in }) {
+// Runs the justrec command in the background; hands its JSON output back on the main thread, or shows
+// what went wrong (the command's last error lines) instead of failing silently.
+func justrec(_ arguments: [String], then done: @escaping ([String: Any]) -> Void = { _ in }) {
   DispatchQueue.global().async {
-    let process = Process(), pipe = Pipe()
+    let process = Process(), output = Pipe(), errors = Pipe()
     process.executableURL = URL(fileURLWithPath: settings.string(forKey: "cli") ?? "justrec")
     process.arguments = arguments
-    process.standardOutput = pipe
-    try? process.run()
-    let data = pipe.fileHandleForReading.readDataToEndOfFile()
-    process.waitUntilExit()
+    process.standardOutput = output
+    process.standardError = errors
+    var problem = ""
+    do { try process.run() } catch { problem = error.localizedDescription }
+    let data = output.fileHandleForReading.readDataToEndOfFile()
+    let said = String(decoding: errors.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+    if problem.isEmpty { process.waitUntilExit() }
     let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
-    DispatchQueue.main.async { done(json) }
+    DispatchQueue.main.async {
+      if let json, process.terminationStatus == 0 { return done(json) }
+      fputs("justrec \(arguments.joined(separator: " ")) failed: \(said)\n", stderr)
+      let reason = problem.isEmpty ? said.split(separator: "\n").suffix(3).joined(separator: "\n") : problem
+      _ = tell("justrec \(arguments[0]) failed", reason.isEmpty ? "No details; see ~/.justrec/app.log" : reason)
+      done([:])
+    }
   }
 }
 
@@ -325,7 +347,7 @@ final class Menu: NSObject, NSMenuDelegate {
       busy = true
       justrec(["start", "--display", "0", "--name", "screen"]) { result in
         self.busy = false
-        guard result?["id"] != nil else { return }
+        guard result["id"] != nil else { return }
         self.recording = Date()
         self.timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in self.show() }
         self.show()
@@ -337,7 +359,7 @@ final class Menu: NSObject, NSMenuDelegate {
       show()
       justrec(["stop"]) { result in
         self.busy = false
-        if let output = result?["output"] as? String { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: output)]) }
+        if let output = result["output"] as? String { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: output)]) }
       }
     }
   }
@@ -349,12 +371,18 @@ if let file = settings.string(forKey: "frame") {
   try! png.write(to: URL(fileURLWithPath: file + ".framed.png"))
   exit(0)
 }
+// Opened again from Finder or Spotlight while running: one menu bar icon is enough.
+if NSRunningApplication.runningApplications(withBundleIdentifier: "com.justrec.app").contains(where: { $0.processIdentifier != getpid() }) { exit(0) }
 NSApplication.shared.setActivationPolicy(.accessory)
 let menu = Menu()
 signal(SIGUSR1, SIG_IGN) // kill -USR1 <pid> opens the picker too (for testing)
 let usr1 = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
 usr1.setEventHandler(handler: pick)
 usr1.resume()
+signal(SIGUSR2, SIG_IGN) // kill -USR2 <pid> = Record Screen / Stop Recording from the menu (for testing)
+let usr2 = DispatchSource.makeSignalSource(signal: SIGUSR2, queue: .main)
+usr2.setEventHandler { menu.toggle() }
+usr2.resume()
 var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
 InstallEventHandler(GetApplicationEventTarget(), { _, _, _ in DispatchQueue.main.async(execute: pick); return noErr }, 1, &eventType, nil, nil)
 var reference: EventHotKeyRef?
