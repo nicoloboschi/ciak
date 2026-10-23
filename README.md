@@ -82,6 +82,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Optional webcam bubble
 - ✅ Menu bar app (`justrec install`): ⌘1 screenshots, Record… (the recording panel), Open Recordings; starts at login and holds the permissions
 - ✅ Panel (`justrec ui`, menu bar Record…): projects on the left (thumbnail, time, length, state); a new recording with live camera preview and mic meter; after Finish every step (stop, encode + mix, clicks, auto edit, render frames with a live count, audio, check) with its timing, then the video and the project id with a prompt for your agent. It follows an agent's renders live. Rename or delete a project there (`justrec project rename|remove`; delete goes to the Trash)
+- ✅ Quick recording (⌘2): the screenshot overlay picks an area or a window, a red frame and timer show while it records (default mic); ⌘2 or a click on the timer stops it, the panel opens on the project and renders it. The picker stays loaded between uses, so the overlay opens at once
 - ✅ Panel: Screenshots page (⌘1 shots, newest first: open, copy, show in Finder, delete to the Trash; `justrec shot list|copy|remove`)
 - ✅ Panel: Voices page: every cloned voice with its sample and a Try-it box; add one by reading a text in the page or uploading a voice note or video; a failed try keeps the old voice
 - ✅ An agent with only the skill edits a project by id ("Use /justrec to edit project <id>: make it vertical, sunset background") — tested with a fresh agent

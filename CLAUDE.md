@@ -20,9 +20,9 @@ the output, not just that it compiles.
   (same JSON-lines protocol as `rec.swift`).
 - `app.swift` + `lib/app.mjs` — justrec.app, the menu bar app (`justrec install`), a **thin shell**: menu, ⌘1 key,
   the permission check, and starting helpers. macOS ties Screen Recording/Microphone permission to this exact
-  build and helpers it starts use it, so **don't change app.swift for features**: each change makes the user grant
+  build and helpers it starts use it, so **don't change app.swift for features** (new shortcuts are settings: `keys` in lib/app.mjs): each change makes the user grant
   the permission again (install replaces the app only when app.swift changed). Features go in the helpers:
-  `picker.swift` (⌘1 screenshot: picker, frame, sound, Finder), `rec.swift`, the panel and the CLI.
+  `picker.swift` (⌘1 screenshot: picker, frame, sound, Finder; ⌘2 quick recording; stays running, the app signals it), `rec.swift`, the panel and the CLI.
 - `lib/shot.mjs` — framed screenshots from the command line (`justrec shot`).
 - `lib/voice.mjs` — the user's own cloned voice for narration (Qwen3-TTS via mlx-audio).
 - `lib/clean.mjs` — the one mic cleanup (`cleanVoice`): recordings at render (`audio.denoise`) and the voice sample.

@@ -573,7 +573,9 @@ setInterval(timer, 250);
 setInterval(() => { loadList().catch(() => {}); loadShots().catch(() => {}); }, 3000);
 loadVoices().catch(() => {});
 if (!location.hash) history.replaceState(null, '', '#new');
-sources().catch(failure => toast(failure.message)).finally(route);
+// The page first; screens and devices (a second or so) fill the new-recording form when they arrive.
+route();
+sources().then(() => { if (view === 'new') preview(); }).catch(failure => toast(failure.message));
 </script>
 </body>
 </html>

@@ -2,8 +2,10 @@
 // Microphone permission to this exact build, and programs it starts use its permission. So every feature
 // lives in what it starts (justrec-picker for screenshots, the recording panel and recorder via the justrec
 // command) and those can change freely; changing this file makes the user grant the permission again.
-// It has: the menu, one global key (RegisterEventHotKey, no Accessibility permission), the permission check.
-// Settings (defaults com.justrec.app, written by install): key, picker, cli, recordings.
+// It has: the menu, global keys (RegisterEventHotKey, no Accessibility permission), the permission check.
+// Settings (defaults com.justrec.app, written by install): keys, picker, cli, recordings. keys is JSON, so new
+// shortcuts need no change here: [{"key": "cmd+1", "title": "Take Screenshot", "args": [], "stop": "…"}], each
+// starts the picker with its args; pressed again while that picker runs, it gets SIGUSR1 (e.g. stop recording).
 import AppKit
 import Carbon
 
@@ -18,14 +20,18 @@ let keyCodes: [String: Int] = [
 let modifierFlags: [String: Int] = ["cmd": cmdKey, "shift": shiftKey, "opt": optionKey, "alt": optionKey, "ctrl": controlKey]
 
 let settings = UserDefaults.standard
-let key = settings.string(forKey: "key") ?? "cmd+1"
-var keyCode: Int?
-var modifiers = 0
-for part in key.lowercased().split(separator: "+").map(String.init) {
-  if let flag = modifierFlags[part] { modifiers |= flag } else { keyCode = keyCodes[part] }
+struct Shortcut: Decodable { let key: String; let title: String; let args: [String]; let stop: String?; var code = 0; var modifiers = 0
+  enum CodingKeys: String, CodingKey { case key, title, args, stop } }
+var shortcuts = (settings.string(forKey: "keys")?.data(using: .utf8)).flatMap { try? JSONDecoder().decode([Shortcut].self, from: $0) }
+  ?? [Shortcut(key: settings.string(forKey: "key") ?? "cmd+1", title: "Take Screenshot", args: [], stop: nil)]
+for index in shortcuts.indices {
+  var keyCode: Int?
+  for part in shortcuts[index].key.lowercased().split(separator: "+").map(String.init) {
+    if let flag = modifierFlags[part] { shortcuts[index].modifiers |= flag } else { keyCode = keyCodes[part] }
+  }
+  guard let keyCode, shortcuts[index].modifiers != 0 else { fputs("Shortcut must be modifiers plus a letter or digit, e.g. cmd+1\n", stderr); exit(2) }
+  shortcuts[index].code = keyCode
 }
-let code = keyCode ?? 0
-guard keyCode != nil, modifiers != 0 else { fputs("Shortcut must be modifiers plus a letter or digit, e.g. cmd+1\n", stderr); exit(2) }
 let home = FileManager.default.homeDirectoryForCurrentUser
 let recordingsDir = URL(fileURLWithPath: settings.string(forKey: "recordings") ?? home.appendingPathComponent("Documents/justrec").path)
 
@@ -54,22 +60,25 @@ func permitted() -> Bool {
   return false
 }
 
-// Starts a helper as this app's child, so it runs with this app's permission. One copy at a time.
+// Starts a helper as this app's child, so it runs with this app's permission. One copy at a time (per arguments).
 var helpers: [String: Process] = [:]
+func running(_ path: String, _ arguments: [String] = []) -> Process? { helpers[([path] + arguments).joined(separator: " ")].flatMap { $0.isRunning ? $0 : nil } }
 func start(_ path: String, _ arguments: [String] = [], output: Pipe? = nil) -> Process? {
-  if let running = helpers[path], running.isRunning { return nil }
+  if running(path, arguments) != nil { return nil }
   let process = Process()
   process.executableURL = URL(fileURLWithPath: path)
   process.arguments = arguments
   if let output { process.standardOutput = output }
   do { try process.run() } catch { _ = tell("Cannot start \(URL(fileURLWithPath: path).lastPathComponent)", error.localizedDescription); return nil }
-  helpers[path] = process
+  helpers[([path] + arguments).joined(separator: " ")] = process
   return process
 }
 
-func pick() {
-  guard permitted(), let picker = settings.string(forKey: "picker") else { return }
-  _ = start(picker)
+func press(_ index: Int) {
+  guard shortcuts.indices.contains(index), let picker = settings.string(forKey: "picker") else { return }
+  if let helper = running(picker, shortcuts[index].args) { kill(helper.processIdentifier, SIGUSR1); return }
+  guard permitted() else { return }
+  _ = start(picker, shortcuts[index].args)
 }
 
 // The menu bar icon: screenshot, and Record… which opens the recording panel (justrec ui, one copy at a time).
@@ -86,18 +95,24 @@ final class Menu: NSObject, NSMenuDelegate {
   }
   func menuNeedsUpdate(_ menu: NSMenu) {
     menu.removeAllItems()
-    let shot = NSMenuItem(title: "Take Screenshot", action: #selector(screenshot), keyEquivalent: keyCodes.first { $0.value == code }?.key ?? "")
-    shot.keyEquivalentModifierMask = NSEvent.ModifierFlags(rawValue: (modifiers & cmdKey != 0 ? NSEvent.ModifierFlags.command.rawValue : 0)
-      | (modifiers & shiftKey != 0 ? NSEvent.ModifierFlags.shift.rawValue : 0) | (modifiers & optionKey != 0 ? NSEvent.ModifierFlags.option.rawValue : 0)
-      | (modifiers & controlKey != 0 ? NSEvent.ModifierFlags.control.rawValue : 0))
-    for entry in [shot, NSMenuItem(title: "Record…", action: #selector(panel), keyEquivalent: ""), .separator(),
+    let picker = settings.string(forKey: "picker") ?? ""
+    let keys: [NSMenuItem] = shortcuts.enumerated().map { index, shortcut in
+      let item = NSMenuItem(title: running(picker, shortcut.args) != nil ? shortcut.stop ?? shortcut.title : shortcut.title, action: #selector(shortcutItem), keyEquivalent: keyCodes.first { $0.value == shortcut.code }?.key ?? "")
+      let modifiers = shortcut.modifiers
+      item.keyEquivalentModifierMask = NSEvent.ModifierFlags(rawValue: (modifiers & cmdKey != 0 ? NSEvent.ModifierFlags.command.rawValue : 0)
+        | (modifiers & shiftKey != 0 ? NSEvent.ModifierFlags.shift.rawValue : 0) | (modifiers & optionKey != 0 ? NSEvent.ModifierFlags.option.rawValue : 0)
+        | (modifiers & controlKey != 0 ? NSEvent.ModifierFlags.control.rawValue : 0))
+      item.tag = index
+      return item
+    }
+    for entry in keys + [NSMenuItem(title: "Record…", action: #selector(panel), keyEquivalent: ""), .separator(),
                   NSMenuItem(title: "Open Recordings", action: #selector(folder), keyEquivalent: ""), .separator(),
                   NSMenuItem(title: "Quit justrec", action: #selector(quit), keyEquivalent: "q")] {
       entry.target = self
       menu.addItem(entry)
     }
   }
-  @objc func screenshot() { DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: pick) } // after the menu closes
+  @objc func shortcutItem(_ item: NSMenuItem) { DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { press(item.tag) } } // after the menu closes
   @objc func folder() { NSWorkspace.shared.open(recordingsDir) }
   @objc func quit() { helpers.values.forEach { $0.terminate() }; NSApp.terminate(nil) }
   // The panel records as a child of this app, so it uses this app's Screen Recording permission.
@@ -119,18 +134,27 @@ final class Menu: NSObject, NSMenuDelegate {
 if NSRunningApplication.runningApplications(withBundleIdentifier: "com.justrec.app").contains(where: { $0.processIdentifier != getpid() }) { exit(0) }
 NSApplication.shared.setActivationPolicy(.accessory)
 let menu = Menu()
-signal(SIGUSR1, SIG_IGN) // kill -USR1 <pid> opens the picker too (for testing)
+signal(SIGUSR1, SIG_IGN) // kill -USR1 <pid> presses a shortcut (for testing): the first, or defaults key "press" (its index)
 let usr1 = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
-usr1.setEventHandler(handler: pick)
+usr1.setEventHandler { press(CFPreferencesCopyAppValue("press" as CFString, "com.justrec.app" as CFString) as? Int ?? 0) }
 usr1.resume()
 signal(SIGUSR2, SIG_IGN) // kill -USR2 <pid> = Record… from the menu (for testing)
 let usr2 = DispatchSource.makeSignalSource(signal: SIGUSR2, queue: .main)
 usr2.setEventHandler { menu.panel() }
 usr2.resume()
 var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-InstallEventHandler(GetApplicationEventTarget(), { _, _, _ in DispatchQueue.main.async(execute: pick); return noErr }, 1, &eventType, nil, nil)
-var reference: EventHotKeyRef?
-let status = RegisterEventHotKey(UInt32(code), UInt32(modifiers), EventHotKeyID(signature: OSType(0x4A524543), id: 1), GetApplicationEventTarget(), 0, &reference)
-if status != noErr { fputs("The shortcut \(key) is taken by another app (error \(status)): screenshots only from the menu. Pick another with justrec install --key.\n", stderr) }
-print("ready \(key)"); fflush(stdout)
+InstallEventHandler(GetApplicationEventTarget(), { _, event, _ in
+  var id = EventHotKeyID()
+  GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil, MemoryLayout<EventHotKeyID>.size, nil, &id)
+  DispatchQueue.main.async { press(Int(id.id)) }
+  return noErr
+}, 1, &eventType, nil, nil)
+var references: [EventHotKeyRef?] = []
+for (index, shortcut) in shortcuts.enumerated() {
+  var reference: EventHotKeyRef?
+  let status = RegisterEventHotKey(UInt32(shortcut.code), UInt32(shortcut.modifiers), EventHotKeyID(signature: OSType(0x4A524543), id: UInt32(index)), GetApplicationEventTarget(), 0, &reference)
+  if status != noErr { fputs("The shortcut \(shortcut.key) is taken by another app (error \(status)): \(shortcut.title) only from the menu. Pick another with justrec install --key.\n", stderr) }
+  references.append(reference)
+}
+print("ready \(shortcuts.map(\.key).joined(separator: " "))"); fflush(stdout)
 NSApplication.shared.run()

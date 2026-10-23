@@ -1,4 +1,6 @@
-// justrec-picker: one screenshot, started by justrec.app (⌘1 or the menu) and gone when done. An overlay with a
+// justrec-picker: screenshots, started by justrec.app (⌘1 or the menu). With -mode record (⌘2) the same overlay
+// picks what to record instead: see "Quick recording" below. It stays running after the first use, hidden: the app
+// sends SIGUSR1 to a running picker, which opens the overlay at once (a fresh start took a noticeable moment). An overlay with a
 // glowing border picks an area (or a window: space; Esc cancels); the shot goes on the wallpaper with rounded
 // corners and a shadow, is saved, copied, and shown in Finder. It runs as the app's child, so it uses the app's
 // Screen Recording permission: change it freely, the app (and the permission) stay the same.
@@ -104,7 +106,7 @@ final class Picker: NSView {
   }
 
   override func mouseDown(with event: NSEvent) {
-    if windowMode { if let hovered { finish { capture(window: hovered.id) } }; return }
+    if windowMode { if let hovered { if recordMode { quick(window: hovered.id, rect: hovered.rect.offsetBy(dx: window!.frame.minX, dy: window!.frame.minY)) } else { finish { capture(window: hovered.id) } } }; return }
     start = convert(event.locationInWindow, from: nil)
   }
   override func mouseDragged(with event: NSEvent) {
@@ -122,6 +124,7 @@ final class Picker: NSView {
     let rect = NSRect(x: min(begin.x, point.x), y: min(begin.y, point.y), width: abs(point.x - begin.x), height: abs(point.y - begin.y))
     if rect.width < 4 || rect.height < 4 { show(nil); return }
     let origin = window!.frame.origin
+    if recordMode { quick(area: rect.offsetBy(dx: origin.x, dy: origin.y)); return }
     finish { capture(area: rect.offsetBy(dx: origin.x, dy: origin.y)) }
   }
   override func mouseMoved(with event: NSEvent) {
@@ -198,9 +201,9 @@ let shutter = NSSound(contentsOfFile: "/System/Library/Components/CoreAudio.comp
 func finish(_ take: (() -> CGImage?)?) {
   overlays.forEach { $0.orderOut(nil) }
   overlays = []
-  guard let take else { exit(0) }
+  guard let take else { return }
   DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { // let the overlay leave the screen first
-    guard let shot = take() else { exit(1) }
+    guard let shot = take() else { return }
     shutter?.play()
     guard let png = framed(shot) else { return }
     let stamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-").prefix(19)
@@ -210,11 +213,147 @@ func finish(_ take: (() -> CGImage?)?) {
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setData(png, forType: .png)
     NSWorkspace.shared.activateFileViewerSelecting([file])
-    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { exit(0) } // let the shutter sound finish
   }
 }
 
+// Quick recording (⌘2): the picked area or window records (default mic) with a red frame around it and a small
+// timer; ⌘2 again (the app sends SIGUSR1) or a click on the timer stops it, renders it and opens it in the panel.
+let recordMode = UserDefaults.standard.string(forKey: "mode") == "record"
+let cli = setting("cli") ?? "justrec"
+func sound(_ name: String) { NSSound(contentsOfFile: "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/\(name).caf", byReference: true)?.play() }
+// Runs the justrec command and returns its JSON (nil and a message on failure).
+func justrec(_ arguments: [String], wait: Bool = true) -> [String: Any]? {
+  let process = Process(), output = Pipe(), errors = Pipe()
+  process.executableURL = URL(fileURLWithPath: cli)
+  process.arguments = arguments
+  process.standardOutput = wait ? output : FileHandle.nullDevice
+  process.standardError = wait ? errors : FileHandle.nullDevice
+  do { try process.run() } catch { alert("Cannot run justrec", error.localizedDescription); return nil }
+  guard wait else { return [:] }
+  let data = output.fileHandleForReading.readDataToEndOfFile(), problem = errors.fileHandleForReading.readDataToEndOfFile()
+  process.waitUntilExit()
+  if process.terminationStatus != 0 {
+    let message = String(decoding: problem, as: UTF8.self).split(separator: "\n").last.flatMap { try? JSONSerialization.jsonObject(with: Data($0.utf8)) as? [String: Any] }?["error"] as? String
+    alert("Quick recording failed", message ?? String(decoding: problem, as: UTF8.self)); return nil
+  }
+  return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+}
+func alert(_ title: String, _ text: String) {
+  NSApp.activate(ignoringOtherApps: true)
+  let alert = NSAlert(); alert.messageText = title; alert.informativeText = text; alert.runModal()
+}
+
+// The screen holding most of the area, as the recorder numbers them (main display first, then by id), and the
+// area inside it in points from its top left.
+func quick(area: NSRect) {
+  guard let screen = NSScreen.screens.max(by: { $0.frame.intersection(area).width * $0.frame.intersection(area).height < $1.frame.intersection(area).width * $1.frame.intersection(area).height }) else { return }
+  let id = { (screen: NSScreen) in screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID ?? 0 }
+  let order = NSScreen.screens.map(id).sorted { ($0 == CGMainDisplayID() ? 0 : 1, $0) < ($1 == CGMainDisplayID() ? 0 : 1, $1) }
+  let clipped = screen.frame.intersection(area)
+  let region = [clipped.minX - screen.frame.minX, screen.frame.maxY - clipped.maxY, clipped.width, clipped.height].map { String(Int($0.rounded())) }
+  record(["--display", String(order.firstIndex(of: id(screen)) ?? 0), "--region", region.joined(separator: ",")], around: clipped)
+}
+func quick(window id: CGWindowID, rect: NSRect) { record(["--window", String(id)], around: rect) }
+
+var session: String?
+var started = Date()
+var frames: [NSWindow] = []
+final class Timer: NSView {
+  let text = CATextLayer()
+  override init(frame: NSRect) {
+    super.init(frame: frame)
+    wantsLayer = true
+    layer!.backgroundColor = NSColor(calibratedRed: 0.85, green: 0.2, blue: 0.18, alpha: 0.95).cgColor
+    layer!.cornerRadius = frame.height / 2
+    text.frame = bounds.insetBy(dx: 8, dy: 5)
+    text.fontSize = 12
+    text.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
+    text.foregroundColor = NSColor.white.cgColor
+    text.alignmentMode = .center
+    text.contentsScale = 2
+    layer!.addSublayer(text)
+  }
+  required init?(coder: NSCoder) { nil }
+  override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+  override func mouseDown(with event: NSEvent) { stop() }
+  override func resetCursorRects() { addCursorRect(bounds, cursor: .pointingHand) }
+}
+
+func record(_ source: [String], around rect: NSRect) {
+  overlays.forEach { $0.orderOut(nil) }
+  overlays = []
+  // The frame shows at once (grey: starting, about 2 s); it turns red with a sound when the recording runs.
+  let frame = NSWindow(contentRect: rect.insetBy(dx: -3, dy: -3), styleMask: .borderless, backing: .buffered, defer: false)
+  frame.isOpaque = false; frame.backgroundColor = .clear; frame.ignoresMouseEvents = true; frame.hasShadow = false
+  frame.level = .screenSaver; frame.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]; frame.sharingType = .none
+  let border = NSView(); border.wantsLayer = true
+  border.layer!.borderColor = NSColor(white: 0.75, alpha: 0.9).cgColor; border.layer!.borderWidth = 3; border.layer!.cornerRadius = 5
+  frame.contentView = border
+  frame.orderFrontRegardless()
+  let pill = NSPanel(contentRect: NSRect(x: rect.midX - 100, y: max(rect.minY - 38, 4), width: 200, height: 26), styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+  pill.isOpaque = false; pill.backgroundColor = .clear; pill.level = .screenSaver; pill.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]; pill.sharingType = .none
+  let timer = Timer(frame: NSRect(x: 0, y: 0, width: 200, height: 26))
+  timer.layer!.backgroundColor = NSColor(white: 0.25, alpha: 0.95).cgColor
+  timer.text.string = "Starting…"
+  pill.contentView = timer
+  pill.orderFrontRegardless()
+  frames = [frame, pill]
+  DispatchQueue.global().async {
+    let result = justrec(["start"] + source + ["--mic", "default", "--fps", "60", "--name", "Quick recording"])
+    DispatchQueue.main.async {
+      guard let id = result?["id"] as? String else { done(); return }
+      session = id
+      started = Date()
+      sound("begin_record")
+      border.layer!.borderColor = NSColor(calibratedRed: 1, green: 0.27, blue: 0.23, alpha: 1).cgColor
+      timer.layer!.backgroundColor = NSColor(calibratedRed: 0.85, green: 0.2, blue: 0.18, alpha: 0.95).cgColor
+      func tick() {
+        guard session == id, !stopping else { return }
+        let seconds = Int(Date().timeIntervalSince(started))
+        timer.text.string = "● \(seconds / 60):\(String(format: "%02d", seconds % 60))   ⌘2 or click to stop"
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: tick)
+      }
+      tick()
+    }
+  }
+}
+
+// Stop: the panel opens on the project at once and shows the finishing and render steps as they happen.
+var stopping = false
+func stop() {
+  guard let id = session, !stopping else { return }
+  stopping = true
+  frames.forEach { $0.orderOut(nil) }
+  sound("end_record")
+  DispatchQueue.global().async {
+    // Both at once: by the time the page asks, the recording is already finishing.
+    _ = justrec(["ui", "--project", id], wait: false)
+    if justrec(["stop", id]) != nil { _ = justrec(["render", id], wait: false) }
+    DispatchQueue.main.async(execute: done)
+  }
+}
+
+// Back to waiting for the next press, hidden.
+func done() {
+  overlays.forEach { $0.orderOut(nil) }
+  overlays = []
+  frames.forEach { $0.orderOut(nil) }
+  frames = []
+  session = nil
+  stopping = false
+}
+
+// The app's key (SIGUSR1): stop a recording, cancel an open overlay, or open the overlay.
+signal(SIGUSR1, SIG_IGN)
+let pressed = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
+pressed.setEventHandler {
+  if stopping || (!frames.isEmpty && session == nil) { return }  // finishing, or still starting
+  if session != nil { stop() } else if !overlays.isEmpty { finish(nil) } else { begin() }
+}
+pressed.resume()
+
 func pick() {
+  if recordMode { _ = justrec(["ui", "--no-open"], wait: false) }  // the panel's server, ready for when this recording stops
   for screen in NSScreen.screens {
     let overlay = Overlay(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
     overlay.level = .screenSaver
@@ -240,8 +379,13 @@ if let file = UserDefaults.standard.string(forKey: "frame") {
   exit(0)
 }
 NSApplication.shared.setActivationPolicy(.accessory)
-// For tests: defaults write com.justrec.app area x,y,w,h (screen points from the top left) captures that area without the overlay.
-if let area = setting("area")?.split(separator: ",").compactMap({ Double($0) }), area.count == 4 {
-  finish { capture(area: NSRect(x: area[0], y: mainHeight() - area[1] - area[3], width: area[2], height: area[3])) }
-} else { pick() }
+// For tests: defaults write com.justrec.app area x,y,w,h (screen points from the top left) captures (or records) that area without the overlay.
+func begin() {
+  CFPreferencesAppSynchronize("com.justrec.app" as CFString)
+  if let area = setting("area")?.split(separator: ",").compactMap({ Double($0) }), area.count == 4 {
+    let rect = NSRect(x: area[0], y: mainHeight() - area[1] - area[3], width: area[2], height: area[3])
+    if recordMode { quick(area: rect) } else { finish { capture(area: rect) } }
+  } else { pick() }
+}
+begin()
 NSApplication.shared.run()
