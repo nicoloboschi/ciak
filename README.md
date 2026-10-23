@@ -112,6 +112,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - 🧪 Burned-in captions with a clean style
 - 🧪 Intro/outro title cards (`intro` / `outro` in the project)
 - 🧪 Loudness normalization for the voice
+- ✅ Mic background noise removed automatically (`lib/clean.mjs`: level, then DeepFilterNet), for recordings and the cloned voice's sample: a built-in-mic recording went from 10 dB to 47 dB between voice and pauses
 - ✅ Rendering via Remotion, so every edit is code an agent can change
 
 ### Films (launch videos)

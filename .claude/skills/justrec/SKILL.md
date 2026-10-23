@@ -145,6 +145,9 @@ Everything else is a direct edit of the project JSON, then re-render:
 - `clips[]`: kept source ranges, in order.
 - `style`: `background`, `padding`, `radius`, `shadow`, `cursorSize`, `clickColor`.
 - `captions.enabled`, `audio.normalize`, `intro`/`outro`: `{text, duration}`.
+- `audio.denoise`: the mic's background noise is removed at render (a local speech denoiser; on unless Mac sound was
+  recorded, since it would remove music too). Set `false` if it ever eats the voice; the cleaned voice is cached as
+  `recording.clean.wav` in the project.
 - `webcam`: `size` (fraction of width), `position` `bottom-right|bottom-left`.
 
 - The first `preview`/`render` on a Mac downloads a headless Chrome (~170 MB, ~40 s), once.

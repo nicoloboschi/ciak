@@ -25,6 +25,7 @@ the output, not just that it compiles.
   `picker.swift` (⌘1 screenshot: picker, frame, sound, Finder), `rec.swift`, the panel and the CLI.
 - `lib/shot.mjs` — framed screenshots from the command line (`justrec shot`).
 - `lib/voice.mjs` — the user's own cloned voice for narration (Qwen3-TTS via mlx-audio).
+- `lib/clean.mjs` — the one mic cleanup (`cleanVoice`): recordings at render (`audio.denoise`) and the voice sample.
 - `lib/project.mjs` — project JSON and edits (`justrec edit`); `lib/render.mjs` +
   `render/index.jsx` — Remotion render; `lib/ui.mjs` + `ui/index.html` — record panel.
 - `.claude/skills/justrec/SKILL.md` — the one skill: everything an agent can do with justrec
