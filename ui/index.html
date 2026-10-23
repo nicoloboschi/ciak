@@ -79,6 +79,21 @@ main{padding:28px 32px 60px;min-width:0;max-width:1240px}
 .step time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;white-space:nowrap}
 .facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin:0}.facts dt{color:var(--muted);font-size:12px}.facts dd{margin:0;font-weight:600}
 #toast{display:none;background:#3c1f1c;border:1px solid #8c4a44;color:#ffd9d4;border-radius:10px;padding:12px 14px;margin-bottom:18px;white-space:pre-wrap;overflow-wrap:anywhere}
+/* Sidebar links, screenshots, voices */
+.nav{display:flex;flex-direction:column;gap:2px;padding:0 8px 12px}
+.nav a{display:flex;justify-content:space-between;padding:8px 10px;border-radius:9px;color:inherit;text-decoration:none;font-weight:600}
+.nav a:hover{background:#1b1f26}.nav a.on{background:#232833}.nav a span{color:var(--muted);font-weight:500;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.shot{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.shot a{display:block;aspect-ratio:16/10;background:#0b0d10}.shot img{width:100%;height:100%;object-fit:contain;display:block}
+.shot div{display:flex;align-items:center;gap:4px;padding:8px 10px}.shot small{flex:1;color:var(--muted);font-size:12px}
+.voice{margin-bottom:16px}.voice .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.voice h3{margin:0;font-size:18px}.voice p{margin:0 0 12px;color:var(--muted);font-size:13px}
+audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say input{flex:1}
+.script{background:#12151a;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px;line-height:1.6;margin:0 0 14px}
+.actions-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.small{min-height:30px;padding:4px 10px;font-size:12px}
+#pNameEdit{font-size:22px;font-weight:700;max-width:420px}
 @keyframes pulse{50%{opacity:.25}}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:900px){body{grid-template-columns:1fr}aside{position:static;height:auto;max-height:42vh}.cols{grid-template-columns:1fr}main{padding:20px 16px}}
 </style>
@@ -87,6 +102,7 @@ main{padding:28px 32px 60px;min-width:0;max-width:1240px}
 <aside>
   <div class="brand"><i></i>justrec</div>
   <button class="primary" id="newButton">● New recording</button>
+  <nav class="nav"><a href="#shots" id="navShots">Screenshots <span id="shotCount"></span></a><a href="#voices" id="navVoices">Voices <span id="voiceCount"></span></a></nav>
   <div class="list-title">Projects</div>
   <div id="list"></div>
 </aside>
@@ -129,8 +145,9 @@ main{padding:28px 32px 60px;min-width:0;max-width:1240px}
   <!-- A project: recording live, or its video, steps and id -->
   <section class="view" id="projectView">
     <div class="head">
-      <div><h1 id="pName"></h1><span class="muted" id="pWhen"></span></div>
-      <div class="idbox"><span class="muted">Project</span><code id="pId"></code><button class="link" id="copyId">Copy</button></div>
+      <div><h1 id="pName" title="Click to rename"></h1><input id="pNameEdit" type="text" maxlength="80" hidden><span class="muted" id="pWhen"></span></div>
+      <div class="actions-row"><div class="idbox"><span class="muted">Project</span><code id="pId"></code><button class="link" id="copyId">Copy</button></div>
+        <button class="small" id="renameButton">Rename</button><button class="small" id="deleteButton">Delete</button></div>
     </div>
     <div class="card live" id="live">
       <div class="state"><span class="dot"></span><span id="liveState">RECORDING</span></div>
@@ -152,6 +169,30 @@ main{padding:28px 32px 60px;min-width:0;max-width:1240px}
         <div id="steps"></div>
         <dl class="facts" id="facts"></dl>
         <div class="row" style="margin-top:16px"><button id="revealFinal">Show in Finder</button><button id="revealFolder">Project folder</button><button id="renderAgain">Render again</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots (⌘1): newest first -->
+  <section class="view" id="shotsView">
+    <div class="head"><h1>Screenshots</h1><span class="muted">Take one with ⌘1. Saved in ~/Documents/justrec/shots.</span></div>
+    <div class="grid" id="shots"></div>
+  </section>
+
+  <!-- Voices: your cloned voices for narration -->
+  <section class="view" id="voicesView">
+    <div class="head"><h1>Voices</h1><span class="muted">Your own voices, for narration. In a film: "voice": {"name": "…"}</span></div>
+    <div class="cols">
+      <div id="voices"></div>
+      <div class="card"><h2>Add a voice</h2>
+        <div class="field"><label for="voiceName">Name</label><input id="voiceName" type="text" placeholder="me" maxlength="40"></div>
+        <label>Read this aloud, in your normal demo voice (about 15 seconds):</label>
+        <p class="script" id="voiceScript">Hi, I'm going to show you something I built. It records the screen, cuts the boring parts, and turns it into a short video in about two minutes. Let's open the dashboard and look at the numbers.</p>
+        <div class="meter"><div id="voiceLevel"></div></div>
+        <div class="actions-row" style="margin-top:12px"><button class="primary" id="voiceRecord">● Record</button>
+          <label class="muted" style="margin:0">or <button class="link" id="voicePick">upload a file</button> (a voice note or a video, any language)</label>
+          <input type="file" id="voiceFile" accept="audio/*,video/*" hidden></div>
+        <p class="muted" id="voiceNote" style="margin:12px 0 0;font-size:13px">The same name replaces that voice; a failed try keeps the old one.</p>
       </div>
     </div>
   </section>
@@ -201,12 +242,16 @@ async function loadList() {
 // ---- Views (#new, #project/<id>) ----
 function route() {
   const [, id] = location.hash.match(/^#project\/([\w-]+)/) || [];
-  view = id ? 'project' : 'new';
-  $('newView').classList.toggle('on', view === 'new');
-  $('projectView').classList.toggle('on', view === 'project');
+  view = id ? 'project' : ['#shots', '#voices'].includes(location.hash) ? location.hash.slice(1) : 'new';
+  for (const name of ['new', 'project', 'shots', 'voices']) $(name + 'View').classList.toggle('on', view === name);
+  $('navShots').classList.toggle('on', view === 'shots'); $('navVoices').classList.toggle('on', view === 'voices');
   $('newButton').disabled = view === 'new';
   toast('');
-  if (view === 'project') { current = {id}; refresh(); } else { current = null; preview(); }
+  if (view === 'shots' || view === 'voices') stopPreview();  // the live page keeps the mic meter
+  if (view === 'project') { current = {id}; editName(false); refresh(); } else current = null;
+  if (view === 'new') preview();
+  if (view === 'shots') loadShots().catch(failure => toast(failure.message));
+  if (view === 'voices') loadVoices().catch(failure => toast(failure.message));
   loadList().catch(failure => toast(failure.message));
 }
 addEventListener('hashchange', route);
@@ -389,10 +434,144 @@ $('revealFinal').onclick = () => api('reveal', {id: current.id, kind: 'final'}).
 $('revealFolder').onclick = () => api('reveal', {id: current.id, kind: 'folder'}).catch(failure => toast(failure.message));
 addEventListener('beforeunload', event => { if (current && ['recording', 'paused'].includes(current.state)) { event.preventDefault(); event.returnValue = 'The recording keeps going in the background.'; } });
 
+// Two clicks for anything that throws away: the first arms the button for 3 s.
+function twice(button, action) {
+  button.onclick = () => {
+    if (button.dataset.armed) { delete button.dataset.armed; return action(); }
+    const text = button.textContent;
+    button.dataset.armed = 1; button.textContent = 'Sure? Click again';
+    setTimeout(() => { if (button.dataset.armed) { delete button.dataset.armed; button.textContent = text; } }, 3000);
+  };
+}
+const make = (tag, className, text) => { const item = document.createElement(tag); if (className) item.className = className; if (text != null) item.textContent = text; return item; };
+
+// ---- Project: rename, delete ----
+function editName(on) {
+  $('pName').hidden = on; $('pNameEdit').hidden = !on; $('renameButton').hidden = on;
+  if (on) { $('pNameEdit').value = current.name; $('pNameEdit').focus(); $('pNameEdit').select(); }
+}
+$('pName').onclick = $('renameButton').onclick = () => editName(true);
+$('pNameEdit').onkeydown = event => { if (event.key === 'Escape') editName(false); if (event.key === 'Enter') saveName(); };
+$('pNameEdit').onblur = saveName;
+async function saveName() {
+  const name = $('pNameEdit').value.trim();
+  if ($('pNameEdit').hidden) return;
+  editName(false);
+  if (!name || name === current.name) return;
+  try { await api('project-rename', {id: current.id, name}); $('pName').textContent = name; await refresh(); loadList(); } catch (failure) { toast(failure.message); }
+}
+twice($('deleteButton'), async () => {
+  try { await api('project-remove', {id: current.id}); location.hash = '#new'; } catch (failure) { toast(failure.message); }
+});
+
+// ---- Screenshots ----
+async function loadShots() {
+  const shots = await api('shots');
+  $('shotCount').textContent = shots.length || '';
+  if (view !== 'shots') return;
+  // Rebuild only when the list changed, so a half-clicked Delete isn't reset by the refresh.
+  const key = shots.map(shot => shot.name).join('|');
+  if ($('shots').dataset.key === key) return;
+  $('shots').dataset.key = key;
+  if (!shots.length) { $('shots').replaceChildren(make('div', 'empty', 'No screenshots yet. Press ⌘1, drag an area or press space for a window.')); return; }
+  $('shots').replaceChildren(...shots.map(shot => {
+    const card = make('div', 'shot'), link = make('a'), bar = make('div');
+    const url = '/shot?token=' + token + '&name=' + encodeURIComponent(shot.name);
+    const image = make('img'); image.src = url; image.alt = shot.name; image.loading = 'lazy';
+    link.href = url; link.target = '_blank'; link.title = shot.name; link.append(image);
+    const copy = make('button', 'small', 'Copy'), reveal = make('button', 'small', 'Finder'), remove = make('button', 'small', 'Delete');
+    copy.onclick = () => api('shot-copy', {name: shot.name}).then(() => copy.textContent = 'Copied').catch(failure => toast(failure.message));
+    reveal.onclick = () => api('shot-reveal', {name: shot.name}).catch(failure => toast(failure.message));
+    twice(remove, () => api('shot-remove', {name: shot.name}).then(loadShots).catch(failure => toast(failure.message)));
+    bar.append(make('small', '', when(shot.created)), copy, reveal, remove);
+    card.append(link, bar);
+    return card;
+  }));
+}
+
+// ---- Voices ----
+async function loadVoices() {
+  const voices = await api('voices');
+  $('voiceCount').textContent = voices.length || '';
+  if (view !== 'voices') return;
+  const key = voices.map(voice => voice.name + voice.created).join('|');
+  if ($('voices').dataset.key === key) return;
+  $('voices').dataset.key = key;
+  if (!voices.length) { $('voices').replaceChildren(make('div', 'card empty', 'No voices yet. Add one: read the text aloud, or upload a voice note.')); return; }
+  $('voices').replaceChildren(...voices.map(voice => {
+    const card = make('div', 'card voice'), top = make('div', 'top'), remove = make('button', 'small', 'Delete');
+    top.append(make('h3', '', voice.name), remove);
+    const sample = make('audio'); sample.controls = true; sample.preload = 'none';
+    sample.src = '/voice?token=' + token + '&name=' + voice.name + '&v=' + voice.created;
+    const say = make('div', 'say'), text = make('input'), go = make('button', '', 'Say it'), result = make('audio');
+    text.type = 'text'; text.placeholder = 'Type something to hear it in this voice'; text.maxLength = 600;
+    result.controls = true; result.hidden = true;
+    go.onclick = async () => {
+      go.disabled = true; go.textContent = 'Speaking…'; toast('');
+      try {
+        await api('voice-say', {name: voice.name, text: text.value});
+        result.src = '/voice?token=' + token + '&kind=try&name=' + voice.name + '&v=' + Date.now(); result.hidden = false; result.play();
+      } catch (failure) { toast(failure.message); }
+      finally { go.disabled = false; go.textContent = 'Say it'; }
+    };
+    text.onkeydown = event => { if (event.key === 'Enter') go.click(); };
+    say.append(text, go);
+    twice(remove, () => api('voice-remove', {name: voice.name}).then(loadVoices).catch(failure => toast(failure.message)));
+    card.append(top, make('p', '', 'Made ' + when(voice.created) + ' · “' + voice.said + '”'), sample, say, result);
+    return card;
+  }));
+}
+// Adding one: record in the page (stops by itself after 20 s) or pick a file; the server cleans it, trims it and checks the words.
+let voiceRecorder = null;
+async function addVoice(blob) {
+  const name = $('voiceName').value.trim() || 'me';
+  if (!/^[\w-]+$/.test(name)) { toast('A voice name is letters, digits, - or _ (no spaces).'); return; }
+  $('voiceRecord').disabled = $('voicePick').disabled = true; toast('');
+  $('voiceNote').textContent = 'Cleaning the sample and checking the words… about a minute.';
+  try {
+    const response = await fetch('/voice-add?name=' + encodeURIComponent(name), {method: 'POST', headers: {Authorization: 'Bearer ' + token}, body: blob});
+    const result = await response.json();
+    if (!response.ok) throw Error(result.error);
+    $('voiceNote').textContent = 'Added “' + name + '”. It heard: “' + result.said + '”';
+    loadVoices();
+  } catch (failure) { $('voiceNote').textContent = 'Not added.'; toast(failure.message); }
+  finally { $('voiceRecord').disabled = $('voicePick').disabled = false; }
+}
+$('voiceRecord').onclick = async () => {
+  if (voiceRecorder) { voiceRecorder.stop(); return; }
+  try {
+    const mic = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: false, noiseSuppression: false, autoGainControl: false}});
+    const parts = [];
+    voiceRecorder = new MediaRecorder(mic);
+    const context = new AudioContext(), analyser = context.createAnalyser(), buffer = new Float32Array(1024);
+    analyser.fftSize = 1024; context.createMediaStreamSource(mic).connect(analyser);
+    const started = Date.now();
+    const tick = () => {
+      if (!voiceRecorder) return;
+      analyser.getFloatTimeDomainData(buffer);
+      $('voiceLevel').style.width = Math.min(100, Math.sqrt(buffer.reduce((total, value) => total + value * value, 0) / buffer.length) * 500) + '%';
+      const seconds = (Date.now() - started) / 1000;
+      $('voiceRecord').textContent = '■ Stop · ' + Math.floor(seconds) + ' s';
+      if (seconds >= 20) voiceRecorder.stop(); else requestAnimationFrame(tick);
+    };
+    voiceRecorder.ondataavailable = event => parts.push(event.data);
+    voiceRecorder.onstop = () => {
+      mic.getTracks().forEach(track => track.stop()); context.close();
+      voiceRecorder = null; $('voiceRecord').textContent = '● Record'; $('voiceLevel').style.width = '0';
+      addVoice(new Blob(parts, {type: parts[0]?.type}));
+    };
+    voiceRecorder.start(); tick();
+    $('voiceNote').textContent = 'Recording: read the text, then press Stop.';
+  } catch (failure) { toast('Can’t open the mic here: ' + failure.message); }
+};
+$('voicePick').onclick = () => $('voiceFile').click();
+$('voiceFile').onchange = () => { if ($('voiceFile').files[0]) addVoice($('voiceFile').files[0]); $('voiceFile').value = ''; };
+
 // Live: the open project every 0.7 s (steps, recording timer), the list every 3 s (an agent may render meanwhile).
 setInterval(() => { if (view === 'project') refresh(); }, 700);
 setInterval(timer, 250);
-setInterval(() => loadList().catch(() => {}), 3000);
+setInterval(() => { loadList().catch(() => {}); loadShots().catch(() => {}); }, 3000);
+loadVoices().catch(() => {});
 if (!location.hash) history.replaceState(null, '', '#new');
 sources().catch(failure => toast(failure.message)).finally(route);
 </script>

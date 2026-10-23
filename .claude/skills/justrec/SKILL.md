@@ -14,6 +14,9 @@ the recording panel and says "edit project 3f9a1c2e"). Its files live in `~/.jus
 or a path). The user's folder `~/Documents/justrec/` (`JUSTREC_DIR`) only gets finished videos:
 `justrec render <id>` writes `<name>-<id>.mp4` there (re-rendering replaces it) and screenshots.
 
+`justrec project rename <id> <name>` renames a project and its finished video; `justrec project remove <id>`
+moves the project and its video to the Trash (only when the user asks; refused while it records).
+
 **The user names a project** ("edit project 3f9a1c2e: …") → go to **B. Edit**: one `justrec edit <id>` call takes
 several options at once, then `justrec render <id>`. No film needed. The user's recording panel follows along:
 it shows each render step with its timing and plays the new video when it's done.
@@ -169,6 +172,8 @@ recording is silent too (recorded without a mic): check `recording.mp4` in the p
 
 The user takes them with ⌘1 (menu bar app): drag an area or press space for a window; the shot
 is framed on a wallpaper, saved to `~/Documents/justrec/shots/`, copied, and shown in Finder.
+`justrec shot list` lists them (newest first); `shot copy <file>` puts one on the clipboard, `shot remove <file>`
+moves it to the Trash (only when the user asks). The panel's Screenshots page shows them too.
 For an agent: `justrec browser shot <file.png>` (page) then `justrec shot --from <file.png> --no-copy
 [--background sunset] [--out file]` for the framed version; `--plain` skips the frame.
 
@@ -178,6 +183,8 @@ For an agent: `justrec browser shot <file.png>` (page) then `justrec shot --from
 (Qwen3-TTS, local, ~30 s per sentence; short sentences sound most natural). The user records one
 with `justrec voice add me` (reads a paragraph aloud for 15–20 s; it's cleaned and cut
 automatically) — it records the mic, so ask the user and tell them when to start.
-`justrec voice say me "text"` writes `voice-me.wav` to try it. Use `pronounce` for names
+There can be several voices (one per name); the panel's Voices page lists them, plays each sample, tries text,
+and adds one (recorded in the page or uploaded: a voice note or video). A failed try keeps the old voice.
+`justrec voice say me "text" [--out f]` writes `voice-me.wav` to try it; `voice remove <name>` moves it to the Trash. Use `pronounce` for names
 (e.g. `{"Claude": "Clawd"}`).
 
