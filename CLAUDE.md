@@ -18,9 +18,11 @@ the output, not just that it compiles.
 - `lib/browser.mjs` — the justrec browser (Brave on a profile copy, debugging port 9333):
   `justrec browser ...` driving commands, and the page recorder used by `start --browser`
   (same JSON-lines protocol as `rec.swift`).
-- `app.swift` + `lib/app.mjs` — justrec.app, the menu bar app (`justrec install`): ⌘1 screenshots (native
-  picker, frame, sound, Finder), Record… (opens the recording panel); a launchd agent at login. Installed to
-  ~/Applications only when the build changes: a new build needs the Screen Recording grant again.
+- `app.swift` + `lib/app.mjs` — justrec.app, the menu bar app (`justrec install`), a **thin shell**: menu, ⌘1 key,
+  the permission check, and starting helpers. macOS ties Screen Recording/Microphone permission to this exact
+  build and helpers it starts use it, so **don't change app.swift for features**: each change makes the user grant
+  the permission again (install replaces the app only when app.swift changed). Features go in the helpers:
+  `picker.swift` (⌘1 screenshot: picker, frame, sound, Finder), `rec.swift`, the panel and the CLI.
 - `lib/shot.mjs` — framed screenshots from the command line (`justrec shot`).
 - `lib/voice.mjs` — the user's own cloned voice for narration (Qwen3-TTS via mlx-audio).
 - `lib/project.mjs` — project JSON and edits (`justrec edit`); `lib/render.mjs` +
