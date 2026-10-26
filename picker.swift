@@ -256,8 +256,10 @@ func justrec(_ arguments: [String], wait: Bool = true) -> [String: Any]? {
   return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
 }
 func alert(_ title: String, _ text: String) {
+  // Calls from a background thread (stopping runs on one) crashed the picker: windows only on the main thread.
+  guard Thread.isMainThread else { return DispatchQueue.main.async { alert(title, text) } }
   NSApp.activate(ignoringOtherApps: true)
-  let alert = NSAlert(); alert.messageText = title; alert.informativeText = text; alert.runModal()
+  let box = NSAlert(); box.messageText = title; box.informativeText = text; box.runModal()
 }
 
 // The screen holding most of the area (by its id: an index can point at another screen when one comes or goes), and the
