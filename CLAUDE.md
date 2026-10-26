@@ -68,6 +68,9 @@ ffmpeg -hide_banner -i <file.mp4> -vn -af volumedetect -f null - 2>&1 | grep vol
 ffmpeg -y -ss 2 -i <file.mp4> -frames:v 1 frame.png
 ```
 
+Every justrec process (picker, cli, session, recorder, panel, render steps) writes what it does with times to
+`~/.justrec/trace.log`: read it first when something is slow or fails.
+
 Recording needs Screen Recording + Microphone permission for the terminal app
 running it. If ScreenCaptureKit says the user declined, the permission is missing:
 say so, don't work around it.

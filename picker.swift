@@ -8,6 +8,18 @@
 import AppKit
 import Carbon
 
+let traceName = "picker"
+// One timeline with the other justrec processes (see trace in lib/common.mjs): ~/.justrec/trace.log
+func trace(_ message: String) {
+    let now = Date(), formatter = DateFormatter()
+    formatter.dateFormat = "HH:mm:ss.SSS"
+    let line = "\(formatter.string(from: now)) \(traceName)[\(getpid())] \(message)\n"
+    let descriptor = open(NSHomeDirectory() + "/.justrec/trace.log", O_WRONLY | O_APPEND | O_CREAT, 0o644)
+    guard descriptor >= 0 else { return }
+    _ = line.withCString { write(descriptor, $0, strlen($0)) }
+    close(descriptor)
+}
+
 func setting(_ name: String) -> String? { UserDefaults.standard.string(forKey: name) ?? UserDefaults(suiteName: "com.justrec.app")?.string(forKey: name) }
 let wallpaper = setting("wallpaper").flatMap { NSImage(contentsOfFile: $0)?.cgImage(forProposedRect: nil, context: nil, hints: nil) }
 let outputDir = URL(fileURLWithPath: setting("shots") ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Documents/justrec/shots").path)
@@ -124,6 +136,7 @@ final class Picker: NSView {
     let rect = NSRect(x: min(begin.x, point.x), y: min(begin.y, point.y), width: abs(point.x - begin.x), height: abs(point.y - begin.y))
     if rect.width < 4 || rect.height < 4 { show(nil); return }
     let origin = window!.frame.origin
+    trace("area drawn: \(Int(rect.width))×\(Int(rect.height))")
     if recordMode { quick(area: rect.offsetBy(dx: origin.x, dy: origin.y)); return }
     finish { capture(area: rect.offsetBy(dx: origin.x, dy: origin.y)) }
   }
@@ -223,6 +236,9 @@ let cli = setting("cli") ?? "justrec"
 func sound(_ name: String) { NSSound(contentsOfFile: "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/\(name).caf", byReference: true)?.play() }
 // Runs the justrec command and returns its JSON (nil and a message on failure).
 func justrec(_ arguments: [String], wait: Bool = true) -> [String: Any]? {
+  let began = Date()
+  trace("runs: justrec \(arguments.joined(separator: " "))")
+  defer { if wait { trace("justrec \(arguments[0]) returned after \(String(format: "%.2f", Date().timeIntervalSince(began))) s") } }
   let process = Process(), output = Pipe(), errors = Pipe()
   process.executableURL = URL(fileURLWithPath: cli)
   process.arguments = arguments
@@ -233,6 +249,7 @@ func justrec(_ arguments: [String], wait: Bool = true) -> [String: Any]? {
   let data = output.fileHandleForReading.readDataToEndOfFile(), problem = errors.fileHandleForReading.readDataToEndOfFile()
   process.waitUntilExit()
   if process.terminationStatus != 0 {
+    trace("justrec \(arguments[0]) failed: \(String(decoding: problem, as: UTF8.self).suffix(300))")
     let message = String(decoding: problem, as: UTF8.self).split(separator: "\n").last.flatMap { try? JSONSerialization.jsonObject(with: Data($0.utf8)) as? [String: Any] }?["error"] as? String
     alert("Quick recording failed", message ?? String(decoding: problem, as: UTF8.self)); return nil
   }
@@ -297,12 +314,14 @@ func record(_ source: [String], around rect: NSRect) {
   pill.contentView = timer
   pill.orderFrontRegardless()
   frames = [frame, pill]
+  trace("grey frame shown")
   DispatchQueue.global().async {
     let result = justrec(["start"] + source + ["--mic", "default", "--fps", "60", "--name", "Quick recording"])
     DispatchQueue.main.async {
       guard let id = result?["id"] as? String else { done(); return }
       session = id
       started = Date()
+      trace("red frame: recording")
       sound("begin_record")
       border.layer!.borderColor = NSColor(calibratedRed: 1, green: 0.27, blue: 0.23, alpha: 1).cgColor
       timer.layer!.backgroundColor = NSColor(calibratedRed: 0.85, green: 0.2, blue: 0.18, alpha: 0.95).cgColor
@@ -322,6 +341,7 @@ var stopping = false
 func stop() {
   guard let id = session, !stopping else { return }
   stopping = true
+  trace("stop pressed")
   frames.forEach { $0.orderOut(nil) }
   sound("end_record")
   DispatchQueue.global().async {
@@ -346,12 +366,14 @@ func done() {
 signal(SIGUSR1, SIG_IGN)
 let pressed = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
 pressed.setEventHandler {
+  trace("key pressed (\(stopping ? "stopping" : session != nil ? "recording" : !frames.isEmpty ? "starting" : !overlays.isEmpty ? "overlay open" : "idle"))")
   if stopping || (!frames.isEmpty && session == nil) { return }  // finishing, or still starting
   if session != nil { stop() } else if !overlays.isEmpty { finish(nil) } else { begin() }
 }
 pressed.resume()
 
 func pick() {
+  defer { trace("overlay shown") }
   if recordMode { _ = justrec(["ui", "--no-open"], wait: false) }  // the panel's server, ready for when this recording stops
   for screen in NSScreen.screens {
     let overlay = Overlay(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
@@ -386,5 +408,6 @@ func begin() {
     if recordMode { quick(area: rect) } else { finish { capture(area: rect) } }
   } else { pick() }
 }
+trace("loaded, \(recordMode ? "quick recording" : "screenshot") mode")
 begin()
 NSApplication.shared.run()

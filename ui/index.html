@@ -253,7 +253,7 @@ function route() {
   toast('');
   if (view === 'shots' || view === 'voices') stopPreview();  // the live page keeps the mic meter
   if (view === 'project') { current = {id}; editName(false); refresh(); } else current = null;
-  if (view === 'new') preview();
+  if (view === 'new') { preview(); loadSources(); }
   if (view === 'shots') loadShots().catch(failure => toast(failure.message));
   if (view === 'voices') loadVoices().catch(failure => toast(failure.message));
   loadList().catch(failure => toast(failure.message));
@@ -266,6 +266,10 @@ function option(select, value, text) { const item = document.createElement('opti
 const remember = ['name', 'source', 'mic', 'camera', 'fps', 'delay', 'systemAudio'];
 function restore() { try { const saved = JSON.parse(localStorage.getItem('justrec-setup') || '{}'); for (const key of remember) if (key in saved) $(key)[$(key).type === 'checkbox' ? 'checked' : 'value'] = saved[key]; } catch {} }
 function store() { try { localStorage.setItem('justrec-setup', JSON.stringify(Object.fromEntries(remember.map(key => [key, $(key).type === 'checkbox' ? $(key).checked : $(key).value])))); } catch {} }
+// Screens and devices, once, when the new-recording page first shows: every open tab asking at once (a panel
+// restart reloads them all) kept macOS's capture service busy while a quick recording was starting.
+let sourcesLoaded;
+function loadSources() { sourcesLoaded ||= sources().then(() => { if (view === 'new') preview(); }).catch(failure => { sourcesLoaded = null; toast(failure.message); }); }
 async function sources() {
   const data = await api('sources');
   $('source').replaceChildren();
@@ -605,9 +609,7 @@ setInterval(timer, 250);
 setInterval(() => { loadList().catch(() => {}); loadShots().catch(() => {}); }, 3000);
 loadVoices().catch(() => {});
 if (!location.hash) history.replaceState(null, '', '#new');
-// The page first; screens and devices (a second or so) fill the new-recording form when they arrive.
 route();
-sources().then(() => { if (view === 'new') preview(); }).catch(failure => toast(failure.message));
 </script>
 </body>
 </html>

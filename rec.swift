@@ -8,9 +8,24 @@ func emit(_ value: [String: Any]) {
     }
 }
 
+let traceName = "rec"
+
+// One timeline with the other justrec processes (see trace in lib/common.mjs): ~/.justrec/trace.log
+func trace(_ message: String) {
+    let now = Date(), formatter = DateFormatter()
+    formatter.dateFormat = "HH:mm:ss.SSS"
+    let line = "\(formatter.string(from: now)) \(traceName)[\(getpid())] \(message)\n"
+    let descriptor = open(NSHomeDirectory() + "/.justrec/trace.log", O_WRONLY | O_APPEND | O_CREAT, 0o644)
+    guard descriptor >= 0 else { return }
+    _ = line.withCString { write(descriptor, $0, strlen($0)) }
+    close(descriptor)
+}
+
+// _exit: a plain exit could hang in the system's own cleanup after a capture error, leaving a recorder that blocked the next ones.
 func fail(_ message: String) -> Never {
+    trace("failed: \(message)")
     emit(["event": "error", "message": message])
-    exit(1)
+    _exit(1)
 }
 
 struct Options: Decodable {
@@ -174,9 +189,11 @@ struct Rec {
         _ = NSApplication.shared
         let arguments = CommandLine.arguments
         guard arguments.count >= 2 else { fail("Expected sources or a capture configuration JSON path") }
+        trace("started: \(arguments[1])")
         let content: SCShareableContent
         do { content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: false) }
         catch { fail("Screen Recording permission is required for the host app. Enable it in System Settings > Privacy & Security > Screen & System Audio Recording, then restart the host app. \(error.localizedDescription)") }
+        trace("screens and windows listed: \(content.displays.count) screens, \(content.windows.count) windows")
         let microphones = AVCaptureDevice.DiscoverySession(deviceTypes: [.microphone, .external], mediaType: .audio, position: .unspecified).devices
         let cameras = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera, .external], mediaType: .video, position: .unspecified).devices
         let displays = content.displays.sorted { first, second in
@@ -247,6 +264,7 @@ struct Rec {
             let microphone = name == "default" ? AVCaptureDevice.default(for: .audio) : microphones.first { $0.uniqueID == name || $0.localizedName == name }
             guard let microphone else { fail("Microphone '\(name)' is not available") }
             configuration.microphoneCaptureDeviceID = microphone.uniqueID
+            trace("mic: \(microphone.localizedName)")
         }
         let cameraSession = AVCaptureSession()
         let cameraOutput = AVCaptureMovieFileOutput()
@@ -264,6 +282,7 @@ struct Rec {
                 cameraSession.startRunning()
                 cameraOutput.startRecording(to: URL(fileURLWithPath: destination), recordingDelegate: cameraDelegate)
                 guard await wait(cameraDelegate.started, seconds: 20) else { fail("Camera did not start within 20 seconds") }
+                trace("camera started: \(camera.localizedName)")
             } catch { fail("Cannot start camera: \(error.localizedDescription)") }
         }
         let cursor: CursorLog
@@ -289,14 +308,18 @@ struct Rec {
         do {
             for (_, type, stem) in stems { try stream.addStreamOutput(stem, type: type, sampleHandlerQueue: stem.queue) }
             try stream.addRecordingOutput(output)
+            trace("asking macOS to start capturing \(configuration.width)×\(configuration.height) at \(options.fps) fps")
             try await stream.startCapture()
+            trace("capture started, waiting for the file to start")
         } catch { fail("Cannot start recording: \(error.localizedDescription)") }
         guard await wait(delegate.started, seconds: 20), delegate.error == nil else { fail(delegate.error ?? "Recording did not start within 20 seconds") }
+        trace("recording")
         emit(["event": "capture", "width": configuration.width, "height": configuration.height, "fps": options.fps,
               "bounds": [bounds.minX, bounds.minY, bounds.width, bounds.height]])
         while !(await wait(stop, seconds: 0.25)) {
             if let error = delegate.error { fail(error) }
         }
+        trace("stopping")
         do { try await stream.stopCapture() }
         catch { fail("Cannot stop recording: \(error.localizedDescription)") }
         guard await wait(delegate.finished, seconds: 20), delegate.error == nil else { fail(delegate.error ?? "Recording finalization timed out") }
@@ -313,6 +336,7 @@ struct Rec {
             cameraSession.stopRunning()
         }
         withExtendedLifetime(signals) {}
+        trace("finished")
         emit(["event": "finished", "output": options.output])
     }
 }
