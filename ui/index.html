@@ -381,8 +381,8 @@ async function refresh() {
   $('revealFinal').disabled = !project.final;
   $('renderAgain').disabled = busy || project.state === 'rendering' || !project.recording;
 }
-// Mic, Mac sound and webcam: what the recording has, each in or out of the video. A change waits for Render again.
-const switchNames = {mic: ['Microphone', 'Your voice'], system: ['Mac sound', 'Sound from apps'], webcam: ['Camera bubble', 'You in a circle in the corner']};
+// Mic, Mac sound, webcam, click sounds and zooms: each in or out of the video. A change waits for Render again.
+const switchNames = {mic: ['Microphone', 'Your voice'], system: ['Mac sound', 'Sound from apps'], webcam: ['Camera bubble', 'You in a circle in the corner'], clicks: ['Click sounds', 'A soft tick on each click'], zooms: ['Zoom on clicks', 'Moves in where you click']};
 function showSwitches(project) {
   const list = Object.entries(project.switches || {});
   $('switches').hidden = !list.length;

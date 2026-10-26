@@ -160,6 +160,19 @@ final class RecordingDelegate: NSObject, SCRecordingOutputDelegate, @unchecked S
     }
 }
 
+// macOS's own Stop (the screen-recording icon in the menu bar) ends the stream: finish the file as if asked to stop.
+final class StreamDelegate: NSObject, SCStreamDelegate, @unchecked Sendable {
+    let stop: DispatchSemaphore
+    var stopped = false
+    init(stop: DispatchSemaphore) { self.stop = stop }
+    func stream(_ stream: SCStream, didStopWithError error: Error) {
+        trace("macOS stopped the capture: \(error.localizedDescription)")
+        stopped = true
+        emit(["event": "stopped"])
+        stop.signal()
+    }
+}
+
 final class CameraDelegate: NSObject, AVCaptureFileOutputRecordingDelegate, @unchecked Sendable {
     let finished = DispatchSemaphore(value: 0)
     let started = DispatchSemaphore(value: 0)
@@ -294,8 +307,9 @@ struct Rec {
         recordingConfiguration.outputFileType = .mp4
         recordingConfiguration.videoCodecType = .h264
         let output = SCRecordingOutput(configuration: recordingConfiguration, delegate: delegate)
-        let stream = SCStream(filter: filter, configuration: configuration, delegate: nil)
         let stop = DispatchSemaphore(value: 0)
+        let streamDelegate = StreamDelegate(stop: stop)
+        let stream = SCStream(filter: filter, configuration: configuration, delegate: streamDelegate)
         let signals = [SIGINT, SIGTERM].map { number -> DispatchSourceSignal in
             signal(number, SIG_IGN)
             let source = DispatchSource.makeSignalSource(signal: number, queue: .global())
@@ -320,9 +334,9 @@ struct Rec {
             if let error = delegate.error { fail(error) }
         }
         trace("stopping")
-        do { try await stream.stopCapture() }
+        do { if !streamDelegate.stopped { try await stream.stopCapture() } }
         catch { fail("Cannot stop recording: \(error.localizedDescription)") }
-        guard await wait(delegate.finished, seconds: 20), delegate.error == nil else { fail(delegate.error ?? "Recording finalization timed out") }
+        guard await wait(delegate.finished, seconds: streamDelegate.stopped ? 5 : 20) || streamDelegate.stopped, delegate.error == nil else { fail(delegate.error ?? "Recording finalization timed out") }
         cursor.stop()
         var saved: [String: Any] = [:]
         for (kind, _, stem) in stems {
