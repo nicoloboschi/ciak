@@ -47,7 +47,8 @@ export function Clip({project, clip, sourceUrl, events, clicks, transcript, webc
   const {fps, width, height} = useVideoConfig();
   const time = clip.start + frame * rate / fps;
   const padding = box?.padding ?? project.style.padding;
-  const ratio = Math.min(((box?.width ?? width) - 2 * padding) / project.width, ((box?.height ?? height) - 2 * padding) / project.height);
+  // At most 2 video pixels per recorded pixel: a small area on a non-Retina screen blown up more turns to mush.
+  const ratio = Math.min(2, ((box?.width ?? width) - 2 * padding) / project.width, ((box?.height ?? height) - 2 * padding) / project.height);
   const screenWidth = project.width * ratio;
   const screenHeight = project.height * ratio;
   const index = project.zooms.findIndex(item => time >= item.start && time <= item.end);
