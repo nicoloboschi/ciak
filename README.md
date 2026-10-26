@@ -80,6 +80,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Optional system audio, mixed into the same track (never a second track)
 - ✅ Record a single window (only while visible) or a region
 - ✅ Optional webcam bubble
+- ✅ Mic, Mac sound and webcam each on or off in the video afterwards (`edit --mic off`, the panel's "In the video"): the recorder also saves the mic and the Mac sound apart
 - ✅ Menu bar app (`justrec install`): ⌘1 screenshots, Record… (the recording panel), Open Recordings; starts at login and holds the permissions
 - ✅ Panel (`justrec ui`, menu bar Record…): projects on the left (thumbnail, time, length, state); a new recording with live camera preview and mic meter; after Finish every step (stop, encode + mix, clicks, auto edit, render frames with a live count, audio, check) with its timing, then the video and the project id with a prompt for your agent. It follows an agent's renders live. Rename or delete a project there (`justrec project rename|remove`; delete goes to the Trash)
 - ✅ Quick recording (⌘2): the screenshot overlay picks an area or a window, a red frame and timer show while it records (default mic); ⌘2 or a click on the timer stops it, the panel opens on the project and renders it. The picker stays loaded between uses, so the overlay opens at once

@@ -243,15 +243,14 @@ func alert(_ title: String, _ text: String) {
   let alert = NSAlert(); alert.messageText = title; alert.informativeText = text; alert.runModal()
 }
 
-// The screen holding most of the area, as the recorder numbers them (main display first, then by id), and the
+// The screen holding most of the area (by its id: an index can point at another screen when one comes or goes), and the
 // area inside it in points from its top left.
 func quick(area: NSRect) {
   guard let screen = NSScreen.screens.max(by: { $0.frame.intersection(area).width * $0.frame.intersection(area).height < $1.frame.intersection(area).width * $1.frame.intersection(area).height }) else { return }
   let id = { (screen: NSScreen) in screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID ?? 0 }
-  let order = NSScreen.screens.map(id).sorted { ($0 == CGMainDisplayID() ? 0 : 1, $0) < ($1 == CGMainDisplayID() ? 0 : 1, $1) }
   let clipped = screen.frame.intersection(area)
   let region = [clipped.minX - screen.frame.minX, screen.frame.maxY - clipped.maxY, clipped.width, clipped.height].map { String(Int($0.rounded())) }
-  record(["--display", String(order.firstIndex(of: id(screen)) ?? 0), "--region", region.joined(separator: ",")], around: clipped)
+  record(["--display-id", String(id(screen)), "--region", region.joined(separator: ",")], around: clipped)
 }
 func quick(window id: CGWindowID, rect: NSRect) { record(["--window", String(id)], around: rect) }
 

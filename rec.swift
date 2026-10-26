@@ -17,6 +17,7 @@ struct Options: Decodable {
     var output: String
     var cursor: String
     var display: Int
+    var displayID: UInt32?
     var window: UInt32?
     var region: [Double]?
     var microphone: String?
@@ -86,13 +87,51 @@ final class CursorLog: @unchecked Sendable {
     }
 }
 
+// With both the mic and the Mac sound on, the recording has them mixed in one track. Each is also saved on its own
+// (<output>.mic.m4a, <output>.system.m4a) so an edit can leave one out. `first` is when its first sound came.
+final class Stem: NSObject, SCStreamOutput, @unchecked Sendable {
+    let path: String
+    let queue = DispatchQueue(label: "justrec.stem")
+    var file: AVAudioFile?
+    var first: Double?
+    var written = 0.0
+    init(path: String) { self.path = path }
+    func stream(_ stream: SCStream, didOutputSampleBuffer sample: CMSampleBuffer, of type: SCStreamOutputType) {
+        guard sample.isValid, var description = sample.formatDescription?.audioStreamBasicDescription,
+              let format = AVAudioFormat(streamDescription: &description), sample.numSamples > 0,
+              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(sample.numSamples)) else { return }
+        buffer.frameLength = buffer.frameCapacity
+        guard CMSampleBufferCopyPCMDataIntoAudioBufferList(sample, at: 0, frameCount: Int32(sample.numSamples), into: buffer.mutableAudioBufferList) == noErr else { return }
+        let time = sample.presentationTimeStamp.seconds
+        do {
+            if file == nil {
+                file = try AVAudioFile(forWriting: URL(fileURLWithPath: path), settings: [AVFormatIDKey: kAudioFormatMPEG4AAC, AVSampleRateKey: format.sampleRate,
+                    AVNumberOfChannelsKey: format.channelCount, AVEncoderBitRateKey: 128000], commonFormat: format.commonFormat, interleaved: format.isInterleaved)
+                first = time
+            }
+            // No sound sent for a while: fill the gap with silence so the file stays in time with the video.
+            let gap = AVAudioFrameCount(max(0, (time - first! - written) * format.sampleRate))
+            if gap > AVAudioFrameCount(format.sampleRate / 50), let silence = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: gap) {
+                silence.frameLength = gap
+                for channel in UnsafeMutableAudioBufferListPointer(silence.mutableAudioBufferList) { memset(channel.mData, 0, Int(channel.mDataByteSize)) }
+                try file!.write(from: silence)
+                written += Double(gap) / format.sampleRate
+            }
+            try file!.write(from: buffer)
+            written += Double(buffer.frameLength) / format.sampleRate
+        } catch { emit(["event": "warning", "message": "Cannot save the separate \(path): \(error.localizedDescription)"]) }
+    }
+}
+
 final class RecordingDelegate: NSObject, SCRecordingOutputDelegate, @unchecked Sendable {
     let finished = DispatchSemaphore(value: 0)
     let started = DispatchSemaphore(value: 0)
     let cursor: CursorLog
     var error: String?
+    var startedAt = 0.0  // host clock, the one the sound's times use
     init(cursor: CursorLog) { self.cursor = cursor }
     func recordingOutputDidStartRecording(_ output: SCRecordingOutput) {
+        startedAt = CMClockGetTime(CMClockGetHostTimeClock()).seconds
         cursor.start(at: ProcessInfo.processInfo.systemUptime)
         emit(["event": "recording", "startedAt": Date().timeIntervalSince1970])
         started.signal()
@@ -176,8 +215,9 @@ struct Rec {
             filter = SCContentFilter(desktopIndependentWindow: window)
             bounds = window.frame
         } else {
-            guard displays.indices.contains(options.display) else { fail("Display index \(options.display) is not available") }
-            let display = displays[options.display]
+            if let id = options.displayID, !displays.contains(where: { $0.displayID == id }) { fail("Screen \(id) can't be recorded now: it is off or disconnected") }
+            guard options.displayID != nil || displays.indices.contains(options.display) else { fail("Display index \(options.display) is not available") }
+            let display = displays.first { $0.displayID == options.displayID } ?? displays[options.display]
             filter = SCContentFilter(display: display, excludingWindows: [])
             bounds = CGDisplayBounds(display.displayID)
         }
@@ -244,7 +284,10 @@ struct Rec {
             source.resume()
             return source
         }
+        let stems = options.microphone != nil && options.systemAudio && options.audioApps == nil
+            ? [("system", SCStreamOutputType.audio), ("mic", SCStreamOutputType.microphone)].map { ($0.0, $0.1, Stem(path: options.output.replacingOccurrences(of: ".mp4", with: ".\($0.0).m4a"))) } : []
         do {
+            for (_, type, stem) in stems { try stream.addStreamOutput(stem, type: type, sampleHandlerQueue: stem.queue) }
             try stream.addRecordingOutput(output)
             try await stream.startCapture()
         } catch { fail("Cannot start recording: \(error.localizedDescription)") }
@@ -258,6 +301,12 @@ struct Rec {
         catch { fail("Cannot stop recording: \(error.localizedDescription)") }
         guard await wait(delegate.finished, seconds: 20), delegate.error == nil else { fail(delegate.error ?? "Recording finalization timed out") }
         cursor.stop()
+        var saved: [String: Any] = [:]
+        for (kind, _, stem) in stems {
+            stem.queue.sync { stem.file = nil }
+            if let first = stem.first { saved[kind] = ["file": stem.path, "offset": first - delegate.startedAt] }
+        }
+        if !saved.isEmpty { emit(["event": "stems", "stems": saved]) }
         if options.camera != nil {
             cameraOutput.stopRecording()
             guard await wait(cameraDelegate.finished, seconds: 20), cameraDelegate.error == nil else { fail("Camera finalization failed") }

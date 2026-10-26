@@ -160,6 +160,8 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
       <div>
         <video class="player" id="player" controls playsinline></video>
         <div class="banner" id="banner"></div>
+        <div class="card agent" id="switches"><h2>In the video</h2><div id="switchList"></div>
+          <p class="muted" id="switchNote" style="margin:4px 0 0;font-size:13px">Turn a part off and render again: the recording itself keeps everything.</p></div>
         <div class="card agent"><h2>Continue with your agent</h2>
           <div class="prompt"><span id="prompt"></span><button class="link" id="copyPrompt">Copy</button></div>
           <p class="muted" style="margin:10px 0 0;font-size:13px">Then say what you want: tighter cuts, less zoom, captions, a different background. The agent edits this project and renders it again; this page follows along.</p>
@@ -369,8 +371,33 @@ async function refresh() {
     $('banner').textContent = project.state === 'rendering' ? 'Rendering the edited video… the raw recording plays meanwhile.' : project.final ? '' : project.recording ? 'This is the raw recording: not rendered yet.' : '';
     steps(project);
   }
+  showSwitches(project);
   $('revealFinal').disabled = !project.final;
   $('renderAgain').disabled = busy || project.state === 'rendering' || !project.recording;
+}
+// Mic, Mac sound and webcam: what the recording has, each in or out of the video. A change waits for Render again.
+const switchNames = {mic: ['Microphone', 'Your voice'], system: ['Mac sound', 'Sound from apps'], webcam: ['Camera bubble', 'You in a circle in the corner']};
+function showSwitches(project) {
+  const list = Object.entries(project.switches || {});
+  $('switches').hidden = !list.length;
+  const key = project.id + JSON.stringify(project.switches);
+  if ($('switchList').dataset.key === key) return;
+  if (!$('switchList').dataset.key?.startsWith(project.id)) { $('renderAgain').classList.remove('primary'); $('renderAgain').textContent = 'Render again'; }
+  $('switchList').dataset.key = key;
+  $('switchList').replaceChildren(...list.map(([kind, on]) => {
+    const row = document.createElement('div'); row.className = 'toggle';
+    row.innerHTML = '<label><span></span><small></small></label><input type="checkbox">';
+    row.querySelector('span').textContent = switchNames[kind][0];
+    row.querySelector('small').textContent = switchNames[kind][1];
+    const box = row.querySelector('input'); box.id = 'switch-' + kind; row.querySelector('label').htmlFor = box.id; box.checked = on;
+    box.onchange = async () => {
+      box.disabled = true;
+      try { await api('project-switch', {id: project.id, kind, on: box.checked}); $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
+      catch (failure) { box.checked = !box.checked; toast(failure.message); }
+      finally { box.disabled = false; refresh(); }
+    };
+    return row;
+  }));
 }
 function timer() {
   if (view !== 'project' || !current || !['recording', 'paused'].includes(current.state)) return;
@@ -429,6 +456,7 @@ $('renderAgain').onclick = async () => {
   if (busy) return; busy = true; toast('');
   const id = current.id;
   $('renderAgain').disabled = true;
+  $('renderAgain').classList.remove('primary'); $('renderAgain').textContent = 'Render again';
   try { await api('render', {id}); } catch (failure) { toast(failure.message); }
   finally { busy = false; refresh(); loadList(); }
 };

@@ -142,6 +142,8 @@ justrec render <id>                    # → ~/Documents/justrec/<name>-<id>.mp4
   with small text (a 2560×1080 recording leaves ~80% background). Add `--auto-zoom` (zooms on clicks) or zooms by hand
   on what matters, and tell the user how it reads on a phone.
 - `--background aurora|sunset|ocean|meadow|graphite|midnight` (or any CSS background): the wallpaper behind the recording. Default aurora.
+- `--mic off|on`, `--system-audio off|on`, `--webcam off|on`: leave the voice, the Mac sound or the camera bubble out of the
+  video (the recording keeps them). Mic and Mac sound apart only for recordings that saved them apart (`audio.stems`).
 
 Everything else is a direct edit of the project JSON, then re-render:
 - `zooms[]`: `{start, end, x, y, scale}` in source seconds, x/y 0–1. "Zoom less" = lower `scale`; zooms that touch are chained.
