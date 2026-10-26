@@ -64,7 +64,7 @@ main{padding:28px 32px 60px;min-width:0;max-width:1240px}
 /* Project */
 .idbox{display:flex;align-items:center;gap:8px;background:#12151a;border:1px solid var(--line);border-radius:10px;padding:4px 6px 4px 12px}
 .idbox code{font:700 18px ui-monospace,Menlo,monospace;color:var(--accent);letter-spacing:1px}
-.player{width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;display:block}
+.player{width:100%;aspect-ratio:16/9;max-height:78vh;margin-bottom:20px;background:#000;border-radius:12px;display:block}
 .banner{font-size:12px;color:var(--warn);margin:8px 0 0}
 .agent{margin-top:16px}.agent .prompt{display:flex;gap:10px;align-items:center;background:#12151a;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 .agent .prompt span{flex:1;font-family:ui-monospace,Menlo,monospace;font-size:13px;overflow-wrap:anywhere}
@@ -156,10 +156,11 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
       <div class="meter"><div id="liveLevel"></div></div>
       <div class="actions"><button id="pauseButton">Pause</button><button class="danger" id="finishButton">■ Finish</button></div>
     </div>
-    <div class="cols" id="made">
+    <div id="made">
+      <video class="player" id="player" controls playsinline></video>
+      <div class="banner" id="banner"></div>
+      <div class="cols">
       <div>
-        <video class="player" id="player" controls playsinline></video>
-        <div class="banner" id="banner"></div>
         <div class="card agent" id="switches"><h2>In the video</h2><div id="switchList"></div>
           <p class="muted" id="switchNote" style="margin:4px 0 0;font-size:13px">Turn a part off and render again: the recording itself keeps everything.</p></div>
         <div class="card agent"><h2>Continue with your agent</h2>
@@ -171,6 +172,7 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
         <div id="steps"></div>
         <dl class="facts" id="facts"></dl>
         <div class="row" style="margin-top:16px"><button id="revealFinal">Show in Finder</button><button id="revealFolder">Project folder</button><button id="renderAgain">Render again</button></div>
+      </div>
       </div>
     </div>
   </section>
