@@ -72,7 +72,8 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ If the recorder crashes, the recording so far is kept and the session pauses
 - ✅ Action marks (`justrec mark`, `--at` or `--page`) to drive zooms when the real mouse doesn't move
 - ✅ Logged-in browser for agents (`justrec browser`), recorded while covered, page clicks/typing logged
-- ✅ Drive it from the command line: `browser click/type/key/scroll/go/eval/shot`
+- ✅ Drive it from the command line: `browser click/type/paste/key/scroll/go/eval/shot`
+- 🧪 Looks like a person: the mouse bows and slows into its target (longer moves take longer), typing has an uneven rhythm and replaces the field's text, long text is pasted
 - ✅ Browser sound in browser recordings (`--system-audio`: only the justrec browser, not other apps) · 🧪 `--mic`
 - ✅ Sharp: the justrec browser draws at 2x even on a non-Retina monitor
 - ✅ 60 fps by default (`--fps 30` for smaller files), kept through the render
@@ -141,7 +142,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Live preview in the browser (`film --live`): plays with sound, reloads when files change
 - ✅ Frame by frame (`justrec frames`): labelled frames of a scene or time range, before export
 - ✅ Terminal recordings: `terminal open` + `start --terminal` + `terminal run "<cmd>"` (real shell, secrets masked)
-- ✅ The check after every render (`justrec check`): layout, contrast, jumps, flashes, frozen recordings,
+- ✅ The check after every render (`justrec check`): layout, contrast, jumps, flashes, frozen recordings (also a recording that ends before its scene),
   voice vs music, misheard words, caption speed — each with a time and a frame
 
 ### Export

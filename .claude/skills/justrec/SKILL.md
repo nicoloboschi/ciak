@@ -39,12 +39,17 @@ browser window for this.
 justrec browser https://example.com/start    # start it (first run copies the profile) + open a tab
 justrec start --browser --fps 60 --system-audio --name <short-name>  # record the current tab (+ its sound; --mic for voice)
 justrec browser click "Sign in"              # CSS selector or visible text; the mouse glides there
-justrec browser type "Search" "my query"     # click a field, then type; or: type "text" into the focused field
+justrec browser type "Search" "my query"     # click a field, select what it holds, type over it (uneven, human rhythm); or: type "text" into the focused field
+justrec browser paste "Documents" "a\nb\nc"  # long or multi-line text arrives at once, like ⌘V (\n = new line)
 justrec browser key Enter                    # Enter Tab Escape Backspace Arrow* Space
 justrec browser scroll 600 | go <url> | eval <js> | tabs | switch <tab>   # recordings follow the active tab
 justrec browser shot /tmp/look.png           # see the page before deciding the next step
 justrec stop
 ```
+
+**Look like a person.** Viewers spot an agent at once: text that appears with no typing, a mouse that teleports, pages
+that jump. Only use `click`/`type`/`paste`/`scroll` while recording; never set field values or scroll with `eval`.
+Short text: `type`; long text: `paste`. Give the viewer a beat after each result (`sleep 1`) before the next action.
 
 Clicks, mouse moves and typing on the page are logged automatically: zooms and the
 drawn cursor need no marks. `--system-audio` records only this browser's sound, never other apps.
@@ -87,7 +92,9 @@ start each film with `"$schema": "<path from justrec schema --path>"`. Unknown o
 fields are errors with a "did you mean". One vocabulary everywhere: a scene's headline is
 `title`, pictures are `image`, numbers are `stats`, a recording is `recording` (its project id or --name),
 voice settings live in `voice` {name, speed, pronounce} (`name` can be the user's own voice: `justrec voice list`; they add it once with `justrec voice add me`, reading aloud for 15 s — first use downloads a ~4 GB model) and music in `music` (false | file |
-{file, volume}). A scene's `speed` is playback speed of its recording.
+{file, volume}). A scene's `speed` is playback speed of its recording. Keep browser recordings at speed 1–1.25: faster turns
+the page's own scrolls into flicker. Record enough: a scene longer than its recording holds the last frame still
+(the check reports it as `frozen`), and a still under a zoom reads as a screenshot.
 
 **Style.** Set `"style": "<name>"`: `justrec styles` lists them (built-in `hindsight`, `midnight`,
 `keynote` in styles/; your own as JSON in `~/.justrec/styles`), or a path to a style .json. A style
