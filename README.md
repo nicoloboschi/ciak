@@ -132,7 +132,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Captions timed per sentence, burned in and written as `.srt`
 - ✅ Background music (generated, or your file), ducked under the voice
 - ✅ `--preview`: one contact-sheet image of every scene in ~30 s
-- ✅ Recordings auto-edit on stop (idle cut, zooms) and are referenced by `--name`
+- ✅ Recordings auto-edit on stop (idle cut, zooms) and are referenced by `--name` · ✅ `--no-zoom` skips the zooms (🧪 the panel's "Zoom on clicks" box, on by default)
 - ✅ Keynote look: light theme, two-tone headlines (`*muted*`, `[accent]`), word-by-word reveals
 - ✅ Footage or stills behind any scene; chips, pills and counters on title scenes
 - ✅ Animated line charts (dashed projections, end labels, side-by-side panels) and an end card

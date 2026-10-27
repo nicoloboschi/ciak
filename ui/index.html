@@ -125,6 +125,7 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
           <div class="field"><label for="mic">Microphone</label><select id="mic"><option value="">Off</option></select></div>
           <div class="field"><label for="camera">Camera bubble</label><select id="camera"><option value="">Off</option></select></div>
           <div class="toggle"><label for="systemAudio">Mac sound<small>Mixed into the same audio track</small></label><input id="systemAudio" type="checkbox"></div>
+          <div class="toggle"><label for="autoZoom">Zoom on clicks<small>Moves in where you click; you can turn it off later too</small></label><input id="autoZoom" type="checkbox" checked></div>
           <div class="row">
             <div class="field"><label for="fps">Frame rate</label><select id="fps"><option value="60">60 fps</option><option value="30">30 fps · smaller</option></select></div>
             <div class="field"><label for="delay">Countdown</label><select id="delay"><option value="3">3 s</option><option value="5">5 s</option><option value="0">None</option></select></div>
@@ -265,7 +266,7 @@ $('newButton').onclick = () => location.hash = '#new';
 
 // ---- New recording: devices, camera and mic check ----
 function option(select, value, text) { const item = document.createElement('option'); item.value = value; item.textContent = text; select.append(item); }
-const remember = ['name', 'source', 'mic', 'camera', 'fps', 'delay', 'systemAudio'];
+const remember = ['name', 'source', 'mic', 'camera', 'fps', 'delay', 'systemAudio', 'autoZoom'];
 function restore() { try { const saved = JSON.parse(localStorage.getItem('justrec-setup') || '{}'); for (const key of remember) if (key in saved) $(key)[$(key).type === 'checkbox' ? 'checked' : 'value'] = saved[key]; } catch {} }
 function store() { try { localStorage.setItem('justrec-setup', JSON.stringify(Object.fromEntries(remember.map(key => [key, $(key).type === 'checkbox' ? $(key).checked : $(key).value])))); } catch {} }
 // Screens and devices, once, when the new-recording page first shows: every open tab asking at once (a panel
@@ -327,7 +328,7 @@ function meter() {
   tick();
 }
 for (const id of ['mic', 'camera']) $(id).onchange = () => { store(); preview(); };
-for (const id of ['name', 'source', 'fps', 'delay', 'systemAudio']) $(id).onchange = store;
+for (const id of ['name', 'source', 'fps', 'delay', 'systemAudio', 'autoZoom']) $(id).onchange = store;
 $('useRegion').onchange = () => $('region').classList.toggle('on', $('useRegion').checked);
 $('refresh').onclick = () => sources().then(preview).catch(failure => toast(failure.message));
 
@@ -343,7 +344,7 @@ $('startButton').onclick = async () => {
     $('startButton').textContent = 'Starting…';
     stopPreview(true);  // the recorder takes the camera; keep the mic meter running
     const [kind, value] = $('source').value.split(':');
-    const body = {[kind]: Number(value), microphone: $('mic').value, systemAudio: $('systemAudio').checked, camera: $('camera').value, fps: Number($('fps').value), name: $('name').value.trim() || 'My demo'};
+    const body = {[kind]: Number(value), microphone: $('mic').value, systemAudio: $('systemAudio').checked, autoZoom: $('autoZoom').checked, camera: $('camera').value, fps: Number($('fps').value), name: $('name').value.trim() || 'My demo'};
     if ($('useRegion').checked) body.region = ['rx', 'ry', 'rw', 'rh'].map(id => $(id).value).join(',');
     const session = await api('start', body);
     location.hash = '#project/' + session.id;
