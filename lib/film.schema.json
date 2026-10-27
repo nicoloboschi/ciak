@@ -72,6 +72,10 @@
         }
       ]
     },
+    "clicks": {
+      "type": "boolean",
+      "description": "A soft tick on each click in the recordings. Default false: a launch video has music, not mouse sounds."
+    },
     "captions": {
       "type": "boolean",
       "description": "Burned-in captions from the narration. Default true."

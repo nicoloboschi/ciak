@@ -114,7 +114,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Auto-zoom on clicks in the justrec browser · 🧪 on real mouse clicks
 - ⬜ Smooth pan following the cursor while zoomed
 - ✅ Smooth / enlarged cursor drawn on top, gliding onto each click
-- ✅ Click sounds: a soft tick on each click (`audio.clicks` in the project, on by default)
+- ✅ Click sounds: a soft tick on each click (`audio.clicks` in the project, on by default); films have none unless `"clicks": true`
 - ✅ Screenshots like Cap: `justrec shot` (drag a region or press space for a window) puts it on a wallpaper with rounded corners and a shadow, saves it to `shots/`, copies it; ⌘1 in the menu bar app: instant native picker with a glowing border, shutter sound, then Finder shows the file
 - ✅ Background (wallpaper gradients: `--background aurora|sunset|ocean|meadow|graphite`, or any CSS), padding, rounded corners, shadow
 - 🧪 Burned-in captions with a clean style

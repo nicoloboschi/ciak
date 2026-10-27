@@ -53,7 +53,7 @@ Short text: `type`; long text: `paste`. Give the viewer a beat after each result
 
 Clicks, mouse moves and typing on the page are logged automatically: zooms and the
 drawn cursor need no marks. `--system-audio` records only this browser's sound, never other apps.
-The render adds a soft tick on each click (`audio.clicks: false` in the project turns it off).
+`justrec render` adds a soft tick on each click (`audio.clicks: false` in the project turns it off). A film has no click sounds unless it sets `"clicks": true`.
 If the user's logins changed, `justrec browser --refresh-login <url>` re-copies the profile.
 
 ## A2. Record the screen, a window or a region
@@ -101,6 +101,8 @@ the page's own scrolls into flicker. Record enough: a scene longer than its reco
 is theme fields: fonts (`font`, `headingFont`, `monoFont` + `fontUrl` to load them), colors, `panel`
 / `card` / `border` / `radius`, `backdrop`. `theme` fine-tunes on top. Custom scenes get it via
 `theme` and the `font` / `headingFont` / `monoFont` exports of "justrec".
+
+**Never slowly zoom (push in) on a recording or a screenshot**: a creeping zoom on a UI looks cheap. Move a window into place, then hold it still; zooms come only from the recording's own zooms on clicks.
 
 **Templates are shortcuts, not limits.** When a scene needs its own layout or animation, write it:
 `{"type": "custom", "component": "scenes/hero.jsx", "props": {...}, "recordings": {"main": "<name>"}, "images": {"logo": "logo.png"}, "say": "…"}`.
