@@ -281,7 +281,6 @@ async function sources() {
     $(kind).replaceChildren(); option($(kind), '', 'Off');
     for (const item of list) option($(kind), item.id, item.name);
   }
-  if ($('mic').options.length > 1) $('mic').selectedIndex = 1;
   restore();
 }
 

@@ -318,7 +318,7 @@ func record(_ source: [String], around rect: NSRect) {
   frames = [frame, pill]
   trace("grey frame shown")
   DispatchQueue.global().async {
-    let result = justrec(["start"] + source + ["--mic", "default", "--fps", "60", "--name", "Quick recording"])
+    let result = justrec(["start"] + source + ["--fps", "60", "--name", "Quick recording"])
     DispatchQueue.main.async {
       guard let id = result?["id"] as? String else { done(); return }
       session = id

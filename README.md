@@ -110,7 +110,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Cut idle time: still picture, no voice, no clicks or typing (`--cut-idle`, for agent recordings)
 - ⬜ Cut filler words, driven by the transcript
 - ⬜ Cut by text: delete a sentence from the transcript, it's gone from the video
-- ✅ Auto-zoom on marks; close actions pan instead of zooming out and in
+- ✅ Auto-zoom on marks; close actions pan instead of zooming out and in; gentle (≤ 1.3x) and it lets go between actions over 2.5 s apart
 - ✅ Auto-zoom on clicks in the justrec browser · 🧪 on real mouse clicks
 - ⬜ Smooth pan following the cursor while zoomed
 - ✅ Smooth / enlarged cursor drawn on top, gliding onto each click
@@ -119,7 +119,8 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Background (wallpaper gradients: `--background aurora|sunset|ocean|meadow|graphite`, or any CSS), padding, rounded corners, shadow
 - 🧪 Burned-in captions with a clean style
 - 🧪 Intro/outro title cards (`intro` / `outro` in the project)
-- 🧪 Loudness normalization for the voice
+- 🧪 Loudness normalization for the voice; ✅ a mic with nobody talking is left quiet instead of lifted (key presses no longer become thumps)
+- ✅ No mic unless asked (`--mic default`, the panel's Microphone, quick recordings have none)
 - ✅ Mic background noise removed automatically (`lib/clean.mjs`: level, then DeepFilterNet), for recordings and the cloned voice's sample: a built-in-mic recording went from 10 dB to 47 dB between voice and pauses
 - ✅ Rendering via Remotion, so every edit is code an agent can change
 

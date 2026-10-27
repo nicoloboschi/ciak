@@ -60,7 +60,7 @@ If the user's logins changed, `justrec browser --refresh-login <url>` re-copies 
 
 1. `justrec sources` → a display index or a window `id` (`onScreen: false` = other Space).
 2. `justrec start --window <id> --name <short-name>` (`--display <i>`, `--region x,y,w,h`,
-   `--no-mic`, `--system-audio`, `--camera default`).
+   `--mic default` (no mic unless given), `--system-audio`, `--camera default`).
 3. When an action doesn't move the real mouse, mark it: `justrec mark "<what>" --at <x>,<y>` (0–1).
 4. `justrec stop` → returns the project `id` (and its `output` mp4 and `project` JSON paths).
 
