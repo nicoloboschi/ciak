@@ -2,7 +2,7 @@
 // picks what to record instead: see "Quick recording" below. It stays running after the first use, hidden: the app
 // sends SIGUSR1 to a running picker, which opens the overlay at once (a fresh start took a noticeable moment). An overlay with a
 // glowing border picks an area (or a window: space; Esc cancels); the shot goes on the wallpaper with rounded
-// corners and a shadow, is saved, copied, and shown in Finder. It runs as the app's child, so it uses the app's
+// corners and a shadow, is saved, copied, and shown in the panel. It runs as the app's child, so it uses the app's
 // Screen Recording permission: change it freely, the app (and the permission) stay the same.
 // Settings: the app's (defaults com.justrec.app: wallpaper, shots), or arguments -wallpaper <png> -shots <dir>.
 import AppKit
@@ -210,7 +210,7 @@ func framed(_ shot: CGImage) -> Data? {
 
 let shutter = NSSound(contentsOfFile: "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif", byReference: true) ?? NSSound(named: "Glass")
 
-// Closes the overlay; then (unless cancelled) takes the shot, frames, saves, copies, and shows it in Finder.
+// Closes the overlay; then (unless cancelled) takes the shot, frames, saves, copies, and opens the panel's screenshots.
 func finish(_ take: (() -> CGImage?)?) {
   overlays.forEach { $0.orderOut(nil) }
   overlays = []
@@ -225,7 +225,7 @@ func finish(_ take: (() -> CGImage?)?) {
     do { try png.write(to: file) } catch { fputs("Could not save \(file.path): \(error)\n", stderr); return }
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setData(png, forType: .png)
-    NSWorkspace.shared.activateFileViewerSelecting([file])
+    _ = justrec(["ui", "--shots"], wait: false)  // the panel's screenshots, newest first: copy, Finder or delete
   }
 }
 
