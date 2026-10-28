@@ -106,8 +106,7 @@ details summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;list-s
 .nav a{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:12px;color:inherit;text-decoration:none;font-weight:500}
 .nav a:hover{background:var(--hover)}.nav a.on{background:var(--panel)}.nav a span{color:var(--muted);font-weight:400;font-size:13px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
-.shot{background:var(--panel);border-radius:20px;overflow:hidden;padding:8px;transition:transform .2s}
-.shot:hover{transform:translateY(-2px)}
+.shot{background:var(--panel);border-radius:20px;overflow:hidden;padding:8px}
 .shot a{display:block;aspect-ratio:16/10;background:var(--panel2);border-radius:14px;overflow:hidden}.shot img{width:100%;height:100%;object-fit:contain;display:block}
 .shot div{display:flex;align-items:center;gap:6px;padding:10px 4px 2px}.shot small{flex:1;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .voice{margin-bottom:18px}.voice .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
@@ -119,6 +118,20 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
 #pNameEdit{font-size:26px;font-weight:600;max-width:420px}
 @keyframes pulse{50%{opacity:.25}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes rise{from{opacity:0;transform:translateY(6px)}}
 @media(max-width:900px){body{grid-template-columns:1fr}aside{position:static;height:auto;max-height:42vh}.cols,.split{grid-template-columns:1fr}main{padding:20px 16px}}
+/* Motion (after recent.design): a spring on everything, a press shrinks a little, pictures grow under the mouse,
+   an ↗ pops in on a screenshot, the error note springs in. Off when the Mac asks for less motion. */
+:root{--spring:cubic-bezier(.16,1,.3,1)}
+button,.pill,.seg button,.nav a,.item{transition:background-color .15s,color .15s,opacity .15s,box-shadow .2s,transform .28s var(--spring)}
+button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
+.item .thumb{transition:transform .5s var(--spring),box-shadow .3s}.item:hover .thumb{transform:scale(1.05);box-shadow:inset 0 0 0 1px #0000000f,0 6px 16px #0000001f}
+.shot{transition:transform .5s var(--spring),box-shadow .3s}.shot:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.shot a{position:relative}.shot img{transition:transform .6s var(--spring)}.shot:hover img{transform:scale(1.03)}
+.shot a::after{content:"↗";position:absolute;right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#000a;color:#fff;font-size:16px;backdrop-filter:blur(6px);transform:scale(0);transition:transform .3s var(--spring)}
+.shot:hover a::after{transform:scale(1)}
+.player{transition:box-shadow .3s}
+#toast{animation:pop .3s var(--spring)}
+@keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*,*::after{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
