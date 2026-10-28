@@ -74,8 +74,8 @@ export function Clip({project, clip, sourceUrl, events, clicks, transcript, webc
       </div>
     </div>
     {webcam && <div style={{position: 'absolute', [project.webcam.position?.startsWith('top') ? 'top' : 'bottom']: padding, [project.webcam.position?.endsWith('left') ? 'left' : 'right']: padding, width: width * project.webcam.size, height: width * project.webcam.size * (project.webcam.round === false ? 0.75 : 1), borderRadius: project.webcam.round === false ? width * 0.016 : '50%', overflow: 'hidden', boxShadow: '0 12px 40px #0009', border: '4px solid #ffffffcc'}}>
-      <Sequence from={Math.max(0, Math.round((webcam.start - clip.start) * fps))} layout="none" premountFor={fps}>
-        <Video src={webcam.url} muted trimBefore={Math.round((Math.max(0, clip.start - webcam.start) + (webcam.sourceOffset || 0)) * fps)} objectFit="cover" style={{width: '100%', height: '100%'}}/>
+      <Sequence from={Math.max(0, Math.round((webcam.start - clip.start) * fps / rate))} layout="none" premountFor={fps}>
+        <Video src={webcam.url} muted playbackRate={rate} trimBefore={Math.round((Math.max(0, clip.start - webcam.start) + (webcam.sourceOffset || 0)) * fps)} objectFit="cover" style={{width: '100%', height: '100%'}}/>
       </Sequence>
     </div>}
     {caption && <div style={{position: 'absolute', bottom: height * 0.07, maxWidth: width * 0.8, padding: '14px 24px', background: '#10121ee8', color: 'white', fontFamily: 'Arial, sans-serif', fontWeight: 600, fontSize: Math.round(width / 40), borderRadius: 12, textAlign: 'center', lineHeight: 1.35}}>{caption.text.trim()}</div>}
@@ -93,8 +93,8 @@ export function Demo(props) {
   const {fps} = useVideoConfig();
   let offset = project.intro ? Math.round(project.intro.duration * fps) : 0;
   const sequences = project.clips.map((clip, index) => {
-    const duration = Math.max(1, Math.round((clip.end - clip.start) * fps));
-    const sequence = <Sequence key={index} from={offset} durationInFrames={duration} premountFor={fps}><Clip {...props} clip={clip}/></Sequence>;
+    const duration = Math.max(1, Math.round((clip.end - clip.start) * fps / speedOf(project, clip)));
+    const sequence = <Sequence key={index} from={offset} durationInFrames={duration} premountFor={fps}><Clip {...props} clip={clip} rate={speedOf(project, clip)}/></Sequence>;
     offset += duration;
     return sequence;
   });
@@ -105,5 +105,7 @@ export function Demo(props) {
   </AbsoluteFill>;
 }
 
-export const demoFrames = (project, fps = project.export.fps) => project.clips.reduce((total, clip) => total + Math.max(1, Math.round((clip.end - clip.start) * fps)), 0)
+// A part's playback speed: its own, the whole video's, or as recorded (lib/render.mjs does the same for the sound).
+export const speedOf = (project, clip) => clip.speed || project.speed || 1;
+export const demoFrames = (project, fps = project.export.fps) => project.clips.reduce((total, clip) => total + Math.max(1, Math.round((clip.end - clip.start) * fps / speedOf(project, clip))), 0)
   + Math.round(((project.intro?.duration || 0) + (project.outro?.duration || 0)) * fps);

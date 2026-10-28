@@ -146,6 +146,7 @@ justrec render <id>                    # → ~/Documents/justrec/<name>-<id>.mp4
 - `--cut-idle`: removes 1 s+ stretches where the picture is still, nobody talks and nothing is clicked or typed (agent think-time). Use it for agent recordings.
 - `--cut-silence`: removes pauses in speech. Use it for human talking-head demos.
 - `--cut start,end`: remove a range (source seconds).
+- `--speed 1.5`: the whole video faster (0.5–4, 1 = as recorded; resets per-part speeds). `--speed 3,12,40`: only source seconds 12–40 ("speed up the loading part"); a clip's `speed` in the JSON wins over the project's `speed`. The voice keeps its pitch. Rendered times shrink: map the user's times back through `clips` and their speeds.
 - `--auto-zoom`: zooms on clicks and marks; close actions pan instead of zooming out.
 - `--preset landscape|vertical|square`. A wide screen recording in `vertical` is fitted inside the tall frame: a thin strip
   with small text (a 2560×1080 recording leaves ~80% background). Add `--auto-zoom` (zooms on clicks) or zooms by hand

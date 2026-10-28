@@ -82,6 +82,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Record a single window (only while visible) or a region
 - ✅ Optional webcam bubble · ✅ round or a rounded rectangle, size and corner (`edit --camera round=off,size=0.3,position=top-left`) · ✅ the same in the panel, under the video
 - ✅ Mic, Mac sound and webcam each on or off in the video afterwards (`edit --mic off`, the panel's "In the video"): the recorder also saves the mic and the Mac sound apart
+- ✅ Speed: the whole video (`edit --speed 1.5`, the panel's Speed menu, shown at once in the live preview) or one part (`edit --speed 3,12,40`); the voice keeps its pitch
 - ✅ Click sounds and zooms on or off too (`edit --clicks off`, `--zooms off`, same panel card)
 - ✅ Live preview in the panel: the edit plays in the page (30 fps, Remotion player), a switch or camera change shows at once without a render · ✅ the exported file's name with Copy (the video file on the clipboard, paste it in a chat) and Show in Finder
 - 🧪 Stop from macOS's menu bar recording icon finishes the recording (not tried with the real icon yet)
