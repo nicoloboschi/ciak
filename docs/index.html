@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ciak — the screen recorder your agent edits</title>
+<meta name="description" content="ciak records your screen and hands the editing to an agent: cuts, zooms, captions, narration in your own voice, the final export. Plain files and commands, no timeline.">
+<meta property="og:title" content="🎬 ciak — the screen recorder your agent edits">
+<meta property="og:description" content="Record. Let your agent edit. Open source, for macOS.">
+<meta property="og:image" content="https://nicoloboschi.github.io/ciak/poster.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#0b0b12;--ink:#f3f2f7;--muted:#9a98a8;--line:#24232f;--panel:#14131d;--accent:#a78bfa;--accent2:#60a5fa;--code:#0f0e17}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){color-scheme:light;--bg:#fbfbfa;--ink:#121117;--muted:#6b6977;--line:#e6e5ea;--panel:#ffffff;--accent:#7c3aed;--accent2:#2563eb;--code:#f4f3f7}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0b0b12;--ink:#f3f2f7;--muted:#9a98a8;--line:#24232f;--panel:#14131d;--accent:#a78bfa;--accent2:#60a5fa;--code:#0f0e17}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:-20% -10% auto;height:70vh;background:radial-gradient(50% 60% at 30% 40%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%),radial-gradient(40% 50% at 75% 30%,color-mix(in srgb,var(--accent2) 16%,transparent),transparent 70%);pointer-events:none;z-index:-1}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.5px;text-decoration:none;display:flex;gap:8px;align-items:center}
+.gh{font-size:15px;font-weight:600;text-decoration:none;padding:8px 16px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
+.gh:hover{border-color:var(--muted)}
+header{text-align:center;padding:56px 0 36px}
+.kicker{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(40px,8vw,76px);line-height:1.02;letter-spacing:-.04em;margin:14px 0 18px;font-weight:800}
+h1 span{color:var(--muted)}
+.lede{max-width:620px;margin:0 auto;color:var(--muted);font-size:19px}
+.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+.btn{font-weight:600;text-decoration:none;padding:12px 22px;border-radius:999px;border:1px solid var(--line);background:var(--panel)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn:hover{transform:translateY(-1px)}
+.video{margin:20px auto 0;border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px -30px rgba(0,0,0,.6);background:#000;aspect-ratio:16/9}
+.video video{display:block;width:100%;height:100%}
+.note{text-align:center;color:var(--muted);font-size:14px;margin-top:12px}
+section{padding:72px 0 0}
+h2{font-size:clamp(28px,4.5vw,40px);letter-spacing:-.03em;line-height:1.1;margin:0 0 10px}
+h2 span{color:var(--muted)}
+.sub{color:var(--muted);margin:0 0 28px;max-width:640px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
+.card b{display:block;font-size:17px;margin-bottom:6px}
+.card p{margin:0;color:var(--muted);font-size:15px}
+.card .icon{font-size:22px;margin-bottom:10px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;counter-reset:step}
+.steps .card b::before{counter-increment:step;content:counter(step);display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:13px;margin-right:10px;vertical-align:1px}
+pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:14px;padding:18px 20px;overflow-x:auto;font:14px/1.7 "JetBrains Mono",ui-monospace,monospace}
+pre .c{color:var(--muted)}
+.code{position:relative}
+.copy{position:absolute;top:10px;right:10px;font:600 13px Inter,sans-serif;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+blockquote{margin:0;padding:18px 20px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-size:16px}
+blockquote small{display:block;color:var(--muted);margin-top:6px;font-size:13px}
+footer{padding:80px 0 48px;text-align:center;color:var(--muted);font-size:15px}
+footer .big{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-.03em;color:var(--ink);margin-bottom:18px}
+@media (max-width:820px){.grid,.steps,.two{grid-template-columns:1fr}header{padding:32px 0 24px}section{padding-top:56px}}
+@media (prefers-reduced-motion:reduce){.btn:hover{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="logo" href="./">🎬 ciak</a>
+    <a class="gh" href="https://github.com/nicoloboschi/ciak">GitHub</a>
+  </nav>
+
+  <header>
+    <div class="kicker">Ciak, si gira!</div>
+    <h1>Record.<br><span>Let your agent edit.</span></h1>
+    <p class="lede">ciak is a screen recorder for macOS where an agent does the editing: cuts, zooms on clicks, captions, titles, narration in your own voice, the final export. Every edit is a plain file and a command. No timeline.</p>
+    <div class="cta">
+      <a class="btn primary" href="#install">Install</a>
+      <a class="btn" href="https://github.com/nicoloboschi/ciak">View on GitHub</a>
+    </div>
+  </header>
+
+  <div class="video"><video src="ciak.mp4" poster="poster.jpg" controls playsinline preload="metadata"></video></div>
+  <p class="note">An agent recorded, edited and rendered this video with ciak. The voice is mine, cloned on my Mac.</p>
+
+  <section>
+    <h2>Timelines are for people. <span>Agents need files.</span></h2>
+    <p class="sub">Video editors hide every decision behind a timeline that an agent can't use. ciak keeps every decision where an agent can read it, change it and render it again.</p>
+    <div class="grid">
+      <div class="card"><div class="icon">📄</div><b>Edits are files</b><p>Each recording is a folder: the video, a project JSON with cuts, zooms, speed and background, the cursor log and captions. Same inputs, same video.</p></div>
+      <div class="card"><div class="icon">🎙️</div><b>One file, one audio track</b><p>Mic and system sound are mixed into the video's only track, so the voice never goes missing from the export.</p></div>
+      <div class="card"><div class="icon">🤖</div><b>Agents first</b><p>Every feature works from the command line and prints JSON. A skill teaches Claude Code every command.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <p class="sub">You record and review. Everything in between is your agent.</p>
+    <div class="steps">
+      <div class="card"><b>Record</b><p>⌘2 records an area or a window. Or your agent records itself in a browser with your logins, or in a real terminal, with secrets blurred.</p></div>
+      <div class="card"><b>Edit</b><p>When it stops, idle time is cut and every click gets a zoom. Then ask your agent for the rest: captions, speed, vertical, a sunset background.</p></div>
+      <div class="card"><b>Review</b><p>The panel plays the edit live. Flip a switch and see it at once. Copy the final video straight into a chat.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tell your agent. <span>It knows ciak.</span></h2>
+    <p class="sub">After a recording, the panel gives you the project id. Then just ask.</p>
+    <div class="two">
+      <blockquote>“Use /ciak to edit project 3f9a1c2e: cut the pauses, zoom less at 0:20, make it vertical.”<small>Edit a recording</small></blockquote>
+      <blockquote>“Record yourself signing up on our staging site, then make a 30 second launch video narrated in my voice.”<small>Record and make a film</small></blockquote>
+    </div>
+  </section>
+
+  <section>
+    <h2>Commands, not clicks</h2>
+    <p class="sub">What your agent runs. Every command prints JSON.</p>
+    <div class="code"><pre><span class="c"># an agent records itself in a browser with your logins</span>
+ciak browser https://app.example.com
+ciak start --browser --name demo
+ciak browser click "New project"
+ciak stop                               <span class="c"># idle time cut, zooms on clicks</span>
+
+<span class="c"># edit and render</span>
+ciak edit demo --speed 1.5 --background sunset
+ciak captions demo
+ciak render demo                        <span class="c"># one video + one audio track, checked</span>
+
+<span class="c"># launch videos, in your own voice</span>
+ciak voice add me
+ciak film launch.film.json</pre></div>
+  </section>
+
+  <section id="install">
+    <h2>Install</h2>
+    <p class="sub">macOS 15+ on Apple silicon, with Xcode command line tools, Node 22+, ffmpeg and uv.</p>
+    <div class="code"><button class="copy" type="button">Copy</button><pre id="installCode">git clone https://github.com/nicoloboschi/ciak && cd ciak
+npm install
+./ciak install</pre></div>
+    <p class="sub" style="margin-top:16px">This adds ciak to the menu bar (⌘1 screenshots, ⌘2 quick recording), the <code>ciak</code> command and the agent skill. macOS asks once for Screen Recording: allow ciak.</p>
+  </section>
+
+  <footer>
+    <div class="big">🎬 Ciak, si gira.</div>
+    <a class="btn primary" href="https://github.com/nicoloboschi/ciak">Get ciak on GitHub</a>
+  </footer>
+</div>
+<script>
+document.querySelector('.copy').onclick = async event => {
+  try { await navigator.clipboard.writeText(document.getElementById('installCode').textContent); event.target.textContent = 'Copied'; }
+  catch { event.target.textContent = 'Select and copy'; }
+  setTimeout(() => event.target.textContent = 'Copy', 1600);
+};
+</script>
+</body>
+</html>

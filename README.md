@@ -1,65 +1,115 @@
 # 🎬 ciak
 
-*Ciak, si gira!* — Italian for "clapper, rolling!"
+**The screen recorder your agent edits.**
 
-A screen recorder and video editor run by agents, not by you.
+*Ciak, si gira!* is what Italian film crews say when the camera rolls. ciak records your
+screen, then hands the editing to an agent: cutting dead air, zooms on clicks, captions,
+titles, narration, the final export. You watch the result and say "ok" or "redo".
 
-You hit record, talk, and stop. Agents do the rest: captions, cutting dead air,
-zooms on what you clicked, titles, the final export. You watch the result and say
-"ok" or "redo".
+[![Watch the launch video](docs/poster.jpg)](https://nicoloboschi.github.io/ciak/)
 
-**Why:** apps like Recordly hide the edit behind a timeline UI, and when they get
-something wrong (like dropping your voice from the export) you can't see why.
-ciak keeps everything as plain files and commands, so an agent can read,
-change and re-render any part of it.
+▶ **[Watch the launch video](https://nicoloboschi.github.io/ciak/)**: an agent recorded, edited and
+rendered it with ciak, narrated in my own cloned voice.
 
-## Usage
+## Why
+
+Video editors hide every decision behind a timeline. An agent can't use a timeline, and when
+the app gets something wrong (Recordly dropped the voice from the export) you can't see why.
+In ciak every edit is a plain file and a command:
+
+- **Files, not state.** Each recording is a folder with `recording.mp4`, `recording.project.json`
+  (cuts, zooms, speed, background), the cursor log and captions. Change the JSON, render again,
+  get the same video.
+- **One file, one audio track.** Mic and system sound are mixed into the video's only track,
+  so the voice never goes missing.
+- **Agents first.** Every feature works from the command line and prints JSON. The panel is
+  only for what needs a human: recording and review.
+
+## Install
+
+macOS 15+ on Apple silicon. You need Xcode command line tools (`swiftc`), Node 22+, `ffmpeg`
+and [`uv`](https://docs.astral.sh/uv/) (for Whisper and the voice model).
 
 ```bash
-./ciak install                # once: ciak.app in the menu bar (⌘1 screenshots, Record…:
-                                 # recording panel; starts at login), `ciak` on PATH, the agent skill
-ciak ui                       # the recording panel (menu bar: Record…): pick source/mic/camera, record,
-                                 # finish → plays the edited video and shows the project id for your agent
-ciak rec                      # record main display + default mic; Enter or Ctrl-C stops
-
-# what an agent does: record itself using a logged-in browser
-ciak browser https://app.example.com          # the ciak browser: your Brave logins, runs in background
-ciak start --browser --system-audio --name demo        # record its current tab, returns at once
-ciak browser click "New project"              # click / type / key / scroll / go / shot
-ciak pause / resume / status / stop
-
-# or the screen / a window
-ciak sources                                  # displays, windows, mics, cameras (JSON)
-ciak start --window 69 --name demo
-ciak mark "click Save" --at 0.4,0.2           # where an action happens if the real mouse didn't move
-ciak captions <mp4>           # <name>.srt, .txt, .json (word timestamps)
-ciak edit <project> --cut-idle --auto-zoom    # or --cut-silence, --cut a,b, --preset vertical, --background sunset
-ciak preview <project> --frame 90             # one PNG frame
-ciak render <id>              # ~/Documents/ciak/<name>-<id>.mp4, checked: one video + one audio track
+git clone https://github.com/nicoloboschi/ciak && cd ciak
+npm install
+./ciak install
 ```
 
-`ciak help` lists every option. The agent workflow is written down as a Claude Code
-skill in `.claude/skills/ciak/SKILL.md`.
+`ciak install` sets up, once:
+- **ciak.app** in the menu bar: ⌘1 framed screenshots, ⌘2 quick recording, Record… opens the panel. Starts at login.
+- the `ciak` command in `~/.local/bin`
+- the agent skill in `~/.claude/skills/ciak`, so Claude Code (or any agent reading skills) knows every command
 
-Each recording is a project with a short id, kept in `~/.ciak/projects/<id>/`: `recording.mp4`
-(raw), `recording.project.json` (the edit), `recording.cursor.jsonl`, captions, optional
-`recording.camera-N.mov`. Commands take the id (`ciak edit 3f9a1c2e`, `ciak render 3f9a1c2e`).
-Only finished videos land in `~/Documents/ciak/` (`CIAK_DIR`): `<name>-<id>.mp4`.
+The first time, macOS asks for **Screen Recording** (and **Microphone** when you record): allow ciak.
 
-**Recording a browser:** use `ciak browser`. It is a second Brave on a copy of your
-Brave profile (in `~/Library/Application Support/ciak/browser`, so you're logged in),
-recorded from the page itself, so it works while covered. `--refresh-login` re-copies
-your profile. A plain window recording only updates while the window is visible.
+## Use it
 
-### First run
+### You record, your agent edits
 
-macOS asks once for **Screen Recording** and **Microphone** permission for the
-terminal app that runs `ciak` (System Settings > Privacy & Security).
-Restart the terminal after granting Screen Recording.
+Press ⌘2 (or Record… in the menu bar), record, stop. The panel opens on the new project with
+its id. Then tell your agent:
 
-### Requirements
+> Use /ciak to edit project 3f9a1c2e: cut the pauses, zoom less at 0:20, make it vertical.
 
-macOS 15+, Xcode command line tools (`swiftc`), Node 22+ (`npm install` once), `uv` (for Whisper), `ffmpeg`.
+The panel plays the edit live while you flip switches (click sounds, zooms, mic, camera, speed)
+and shows the exported file with **Copy**, ready to paste in a chat.
+
+### Your agent records itself
+
+```bash
+ciak browser https://app.example.com              # a second Brave with your logins, works in the background
+ciak start --browser --name demo                  # record its current tab
+ciak browser click "New project"                  # click / type / key / scroll / go / shot; the mouse glides
+ciak stop                                         # auto-edit: idle time cut, zooms on every click
+ciak render demo                                  # → ~/Documents/ciak/demo-<id>.mp4, checked
+```
+
+A terminal works the same way (`ciak terminal open`, `ciak start --terminal`, `ciak terminal run "<cmd>"`),
+with secrets blurred.
+
+### Edit with commands
+
+```bash
+ciak edit <id> --cut-idle --auto-zoom          # or --cut-silence, --cut 3,7
+ciak edit <id> --speed 1.5                     # or one part: --speed 3,12,40
+ciak edit <id> --background sunset --preset vertical
+ciak edit <id> --mic off --clicks off --camera round=off,size=0.3,position=top-left
+ciak captions <id>                             # local Whisper: .srt and word timestamps
+ciak preview <id> --frame 90                   # one frame as PNG
+ciak render <id>
+```
+
+### Launch videos
+
+A film is one JSON file of scenes (title, recording, stats, chart, compare, custom React…),
+narrated from each scene's `say`:
+
+```bash
+ciak voice add me                              # read 15 seconds aloud: your cloned voice, local
+ciak film launch.film.json --live              # play it in the browser, reloads on save
+ciak film launch.film.json                     # final mp4 + .srt + a check of what a viewer would notice
+```
+
+`ciak schema` describes every field. The check lists text off-frame, low contrast, frozen
+recordings, music over the voice and words a listener would mishear, each with a time and a frame.
+
+### Screenshots
+
+⌘1: pick an area or a window, it lands on a wallpaper with rounded corners and a shadow,
+copied and saved to `~/Documents/ciak/shots`. From the command line: `ciak shot`.
+
+## Where things live
+
+| What | Where |
+| --- | --- |
+| Projects (raw recording, edit JSON, cursor log, captions) | `~/.ciak/projects/<id>/` |
+| Finished videos and screenshots | `~/Documents/ciak/` (`CIAK_DIR`) |
+| Cloned voices, styles, trace log | `~/.ciak/` |
+| The ciak browser profile | `~/Library/Application Support/ciak/browser` |
+
+Every ciak process writes what it does, with times, to `~/.ciak/trace.log`.
+`ciak help` lists every command and option.
 
 ## Features
 
