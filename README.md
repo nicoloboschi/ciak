@@ -6,9 +6,9 @@
 screen, then hands the editing to an agent: cutting dead air, zooms on clicks, captions,
 titles, narration, the final export. You watch the result and say "ok" or "redo".
 
-[![Watch the launch video](docs/poster.jpg)](https://ciak.nicoloboschi.com/)
+[![Watch the launch video](docs/poster.jpg)](https://nicoloboschi.github.io/ciak/)
 
-▶ **[Watch the launch video](https://ciak.nicoloboschi.com/)**: an agent recorded, edited and
+▶ **[Watch the launch video](https://nicoloboschi.github.io/ciak/)**: an agent recorded, edited and
 rendered it with ciak, narrated in my own cloned voice.
 
 ## Why
