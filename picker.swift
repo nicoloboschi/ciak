@@ -1,28 +1,28 @@
-// justrec-picker: screenshots, started by justrec.app (⌘1 or the menu). With -mode record (⌘2) the same overlay
+// ciak-picker: screenshots, started by ciak.app (⌘1 or the menu). With -mode record (⌘2) the same overlay
 // picks what to record instead: see "Quick recording" below. It stays running after the first use, hidden: the app
 // sends SIGUSR1 to a running picker, which opens the overlay at once (a fresh start took a noticeable moment). An overlay with a
 // glowing border picks an area (or a window: space; Esc cancels); the shot goes on the wallpaper with rounded
 // corners and a shadow, is saved, copied, and shown in the panel. It runs as the app's child, so it uses the app's
 // Screen Recording permission: change it freely, the app (and the permission) stay the same.
-// Settings: the app's (defaults com.justrec.app: wallpaper, shots), or arguments -wallpaper <png> -shots <dir>.
+// Settings: the app's (defaults com.ciak.app: wallpaper, shots), or arguments -wallpaper <png> -shots <dir>.
 import AppKit
 import Carbon
 
 let traceName = "picker"
-// One timeline with the other justrec processes (see trace in lib/common.mjs): ~/.justrec/trace.log
+// One timeline with the other ciak processes (see trace in lib/common.mjs): ~/.ciak/trace.log
 func trace(_ message: String) {
     let now = Date(), formatter = DateFormatter()
     formatter.dateFormat = "HH:mm:ss.SSS"
     let line = "\(formatter.string(from: now)) \(traceName)[\(getpid())] \(message)\n"
-    let descriptor = open(NSHomeDirectory() + "/.justrec/trace.log", O_WRONLY | O_APPEND | O_CREAT, 0o644)
+    let descriptor = open(NSHomeDirectory() + "/.ciak/trace.log", O_WRONLY | O_APPEND | O_CREAT, 0o644)
     guard descriptor >= 0 else { return }
     _ = line.withCString { write(descriptor, $0, strlen($0)) }
     close(descriptor)
 }
 
-func setting(_ name: String) -> String? { UserDefaults.standard.string(forKey: name) ?? UserDefaults(suiteName: "com.justrec.app")?.string(forKey: name) }
+func setting(_ name: String) -> String? { UserDefaults.standard.string(forKey: name) ?? UserDefaults(suiteName: "com.ciak.app")?.string(forKey: name) }
 let wallpaper = setting("wallpaper").flatMap { NSImage(contentsOfFile: $0)?.cgImage(forProposedRect: nil, context: nil, hints: nil) }
-let outputDir = URL(fileURLWithPath: setting("shots") ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Documents/justrec/shots").path)
+let outputDir = URL(fileURLWithPath: setting("shots") ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Documents/ciak/shots").path)
 func color(_ hex: Int) -> CGColor {
   CGColor(srgbRed: CGFloat(hex >> 16) / 255, green: CGFloat((hex >> 8) & 255) / 255, blue: CGFloat(hex & 255) / 255, alpha: 1)
 }
@@ -173,7 +173,7 @@ func windowUnderMouse() -> (id: CGWindowID, rect: NSRect)? {
 }
 
 func screencapture(_ options: [String]) -> CGImage? {
-  let file = FileManager.default.temporaryDirectory.appendingPathComponent("justrec-shot-\(getpid()).png")
+  let file = FileManager.default.temporaryDirectory.appendingPathComponent("ciak-shot-\(getpid()).png")
   let process = Process()
   process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
   process.arguments = ["-x"] + options + [file.path]
@@ -187,7 +187,7 @@ func capture(area: NSRect) -> CGImage? {
 }
 func capture(window id: CGWindowID) -> CGImage? { screencapture(["-o", "-l", "\(id)"]) }
 
-// Same look as justrec shot: padding 7% of the longest side, rounded corners, a soft shadow, a faint edge.
+// Same look as ciak shot: padding 7% of the longest side, rounded corners, a soft shadow, a faint edge.
 func framed(_ shot: CGImage) -> Data? {
   let (width, height) = (shot.width, shot.height)
   let padding = Int((Double(max(width, height)) * 0.07).rounded())
@@ -225,31 +225,31 @@ func finish(_ take: (() -> CGImage?)?) {
     do { try png.write(to: file) } catch { fputs("Could not save \(file.path): \(error)\n", stderr); return }
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setData(png, forType: .png)
-    _ = justrec(["ui", "--shots"], wait: false)  // the panel's screenshots, newest first: copy, Finder or delete
+    _ = ciak(["ui", "--shots"], wait: false)  // the panel's screenshots, newest first: copy, Finder or delete
   }
 }
 
 // Quick recording (⌘2): the picked area or window records (default mic) with a red frame around it and a small
 // timer; ⌘2 again (the app sends SIGUSR1) or a click on the timer stops it, renders it and opens it in the panel.
 let recordMode = UserDefaults.standard.string(forKey: "mode") == "record"
-let cli = setting("cli") ?? "justrec"
+let cli = setting("cli") ?? "ciak"
 func sound(_ name: String) { NSSound(contentsOfFile: "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/\(name).caf", byReference: true)?.play() }
-// Runs the justrec command and returns its JSON (nil and a message on failure).
-func justrec(_ arguments: [String], wait: Bool = true) -> [String: Any]? {
+// Runs the ciak command and returns its JSON (nil and a message on failure).
+func ciak(_ arguments: [String], wait: Bool = true) -> [String: Any]? {
   let began = Date()
-  trace("runs: justrec \(arguments.joined(separator: " "))")
-  defer { if wait { trace("justrec \(arguments[0]) returned after \(String(format: "%.2f", Date().timeIntervalSince(began))) s") } }
+  trace("runs: ciak \(arguments.joined(separator: " "))")
+  defer { if wait { trace("ciak \(arguments[0]) returned after \(String(format: "%.2f", Date().timeIntervalSince(began))) s") } }
   let process = Process(), output = Pipe(), errors = Pipe()
   process.executableURL = URL(fileURLWithPath: cli)
   process.arguments = arguments
   process.standardOutput = wait ? output : FileHandle.nullDevice
   process.standardError = wait ? errors : FileHandle.nullDevice
-  do { try process.run() } catch { alert("Cannot run justrec", error.localizedDescription); return nil }
+  do { try process.run() } catch { alert("Cannot run ciak", error.localizedDescription); return nil }
   guard wait else { return [:] }
   let data = output.fileHandleForReading.readDataToEndOfFile(), problem = errors.fileHandleForReading.readDataToEndOfFile()
   process.waitUntilExit()
   if process.terminationStatus != 0 {
-    trace("justrec \(arguments[0]) failed: \(String(decoding: problem, as: UTF8.self).suffix(300))")
+    trace("ciak \(arguments[0]) failed: \(String(decoding: problem, as: UTF8.self).suffix(300))")
     let message = String(decoding: problem, as: UTF8.self).split(separator: "\n").last.flatMap { try? JSONSerialization.jsonObject(with: Data($0.utf8)) as? [String: Any] }?["error"] as? String
     alert("Quick recording failed", message ?? String(decoding: problem, as: UTF8.self)); return nil
   }
@@ -318,7 +318,7 @@ func record(_ source: [String], around rect: NSRect) {
   frames = [frame, pill]
   trace("grey frame shown")
   DispatchQueue.global().async {
-    let result = justrec(["start"] + source + ["--fps", "60", "--name", "Quick recording"])
+    let result = ciak(["start"] + source + ["--fps", "60", "--name", "Quick recording"])
     DispatchQueue.main.async {
       guard let id = result?["id"] as? String else { done(); return }
       session = id
@@ -348,8 +348,8 @@ func stop() {
   sound("end_record")
   DispatchQueue.global().async {
     // Both at once: by the time the page asks, the recording is already finishing.
-    _ = justrec(["ui", "--project", id], wait: false)
-    if justrec(["stop", id]) != nil { _ = justrec(["render", id], wait: false) }
+    _ = ciak(["ui", "--project", id], wait: false)
+    if ciak(["stop", id]) != nil { _ = ciak(["render", id], wait: false) }
     DispatchQueue.main.async(execute: done)
   }
 }
@@ -376,7 +376,7 @@ pressed.resume()
 
 func pick() {
   defer { trace("overlay shown") }
-  if recordMode { _ = justrec(["ui", "--no-open"], wait: false) }  // the panel's server, ready for when this recording stops
+  if recordMode { _ = ciak(["ui", "--no-open"], wait: false) }  // the panel's server, ready for when this recording stops
   for screen in NSScreen.screens {
     let overlay = Overlay(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
     overlay.level = .screenSaver
@@ -395,16 +395,16 @@ func pick() {
   current.makeFirstResponder(current.contentView)
 }
 
-// Check the frame without a picker: justrec-picker -frame <shot.png> -wallpaper <png> writes <shot>.framed.png
+// Check the frame without a picker: ciak-picker -frame <shot.png> -wallpaper <png> writes <shot>.framed.png
 if let file = UserDefaults.standard.string(forKey: "frame") {
   guard let shot = NSImage(contentsOfFile: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil), let png = framed(shot) else { exit(1) }
   try! png.write(to: URL(fileURLWithPath: file + ".framed.png"))
   exit(0)
 }
 NSApplication.shared.setActivationPolicy(.accessory)
-// For tests: defaults write com.justrec.app area x,y,w,h (screen points from the top left) captures (or records) that area without the overlay.
+// For tests: defaults write com.ciak.app area x,y,w,h (screen points from the top left) captures (or records) that area without the overlay.
 func begin() {
-  CFPreferencesAppSynchronize("com.justrec.app" as CFString)
+  CFPreferencesAppSynchronize("com.ciak.app" as CFString)
   if let area = setting("area")?.split(separator: ",").compactMap({ Double($0) }), area.count == 4 {
     let rect = NSRect(x: area[0], y: mainHeight() - area[1] - area[3], width: area[2], height: area[3])
     if recordMode { quick(area: rect) } else { finish { capture(area: rect) } }

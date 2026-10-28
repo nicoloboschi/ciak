@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# ciak — record screen + mic into one file, then let agents do the rest.
+set -euo pipefail
+
+# Settings from before the rename (JUSTREC_DIR, …) still work as CIAK_*.
+for name in $(compgen -e | grep '^JUSTREC_' || true); do
+  new="CIAK_${name#JUSTREC_}"; [ -n "${!new+x}" ] || export "$new=${!name}"
+done
+
+HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+exec node "$HERE/lib/cli.mjs" "$@"

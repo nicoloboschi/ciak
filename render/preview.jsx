@@ -7,8 +7,8 @@ import {Demo, demoFrames} from './parts.jsx';
 
 let root;
 const player = React.createRef();
-window.justrecPreviewPause = () => player.current?.pause();
-window.justrecPreview = (element, props) => {
+window.ciakPreviewPause = () => player.current?.pause();
+window.ciakPreview = (element, props) => {
   root ||= createRoot(element);
   const {width, height} = props.project.export;
   root.render(<Player ref={player} component={Demo} inputProps={props} durationInFrames={Math.max(1, demoFrames(props.project, 30))} fps={30}

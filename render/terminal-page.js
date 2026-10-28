@@ -1,9 +1,9 @@
-// The justrec terminal page: xterm.js styled like the user's iTerm2 profile, showing a real
-// zsh session streamed from the justrec terminal server.
+// The ciak terminal page: xterm.js styled like the user's iTerm2 profile, showing a real
+// zsh session streamed from the ciak terminal server.
 import {Terminal} from '@xterm/xterm';
 import {FitAddon} from '@xterm/addon-fit';
 
-const config = window.JUSTREC_TERMINAL;
+const config = window.CIAK_TERMINAL;
 document.title = config.title;
 document.getElementById('title').textContent = config.title;
 const terminal = new Terminal({

@@ -10,12 +10,12 @@ func emit(_ value: [String: Any]) {
 
 let traceName = "rec"
 
-// One timeline with the other justrec processes (see trace in lib/common.mjs): ~/.justrec/trace.log
+// One timeline with the other ciak processes (see trace in lib/common.mjs): ~/.ciak/trace.log
 func trace(_ message: String) {
     let now = Date(), formatter = DateFormatter()
     formatter.dateFormat = "HH:mm:ss.SSS"
     let line = "\(formatter.string(from: now)) \(traceName)[\(getpid())] \(message)\n"
-    let descriptor = open(NSHomeDirectory() + "/.justrec/trace.log", O_WRONLY | O_APPEND | O_CREAT, 0o644)
+    let descriptor = open(NSHomeDirectory() + "/.ciak/trace.log", O_WRONLY | O_APPEND | O_CREAT, 0o644)
     guard descriptor >= 0 else { return }
     _ = line.withCString { write(descriptor, $0, strlen($0)) }
     close(descriptor)
@@ -46,7 +46,7 @@ struct Options: Decodable {
 }
 
 final class CursorLog: @unchecked Sendable {
-    let queue = DispatchQueue(label: "justrec.cursor", qos: .utility)
+    let queue = DispatchQueue(label: "ciak.cursor", qos: .utility)
     let file: FileHandle
     var bounds: CGRect
     let windowID: UInt32?
@@ -106,7 +106,7 @@ final class CursorLog: @unchecked Sendable {
 // (<output>.mic.m4a, <output>.system.m4a) so an edit can leave one out. `first` is when its first sound came.
 final class Stem: NSObject, SCStreamOutput, @unchecked Sendable {
     let path: String
-    let queue = DispatchQueue(label: "justrec.stem")
+    let queue = DispatchQueue(label: "ciak.stem")
     var file: AVAudioFile?
     var first: Double?
     var written = 0.0

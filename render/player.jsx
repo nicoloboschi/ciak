@@ -110,7 +110,7 @@ function App() {
     if (index >= 0 && timeline?.scenes[index]) player.current?.seekTo(timeline.scenes[index].from);
   };
   const save = async next => {
-    const response = await fetch('/save', {method: 'POST', headers: {Authorization: `Bearer ${window.JUSTREC_LIVE.token}`}, body: JSON.stringify({film: next})});
+    const response = await fetch('/save', {method: 'POST', headers: {Authorization: `Bearer ${window.CIAK_LIVE.token}`}, body: JSON.stringify({film: next})});
     const result = await response.json();
     if (result.errors || result.error) { setErrors((result.errors || [result.error]).join('\n')); return false; }
     setFilm(next); setDraft(null); setErrors(null); return true;

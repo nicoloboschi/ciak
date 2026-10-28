@@ -419,7 +419,7 @@ function LayoutProbe() {
         const shared = overlap(item.box, band);
         if (shared > 400 && (item.kind === 'text' || shared > 0.03 * (item.box.right - item.box.left) * (item.box.bottom - item.box.top))) issues.push({kind: 'caption-zone', text: item.kind === 'media' ? '(recording or image)' : item.text, box: item.box});
       }
-      console.log('JUSTREC_LAYOUT ' + JSON.stringify({frame, issues}));
+      console.log('CIAK_LAYOUT ' + JSON.stringify({frame, issues}));
       continueRender(handle);
     };
     // Wait two frames so fonts and layout have settled.

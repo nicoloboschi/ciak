@@ -1,4 +1,4 @@
-// What a custom scene can import ("justrec"): justrec's building blocks plus Remotion.
+// What a custom scene can import ("ciak"): ciak's building blocks plus Remotion.
 // A custom scene is a default-exported component; it receives its "props" from film.json, and
 // {scene, theme, frames, reserve, recordings, images}. Mark readable text with data-check="text"
 // so the layout check can see it (Text below does that), and keep `reserve` px free at the bottom

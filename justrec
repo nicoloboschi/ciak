@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-# justrec — record screen + mic into one file, then let agents do the rest.
-set -euo pipefail
-
-HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
-exec node "$HERE/lib/cli.mjs" "$@"

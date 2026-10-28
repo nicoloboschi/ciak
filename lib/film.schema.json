@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/nicoloboschi/justrec/lib/film.schema.json",
-  "title": "justrec film",
+  "$id": "https://github.com/nicoloboschi/ciak/lib/film.schema.json",
+  "title": "ciak film",
   "description": "A launch video as a list of scenes. Each scene lasts as long as its narration (or its recording); captions, music, transitions and audio levels are automatic. Rich text fields accept *muted words* (grey) and [accent words] (accent color).",
   "type": "object",
   "required": [
@@ -25,11 +25,11 @@
     "voice": {
       "type": "object",
       "additionalProperties": false,
-      "description": "The narrator (local Kokoro voice, or your own voice from justrec voice add; macOS say if it fails).",
+      "description": "The narrator (local Kokoro voice, or your own voice from ciak voice add; macOS say if it fails).",
       "properties": {
         "name": {
           "type": "string",
-          "description": "A voice from justrec voice list (your own, cloned), or a Kokoro voice, e.g. af_heart, af_bella, am_michael, bf_emma. Default af_heart."
+          "description": "A voice from ciak voice list (your own, cloned), or a Kokoro voice, e.g. af_heart, af_bella, am_michael, bf_emma. Default af_heart."
         },
         "speed": {
           "type": "number",
@@ -103,7 +103,7 @@
     },
     "style": {
       "type": "string",
-      "description": "A style: fonts, colors, surfaces, radius, backdrop. A name (`justrec styles` lists them: built-in hindsight, midnight, keynote, plus your own in ~/.justrec/styles) or a path to a style .json. \"theme\" overrides on top."
+      "description": "A style: fonts, colors, surfaces, radius, backdrop. A name (`ciak styles` lists them: built-in hindsight, midnight, keynote, plus your own in ~/.ciak/styles) or a path to a style .json. \"theme\" overrides on top."
     }
   },
   "$defs": {
@@ -827,7 +827,7 @@
       }
     },
     "custom": {
-      "description": "Any layout you want: a React component (default export) from the film's folder. Import building blocks from \"justrec\" (Rich, Heading, Pill, Counter, LinePanel, Recording, Text, appear, ease, font, plus Remotion's AbsoluteFill, Img, useCurrentFrame, interpolate, spring). It receives its props plus {theme, frames, reserve, recordings, images}; keep `reserve` px free at the bottom for captions; wrap readable text in <Text> so the layout check sees it.",
+      "description": "Any layout you want: a React component (default export) from the film's folder. Import building blocks from \"ciak\" (Rich, Heading, Pill, Counter, LinePanel, Recording, Text, appear, ease, font, plus Remotion's AbsoluteFill, Img, useCurrentFrame, interpolate, spring). It receives its props plus {theme, frames, reserve, recordings, images}; keep `reserve` px free at the bottom for captions; wrap readable text in <Text> so the layout check sees it.",
       "type": "object",
       "required": [
         "type",

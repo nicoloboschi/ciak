@@ -1,9 +1,9 @@
-// justrec.app: the menu bar app (justrec install), kept small on purpose. macOS ties Screen Recording and
+// ciak.app: the menu bar app (ciak install), kept small on purpose. macOS ties Screen Recording and
 // Microphone permission to this exact build, and programs it starts use its permission. So every feature
-// lives in what it starts (justrec-picker for screenshots, the recording panel and recorder via the justrec
+// lives in what it starts (ciak-picker for screenshots, the recording panel and recorder via the ciak
 // command) and those can change freely; changing this file makes the user grant the permission again.
 // It has: the menu, global keys (RegisterEventHotKey, no Accessibility permission), the permission check.
-// Settings (defaults com.justrec.app, written by install): keys, picker, cli, recordings. keys is JSON, so new
+// Settings (defaults com.ciak.app, written by install): keys, picker, cli, recordings. keys is JSON, so new
 // shortcuts need no change here: [{"key": "cmd+1", "title": "Take Screenshot", "args": [], "stop": "…"}], each
 // starts the picker with its args; pressed again while that picker runs, it gets SIGUSR1 (e.g. stop recording).
 import AppKit
@@ -33,7 +33,7 @@ for index in shortcuts.indices {
   shortcuts[index].code = keyCode
 }
 let home = FileManager.default.homeDirectoryForCurrentUser
-let recordingsDir = URL(fileURLWithPath: settings.string(forKey: "recordings") ?? home.appendingPathComponent("Documents/justrec").path)
+let recordingsDir = URL(fileURLWithPath: settings.string(forKey: "recordings") ?? home.appendingPathComponent("Documents/ciak").path)
 
 func tell(_ title: String, _ text: String, button: String = "OK") -> Bool {
   NSApp.activate(ignoringOtherApps: true)
@@ -51,10 +51,10 @@ func permitted() -> Bool {
   if CGPreflightScreenCaptureAccess() { return true }
   CGRequestScreenCaptureAccess()
   NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
-  if tell("justrec needs Screen Recording", "Turn on justrec in System Settings › Privacy & Security › Screen Recording, then restart justrec.\n\nAlready on? It belongs to an older justrec: select it, remove it with −, and add it again (or run: tccutil reset ScreenCapture com.justrec.app).", button: "Restart justrec") {
+  if tell("ciak needs Screen Recording", "Turn on ciak in System Settings › Privacy & Security › Screen Recording, then restart ciak.\n\nAlready on? It belongs to an older ciak: select it, remove it with −, and add it again (or run: tccutil reset ScreenCapture com.ciak.app).", button: "Restart ciak") {
     let restart = Process()
     restart.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-    restart.arguments = ["kickstart", "-k", "gui/\(getuid())/com.justrec.app"]
+    restart.arguments = ["kickstart", "-k", "gui/\(getuid())/com.ciak.app"]
     try? restart.run()
   }
   return false
@@ -81,7 +81,7 @@ func press(_ index: Int) {
   _ = start(picker, shortcuts[index].args)
 }
 
-// The menu bar icon: screenshot, and Record… which opens the recording panel (justrec ui, one copy at a time).
+// The menu bar icon: screenshot, and Record… which opens the recording panel (ciak ui, one copy at a time).
 final class Menu: NSObject, NSMenuDelegate {
   let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
   var panelURL: URL?
@@ -91,7 +91,7 @@ final class Menu: NSObject, NSMenuDelegate {
     let menu = NSMenu()
     menu.delegate = self
     item.menu = menu
-    item.button?.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: "justrec")
+    item.button?.image = NSImage(systemSymbolName: "movieclapper", accessibilityDescription: "ciak")
   }
   func menuNeedsUpdate(_ menu: NSMenu) {
     menu.removeAllItems()
@@ -107,7 +107,7 @@ final class Menu: NSObject, NSMenuDelegate {
     }
     for entry in keys + [NSMenuItem(title: "Record…", action: #selector(panel), keyEquivalent: ""), .separator(),
                   NSMenuItem(title: "Open Recordings", action: #selector(folder), keyEquivalent: ""), .separator(),
-                  NSMenuItem(title: "Quit justrec", action: #selector(quit), keyEquivalent: "q")] {
+                  NSMenuItem(title: "Quit ciak", action: #selector(quit), keyEquivalent: "q")] {
       entry.target = self
       menu.addItem(entry)
     }
@@ -131,12 +131,12 @@ final class Menu: NSObject, NSMenuDelegate {
 }
 
 // Opened again from Finder or Spotlight while running: one menu bar icon is enough.
-if NSRunningApplication.runningApplications(withBundleIdentifier: "com.justrec.app").contains(where: { $0.processIdentifier != getpid() }) { exit(0) }
+if NSRunningApplication.runningApplications(withBundleIdentifier: "com.ciak.app").contains(where: { $0.processIdentifier != getpid() }) { exit(0) }
 NSApplication.shared.setActivationPolicy(.accessory)
 let menu = Menu()
 signal(SIGUSR1, SIG_IGN) // kill -USR1 <pid> presses a shortcut (for testing): the first, or defaults key "press" (its index)
 let usr1 = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
-usr1.setEventHandler { press(CFPreferencesCopyAppValue("press" as CFString, "com.justrec.app" as CFString) as? Int ?? 0) }
+usr1.setEventHandler { press(CFPreferencesCopyAppValue("press" as CFString, "com.ciak.app" as CFString) as? Int ?? 0) }
 usr1.resume()
 signal(SIGUSR2, SIG_IGN) // kill -USR2 <pid> = Record… from the menu (for testing)
 let usr2 = DispatchSource.makeSignalSource(signal: SIGUSR2, queue: .main)
@@ -153,7 +153,7 @@ var references: [EventHotKeyRef?] = []
 for (index, shortcut) in shortcuts.enumerated() {
   var reference: EventHotKeyRef?
   let status = RegisterEventHotKey(UInt32(shortcut.code), UInt32(shortcut.modifiers), EventHotKeyID(signature: OSType(0x4A524543), id: UInt32(index)), GetApplicationEventTarget(), 0, &reference)
-  if status != noErr { fputs("The shortcut \(shortcut.key) is taken by another app (error \(status)): \(shortcut.title) only from the menu. Pick another with justrec install --key.\n", stderr) }
+  if status != noErr { fputs("The shortcut \(shortcut.key) is taken by another app (error \(status)): \(shortcut.title) only from the menu. Pick another with ciak install --key.\n", stderr) }
   references.append(reference)
 }
 print("ready \(shortcuts.map(\.key).joined(separator: " "))"); fflush(stdout)
