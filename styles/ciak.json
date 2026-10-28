@@ -1,0 +1,11 @@
+{
+  "name": "ciak",
+  "description": "The ciak panel's look: white, near-black type, soft grey cards, round corners, the red record dot as accent.",
+  "base": "light",
+  "background": "#ffffff", "text": "#111111", "muted": "#8a8a86", "accent": "#ff4d2e", "accentText": "#ffffff",
+  "accentGradient": "linear-gradient(90deg, #ff4d2e, #ff4d2e)",
+  "panel": "#f6f6f4", "card": "#f6f6f4", "border": "#e6e5e1", "radius": 22,
+  "font": "Inter, system-ui, sans-serif", "headingFont": "Inter, system-ui, sans-serif", "monoFont": "\"JetBrains Mono\", ui-monospace, Menlo, monospace",
+  "fontUrl": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap",
+  "backdrop": "plain"
+}

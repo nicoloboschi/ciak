@@ -4,151 +4,152 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ciak — the screen recorder your agent edits</title>
-<meta name="description" content="ciak records your screen and hands the editing to an agent: cuts, zooms, captions, narration in your own voice, the final export. Plain files and commands, no timeline.">
+<meta name="description" content="Record your screen. Then just ask, in plain words, and your agent edits it: cuts, zooms, captions, speed, narration in your own voice. Open source, for macOS.">
 <meta property="og:title" content="🎬 ciak — the screen recorder your agent edits">
-<meta property="og:description" content="Record. Let your agent edit. Open source, for macOS.">
-<meta property="og:image" content="https://nicoloboschi.github.io/ciak/poster.jpg">
+<meta property="og:description" content="Record your screen. Then just ask, and your agent edits it.">
+<meta property="og:image" content="https://ciak.nicoloboschi.com/poster.jpg">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:dark;--bg:#0b0b12;--ink:#f3f2f7;--muted:#9a98a8;--line:#24232f;--panel:#14131d;--accent:#a78bfa;--accent2:#60a5fa;--code:#0f0e17}
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){color-scheme:light;--bg:#fbfbfa;--ink:#121117;--muted:#6b6977;--line:#e6e5ea;--panel:#ffffff;--accent:#7c3aed;--accent2:#2563eb;--code:#f4f3f7}}
-:root[data-theme="dark"]{color-scheme:dark;--bg:#0b0b12;--ink:#f3f2f7;--muted:#9a98a8;--line:#24232f;--panel:#14131d;--accent:#a78bfa;--accent2:#60a5fa;--code:#0f0e17}
+/* The panel's look (ui/index.html): warm white, near-black pills, soft grey cards, quiet grey labels. Dark follows the Mac. */
+:root{color-scheme:light;--bg:#ffffff;--panel:#f6f6f4;--panel2:#ececea;--line:#e6e5e1;--muted:#8a8a86;--ink:#111111;--on-ink:#ffffff;--brand:#ff4d2e;--shadow:0 1px 2px #0000000a,0 8px 24px #0000000d}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0e0e0f;--panel:#18181a;--panel2:#232326;--line:#2a2a2d;--muted:#8d8d93;--ink:#f2f2f0;--on-ink:#111111;--shadow:none}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0e0e0f;--panel:#18181a;--panel2:#232326;--line:#2a2a2d;--muted:#8d8d93;--ink:#f2f2f0;--on-ink:#111111;--shadow:none}
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-body::before{content:"";position:fixed;inset:-20% -10% auto;height:70vh;background:radial-gradient(50% 60% at 30% 40%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%),radial-gradient(40% 50% at 75% 30%,color-mix(in srgb,var(--accent2) 16%,transparent),transparent 70%);pointer-events:none;z-index:-1}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,"Inter",BlinkMacSystemFont,"Segoe UI",sans-serif;font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}
 a{color:inherit}
-.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
-nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
-.logo{font-weight:800;font-size:20px;letter-spacing:-.5px;text-decoration:none;display:flex;gap:8px;align-items:center}
-.gh{font-size:15px;font-weight:600;text-decoration:none;padding:8px 16px;border:1px solid var(--line);border-radius:999px;background:var(--panel)}
-.gh:hover{border-color:var(--muted)}
-header{text-align:center;padding:56px 0 36px}
-.kicker{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
-h1{font-size:clamp(40px,8vw,76px);line-height:1.02;letter-spacing:-.04em;margin:14px 0 18px;font-weight:800}
-h1 span{color:var(--muted)}
-.lede{max-width:620px;margin:0 auto;color:var(--muted);font-size:19px}
-.cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:30px}
-.btn{font-weight:600;text-decoration:none;padding:12px 22px;border-radius:999px;border:1px solid var(--line);background:var(--panel)}
-.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.btn:hover{transform:translateY(-1px)}
-.video{margin:20px auto 0;border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 80px -30px rgba(0,0,0,.6);background:#000;aspect-ratio:16/9}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+nav{display:flex;align-items:center;justify-content:space-between;padding:20px 0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:-.6px;text-decoration:none}
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:500;font-size:15px;text-decoration:none;border:0;border-radius:999px;padding:9px 18px;min-height:40px;background:var(--panel2);color:var(--ink);cursor:pointer;transition:background .15s,opacity .15s,transform .1s}
+.pill:hover{background:var(--line)}.pill:active{transform:scale(.97)}
+.pill.primary{background:var(--ink);color:var(--on-ink)}.pill.primary:hover{opacity:.85}
+.rec{width:9px;height:9px;border-radius:50%;background:var(--brand)}
+header{padding:64px 0 40px;max-width:760px}
+h1{font-size:clamp(38px,6.4vw,64px);font-weight:600;letter-spacing:-.045em;line-height:1.04;margin:0 0 18px}
+h1 span,h2 span{color:var(--muted)}
+.lede{font-size:19px;color:var(--muted);margin:0 0 28px;max-width:600px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.video{border-radius:22px;overflow:hidden;background:#000;box-shadow:var(--shadow);aspect-ratio:16/9}
 .video video{display:block;width:100%;height:100%}
-.note{text-align:center;color:var(--muted);font-size:14px;margin-top:12px}
-section{padding:72px 0 0}
-h2{font-size:clamp(28px,4.5vw,40px);letter-spacing:-.03em;line-height:1.1;margin:0 0 10px}
-h2 span{color:var(--muted)}
-.sub{color:var(--muted);margin:0 0 28px;max-width:640px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px}
-.card b{display:block;font-size:17px;margin-bottom:6px}
+.caption{color:var(--muted);font-size:14px;margin:12px 4px 0}
+section{padding:88px 0 0}
+h2{font-size:clamp(28px,4vw,40px);font-weight:600;letter-spacing:-.035em;line-height:1.1;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 28px;max-width:600px;font-size:17px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--panel);border-radius:22px;padding:24px}
+.card .label{font-size:13px;color:var(--muted);margin-bottom:6px}
+.card b{display:block;font-size:17px;font-weight:600;letter-spacing:-.3px;margin-bottom:6px}
 .card p{margin:0;color:var(--muted);font-size:15px}
-.card .icon{font-size:22px;margin-bottom:10px}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;counter-reset:step}
-.steps .card b::before{counter-increment:step;content:counter(step);display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:13px;margin-right:10px;vertical-align:1px}
-pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:14px;padding:18px 20px;overflow-x:auto;font:14px/1.7 "JetBrains Mono",ui-monospace,monospace}
-pre .c{color:var(--muted)}
-.code{position:relative}
-.copy{position:absolute;top:10px;right:10px;font:600 13px Inter,sans-serif;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-blockquote{margin:0;padding:18px 20px;border-radius:14px;background:var(--panel);border:1px solid var(--line);font-size:16px}
-blockquote small{display:block;color:var(--muted);margin-top:6px;font-size:13px}
-footer{padding:80px 0 48px;text-align:center;color:var(--muted);font-size:15px}
-footer .big{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-.03em;color:var(--ink);margin-bottom:18px}
-@media (max-width:820px){.grid,.steps,.two{grid-template-columns:1fr}header{padding:32px 0 24px}section{padding-top:56px}}
-@media (prefers-reduced-motion:reduce){.btn:hover{transform:none}}
+.asks{display:flex;flex-wrap:wrap;gap:10px}
+.ask{background:var(--panel);border-radius:999px;padding:10px 18px;font-size:16px}
+.ask::before{content:"“"}.ask::after{content:"”"}
+.seg{display:inline-flex;background:var(--panel);border-radius:999px;padding:3px;margin-bottom:16px;flex-wrap:wrap}
+.seg button{font:inherit;font-size:14px;font-weight:500;background:none;border:0;color:var(--muted);padding:7px 16px;border-radius:999px;cursor:pointer;min-height:34px}
+.seg button.on{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px #0002}
+.shot{border-radius:22px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow);border:1px solid var(--line)}
+.shot img{display:block;width:100%;height:auto}
+.shot-note{color:var(--muted);font-size:15px;margin:14px 4px 0;min-height:24px}
+.install{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;align-items:start}.install>*{min-width:0}
+.code{background:var(--panel);border-radius:22px;padding:22px 24px;position:relative}
+.code pre{margin:0;font:14px/1.8 ui-monospace,SFMono-Regular,Menlo,monospace;overflow-x:auto;padding-right:84px}
+.code .pill{position:absolute;top:16px;right:16px;min-height:34px;padding:6px 14px;font-size:14px;background:var(--bg)}
+.list{margin:0;padding:0;list-style:none;display:grid;gap:12px}
+.list li{color:var(--muted);font-size:15px}.list b{color:var(--ink);font-weight:500}
+footer{padding:96px 0 48px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:15px;border-top:1px solid var(--line);margin-top:96px;padding-top:28px}
+@media (max-width:820px){.cards,.install{grid-template-columns:1fr}header{padding:36px 0 28px}section{padding-top:64px}footer{margin-top:64px}}
+@media (prefers-reduced-motion:reduce){.pill:active{transform:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <nav>
-    <a class="logo" href="./">🎬 ciak</a>
-    <a class="gh" href="https://github.com/nicoloboschi/ciak">GitHub</a>
+    <a class="brand" href="./">🎬 ciak</a>
+    <a class="pill" href="https://github.com/nicoloboschi/ciak">GitHub</a>
   </nav>
 
   <header>
-    <div class="kicker">Ciak, si gira!</div>
-    <h1>Record.<br><span>Let your agent edit.</span></h1>
-    <p class="lede">ciak is a screen recorder for macOS where an agent does the editing: cuts, zooms on clicks, captions, titles, narration in your own voice, the final export. Every edit is a plain file and a command. No timeline.</p>
-    <div class="cta">
-      <a class="btn primary" href="#install">Install</a>
-      <a class="btn" href="https://github.com/nicoloboschi/ciak">View on GitHub</a>
+    <h1>The screen recorder <span>your agent edits.</span></h1>
+    <p class="lede">Record your screen. Then just ask, in plain words, and your agent edits it: cuts, zooms, captions, speed, even narration in your own voice. You never touch a timeline.</p>
+    <div class="actions">
+      <a class="pill primary" href="#install"><i class="rec"></i>Get ciak</a>
+      <a class="pill" href="https://github.com/nicoloboschi/ciak">View on GitHub</a>
     </div>
   </header>
 
   <div class="video"><video src="ciak.mp4" poster="poster.jpg" controls playsinline preload="metadata"></video></div>
-  <p class="note">An agent recorded, edited and rendered this video with ciak. The voice is mine, cloned on my Mac.</p>
+  <p class="caption">The voice in this video isn't a recording. An agent made it from a short sample of my real voice, then wrote, recorded and edited the whole video with ciak.</p>
 
   <section>
-    <h2>Timelines are for people. <span>Agents need files.</span></h2>
-    <p class="sub">Video editors hide every decision behind a timeline that an agent can't use. ciak keeps every decision where an agent can read it, change it and render it again.</p>
-    <div class="grid">
-      <div class="card"><div class="icon">📄</div><b>Edits are files</b><p>Each recording is a folder: the video, a project JSON with cuts, zooms, speed and background, the cursor log and captions. Same inputs, same video.</p></div>
-      <div class="card"><div class="icon">🎙️</div><b>One file, one audio track</b><p>Mic and system sound are mixed into the video's only track, so the voice never goes missing from the export.</p></div>
-      <div class="card"><div class="icon">🤖</div><b>Agents first</b><p>Every feature works from the command line and prints JSON. A skill teaches Claude Code every command.</p></div>
+    <h2>You record. <span>Your agent edits.</span></h2>
+    <p class="sub">Three steps, and only the first and last are yours.</p>
+    <div class="cards">
+      <div class="card"><div class="label">1 · You</div><b>Record</b><p>Press ⌘2 and pick an area or a window. Or let your agent record itself in a browser, with your logins.</p></div>
+      <div class="card"><div class="label">2 · Your agent</div><b>Edit</b><p>Pauses are cut and every click gets a zoom on its own. Ask for anything else, and the agent does it and renders the video.</p></div>
+      <div class="card"><div class="label">3 · You</div><b>Watch</b><p>The video plays in the panel. Flip a switch and see it change at once. Copy it straight into a chat.</p></div>
     </div>
   </section>
 
   <section>
-    <h2>How it works</h2>
-    <p class="sub">You record and review. Everything in between is your agent.</p>
-    <div class="steps">
-      <div class="card"><b>Record</b><p>⌘2 records an area or a window. Or your agent records itself in a browser with your logins, or in a real terminal, with secrets blurred.</p></div>
-      <div class="card"><b>Edit</b><p>When it stops, idle time is cut and every click gets a zoom. Then ask your agent for the rest: captions, speed, vertical, a sunset background.</p></div>
-      <div class="card"><b>Review</b><p>The panel plays the edit live. Flip a switch and see it at once. Copy the final video straight into a chat.</p></div>
+    <h2>Just ask. <span>In plain words.</span></h2>
+    <p class="sub">Anything you'd do in a video editor, you can ask for. Nothing technical.</p>
+    <div class="asks">
+      <span class="ask">Cut the pauses</span><span class="ask">Make it vertical</span><span class="ask">Slow down this part</span>
+      <span class="ask">Zoom less at 0:20</span><span class="ask">Add captions</span><span class="ask">Hide my camera</span>
+      <span class="ask">Turn off the click sounds</span><span class="ask">Sunset background</span>
+      <span class="ask">Make a 30 second launch video, in my voice</span>
     </div>
   </section>
 
   <section>
-    <h2>Tell your agent. <span>It knows ciak.</span></h2>
-    <p class="sub">After a recording, the panel gives you the project id. Then just ask.</p>
-    <div class="two">
-      <blockquote>“Use /ciak to edit project 3f9a1c2e: cut the pauses, zoom less at 0:20, make it vertical.”<small>Edit a recording</small></blockquote>
-      <blockquote>“Record yourself signing up on our staging site, then make a 30 second launch video narrated in my voice.”<small>Record and make a film</small></blockquote>
+    <h2>One panel <span>for everything.</span></h2>
+    <p class="sub">Your recordings, your screenshots and your voices, in one quiet window.</p>
+    <div class="seg" role="tablist">
+      <button class="on" data-shot="project" role="tab">Recordings</button>
+      <button data-shot="shots" role="tab">Screenshots</button>
+      <button data-shot="voices" role="tab">Voices</button>
     </div>
-  </section>
-
-  <section>
-    <h2>Commands, not clicks</h2>
-    <p class="sub">What your agent runs. Every command prints JSON.</p>
-    <div class="code"><pre><span class="c"># an agent records itself in a browser with your logins</span>
-ciak browser https://app.example.com
-ciak start --browser --name demo
-ciak browser click "New project"
-ciak stop                               <span class="c"># idle time cut, zooms on clicks</span>
-
-<span class="c"># edit and render</span>
-ciak edit demo --speed 1.5 --background sunset
-ciak captions demo
-ciak render demo                        <span class="c"># one video + one audio track, checked</span>
-
-<span class="c"># launch videos, in your own voice</span>
-ciak voice add me
-ciak film launch.film.json</pre></div>
+    <div class="shot"><img id="shot" src="app-project.jpg" alt="The ciak panel: a recording with its video, switches for click sounds and zooms, and a speed menu" width="2880" height="1300"></div>
+    <p class="shot-note" id="shotNote">Every recording plays here. Switch zooms or click sounds off, change the speed, and watch it change right away.</p>
   </section>
 
   <section id="install">
-    <h2>Install</h2>
-    <p class="sub">macOS 15+ on Apple silicon, with Xcode command line tools, Node 22+, ffmpeg and uv.</p>
-    <div class="code"><button class="copy" type="button">Copy</button><pre id="installCode">git clone https://github.com/nicoloboschi/ciak && cd ciak
-npm install
+    <h2>Get ciak</h2>
+    <p class="sub">Free and open source, for Macs with Apple silicon.</p>
+    <div class="install">
+      <div class="code"><button class="pill" id="copy" type="button">Copy</button><pre id="installCode">git clone https://github.com/nicoloboschi/ciak
+cd ciak && npm install
 ./ciak install</pre></div>
-    <p class="sub" style="margin-top:16px">This adds ciak to the menu bar (⌘1 screenshots, ⌘2 quick recording), the <code>ciak</code> command and the agent skill. macOS asks once for Screen Recording: allow ciak.</p>
+      <ul class="list">
+        <li><b>A menu bar app.</b> ⌘1 takes a framed screenshot, ⌘2 starts a quick recording.</li>
+        <li><b>Your agent learns it.</b> Claude Code knows every ciak command after install.</li>
+        <li><b>Needs</b> macOS 15, Xcode command line tools, Node, ffmpeg and uv. macOS asks once for screen recording.</li>
+      </ul>
+    </div>
   </section>
 
   <footer>
-    <div class="big">🎬 Ciak, si gira.</div>
-    <a class="btn primary" href="https://github.com/nicoloboschi/ciak">Get ciak on GitHub</a>
+    <span>🎬 Ciak, si gira.</span>
+    <a class="pill" href="https://github.com/nicoloboschi/ciak">github.com/nicoloboschi/ciak</a>
   </footer>
 </div>
 <script>
-document.querySelector('.copy').onclick = async event => {
+const shots = {
+  project: ['app-project.jpg', 1300, 'The ciak panel: a recording with its video, switches for click sounds and zooms, and a speed menu', 'Every recording plays here. Switch zooms or click sounds off, change the speed, and watch it change right away.'],
+  shots: ['app-shots.jpg', 900, 'The Screenshots page: framed screenshots with Copy, Finder and Delete', '⌘1 picks an area or a window and puts it on a wallpaper, with rounded corners and a shadow. Copied, ready to paste.'],
+  voices: ['app-voices.jpg', 1080, 'The Voices page: your cloned voice with a box to try it, and a form to add a new one', 'Read a short text aloud once. Your agent can then narrate any video in your voice, made on your Mac.'],
+};
+for (const button of document.querySelectorAll('.seg button')) button.onclick = () => {
+  document.querySelectorAll('.seg button').forEach(other => other.classList.toggle('on', other === button));
+  const [src, height, alt, note] = shots[button.dataset.shot], image = document.getElementById('shot');
+  Object.assign(image, {src, alt, height}); document.getElementById('shotNote').textContent = note;
+};
+document.getElementById('copy').onclick = async event => {
   try { await navigator.clipboard.writeText(document.getElementById('installCode').textContent); event.target.textContent = 'Copied'; }
-  catch { event.target.textContent = 'Select and copy'; }
+  catch { event.target.textContent = 'Select it'; }
   setTimeout(() => event.target.textContent = 'Copy', 1600);
 };
 </script>
