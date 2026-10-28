@@ -1,7 +1,7 @@
 // Shared pieces: the cursor and one clip of a recording, fitted into a box.
 import React from 'react';
 import {AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig} from 'remotion';
-import {Video} from '@remotion/media';
+import {Video, Audio} from '@remotion/media';
 
 export const clamp = (value, lower, upper) => Math.min(upper, Math.max(lower, value));
 export const ease = value => { value = clamp(value, 0, 1); return value * value * (3 - 2 * value); };
@@ -42,8 +42,8 @@ export function Cursor({events, clicks, time, width, height, style}) {
 }
 
 // box: the area the screen is fitted into (the whole video, or half of it in a comparison).
-// sound: play the recording's sound (the live preview; a render adds the mixed sound with ffmpeg).
-export function Clip({project, clip, sourceUrl, events, clicks, transcript, webcams, box, rate = 1, sound = false}) {
+// sound: the address of the sound to play with it (the live preview; a render adds the mixed sound with ffmpeg).
+export function Clip({project, clip, sourceUrl, events, clicks, transcript, webcams, box, rate = 1, sound = null}) {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
   const time = clip.start + frame * rate / fps;
@@ -68,7 +68,8 @@ export function Clip({project, clip, sourceUrl, events, clicks, transcript, webc
   return <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
     <div style={{width: screenWidth, height: screenHeight, overflow: 'hidden', position: 'relative', borderRadius: project.style.radius, boxShadow: project.style.shadow ? '0 24px 70px #0008, 0 0 0 1px #ffffff18' : undefined}}>
       <div style={{width: screenWidth, height: screenHeight, transformOrigin: '0 0', transform: `translate(${targetX * strength}px, ${targetY * strength}px) scale(${scale})`}}>
-        <Video src={sourceUrl} muted={!sound} playbackRate={rate} trimBefore={Math.round(clip.start * fps)} objectFit="fill" style={{width: screenWidth, height: screenHeight}}/>
+        <Video src={sourceUrl} muted playbackRate={rate} trimBefore={Math.round(clip.start * fps)} objectFit="fill" style={{width: screenWidth, height: screenHeight}}/>
+        {sound && <Audio src={sound} playbackRate={rate} trimBefore={Math.round(clip.start * fps)}/>}
         {!project.cursorBaked && <Cursor events={events} clicks={clicks} time={time} width={screenWidth} height={screenHeight} style={project.style}/>}
       </div>
     </div>
