@@ -73,6 +73,11 @@ input[type=checkbox]:checked{background:var(--ink)}input[type=checkbox]:checked:
 .meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:15px;margin-top:6px}.meta #pWhen{margin:0}
 .idbox{display:inline-flex;align-items:center;gap:6px}.idbox code{font:500 14px ui-monospace,Menlo,monospace;color:var(--ink)}
 .player{width:100%;aspect-ratio:16/9;max-height:78vh;margin-bottom:18px;background:#000;border-radius:22px;display:block;box-shadow:var(--shadow)}
+.player.preview{aspect-ratio:auto;max-height:none;overflow:hidden;background:var(--panel)}
+.viewer-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.seg{display:inline-flex;background:var(--panel);border-radius:999px;padding:3px}.seg button{background:none;border:0;box-shadow:none;color:var(--muted);padding:6px 14px;font-size:14px}
+.seg button.on{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px #0002}.seg button:disabled{opacity:.4}
+.file{display:flex;align-items:center;gap:8px;min-width:0}.file span{font:13px ui-monospace,Menlo,monospace;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:36ch}
 .banner{font-size:14px;color:var(--warn);margin:10px 0 0}.banner:empty{display:none}
 .bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .pills{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pills>.muted{font-size:14px;margin-right:4px}#switchList{display:contents}
@@ -166,7 +171,7 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
     <div class="head">
       <div><h1 id="pName" title="Click to rename"></h1><input id="pNameEdit" type="text" maxlength="80" hidden>
         <div class="meta"><span id="pWhen"></span><span class="idbox">Project <code id="pId"></code><button class="link" id="copyId">Copy</button></span></div></div>
-      <div class="actions-row"><button class="small" id="revealFinal">Show in Finder</button><button class="small" id="revealFolder">Project folder</button>
+      <div class="actions-row"><button class="small" id="revealFolder">Project folder</button>
         <button class="small" id="renameButton">Rename</button><button class="small" id="deleteButton">Delete</button></div>
     </div>
     <div class="card live" id="live">
@@ -177,7 +182,11 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
       <div class="actions"><button id="pauseButton">Pause</button><button class="danger" id="finishButton">■ Finish</button></div>
     </div>
     <div id="made">
+      <!-- The exported video, or the edit playing live (redrawn on each change, no render needed) -->
+      <div class="viewer-top"><div class="seg" id="seg"><button data-show="final">Exported video</button><button data-show="live">Live preview</button></div>
+        <div class="file" id="finalFile"><span id="finalName"></span><button class="small" id="copyVideo">Copy</button><button class="small" id="revealFinal">Show in Finder</button></div></div>
       <video class="player" id="player" controls playsinline></video>
+      <div class="player preview" id="preview" hidden></div>
       <!-- Under the video: what's in it (tap to leave a part out), then render -->
       <div class="bar"><div class="pills" id="switches"><span class="muted">In the video</span><span id="switchList"></span></div><button id="renderAgain">Render again</button></div>
       <!-- The camera bubble's look (only for recordings with a camera) -->
@@ -377,7 +386,7 @@ async function refresh() {
   let project;
   try { project = await api('project', {id}); } catch (failure) { if (current?.id === id) toast(failure.message); return; }
   if (current?.id !== id) return;
-  const fresh = current.final?.output !== project.final?.output || current.recording !== project.recording;
+  const fresh = JSON.stringify(current.final) !== JSON.stringify(project.final) || current.id !== project.id;
   current = project;
   $('pName').textContent = project.name;
   $('pWhen').textContent = when(project.created) + (project.duration ? ' · recorded ' + clock(project.duration) : '');
@@ -391,15 +400,34 @@ async function refresh() {
   $('pauseButton').textContent = project.state === 'paused' ? 'Resume' : 'Pause';
   $('liveNote').textContent = project.state === 'paused' ? 'Paused: this part won’t be in the video.' : 'Show what you’re building. Pause any time.';
   if (!live) {
-    if (fresh && (project.final || project.recording)) $('player').src = media(project.id, project.final ? 'final' : 'raw') + '&v=' + encodeURIComponent(project.final?.output || '');
-    $('banner').textContent = project.state === 'rendering' ? 'Rendering the edited video… the raw recording plays meanwhile.' : project.final ? '' : project.recording ? 'This is the raw recording: not rendered yet.' : '';
+    if (fresh && project.final) { $('player').src = media(project.id, 'final') + '&v=' + project.final.elapsedSeconds; shown = null; }
+    $('banner').textContent = project.state === 'rendering' ? 'Rendering the video… the live preview plays meanwhile.' : project.final || !project.recording ? '' : 'Not exported yet: this is the live preview.';
+    viewer(project);
     steps(project);
   }
   showSwitches(project);
   showCamera(project);
-  $('revealFinal').disabled = !project.final;
   $('renderAgain').disabled = busy || project.state === 'rendering' || !project.recording;
 }
+// The exported file, or the live preview: the edit drawn in the page from the project (30 fps), so a switch shows at once.
+let shown = null, previewEdited = null;
+function viewer(project) {
+  if (!shown || !project.final) shown = project.final && project.state !== 'rendering' ? 'final' : 'live';
+  $('player').hidden = shown !== 'final'; $('preview').hidden = shown !== 'live';
+  for (const button of $('seg').children) { button.classList.toggle('on', button.dataset.show === shown); button.disabled = button.dataset.show === 'final' && !project.final; }
+  $('finalFile').hidden = !project.final;
+  if (project.final) { $('finalName').textContent = project.final.output.split('/').pop(); $('finalName').title = project.final.output; }
+  if (shown === 'final') { window.justrecPreviewPause?.(); previewEdited = null; return; }
+  $('player').pause();
+  if (project.recording && previewEdited !== project.id + project.edited) { previewEdited = project.id + project.edited; livePreview(project.id).catch(failure => toast('Live preview: ' + failure.message)); }
+}
+async function livePreview(id) {
+  if (!window.justrecPreview) await new Promise((loaded, failed) => document.head.append(Object.assign(document.createElement('script'), {src: '/preview.js?token=' + token, onload: loaded, onerror: () => failed(new Error('could not load'))})));
+  const props = await api('project-preview', {id});
+  if (current?.id === id) window.justrecPreview($('preview'), props);
+}
+for (const button of $('seg').children) button.onclick = () => { shown = button.dataset.show; viewer(current); };
+$('copyVideo').onclick = () => api('copy-video', {id: current.id}).then(() => { $('copyVideo').textContent = 'Copied'; setTimeout(() => $('copyVideo').textContent = 'Copy', 2000); }).catch(failure => toast(failure.message));
 // Mic, Mac sound, webcam, click sounds and zooms: each in or out of the video. A change waits for Render again.
 const switchNames = {mic: ['Microphone', 'Your voice'], system: ['Mac sound', 'Sound from apps'], webcam: ['Camera bubble', 'You in a circle in the corner'], clicks: ['Click sounds', 'A soft tick on each click'], zooms: ['Zoom on clicks', 'Moves in where you click']};
 function showSwitches(project) {
@@ -415,7 +443,7 @@ function showSwitches(project) {
     pill.setAttribute('aria-pressed', on);
     pill.onclick = async () => {
       pill.disabled = true;
-      try { await api('project-switch', {id: project.id, kind, on: !on}); $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
+      try { await api('project-switch', {id: project.id, kind, on: !on}); shown = 'live'; $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
       catch (failure) { toast(failure.message); }
       finally { pill.disabled = false; refresh(); }
     };
@@ -430,7 +458,7 @@ function showCamera(project) {
 }
 for (const [id, key, read] of [['camRound', 'round', box => box.checked], ['camSize', 'size', box => Number(box.value)], ['camPosition', 'position', box => box.value]])
   $(id).onchange = async () => {
-    try { await api('project-camera', {id: current.id, camera: {[key]: read($(id))}}); $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
+    try { await api('project-camera', {id: current.id, camera: {[key]: read($(id))}}); shown = 'live'; $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
     catch (failure) { toast(failure.message); }
     finally { $(id).blur(); refresh(); }
   };

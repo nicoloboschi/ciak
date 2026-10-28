@@ -42,7 +42,8 @@ export function Cursor({events, clicks, time, width, height, style}) {
 }
 
 // box: the area the screen is fitted into (the whole video, or half of it in a comparison).
-export function Clip({project, clip, sourceUrl, events, clicks, transcript, webcams, box, rate = 1}) {
+// sound: play the recording's sound (the live preview; a render adds the mixed sound with ffmpeg).
+export function Clip({project, clip, sourceUrl, events, clicks, transcript, webcams, box, rate = 1, sound = false}) {
   const frame = useCurrentFrame();
   const {fps, width, height} = useVideoConfig();
   const time = clip.start + frame * rate / fps;
@@ -67,7 +68,7 @@ export function Clip({project, clip, sourceUrl, events, clicks, transcript, webc
   return <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
     <div style={{width: screenWidth, height: screenHeight, overflow: 'hidden', position: 'relative', borderRadius: project.style.radius, boxShadow: project.style.shadow ? '0 24px 70px #0008, 0 0 0 1px #ffffff18' : undefined}}>
       <div style={{width: screenWidth, height: screenHeight, transformOrigin: '0 0', transform: `translate(${targetX * strength}px, ${targetY * strength}px) scale(${scale})`}}>
-        <Video src={sourceUrl} muted playbackRate={rate} trimBefore={Math.round(clip.start * fps)} objectFit="fill" style={{width: screenWidth, height: screenHeight}}/>
+        <Video src={sourceUrl} muted={!sound} playbackRate={rate} trimBefore={Math.round(clip.start * fps)} objectFit="fill" style={{width: screenWidth, height: screenHeight}}/>
         {!project.cursorBaked && <Cursor events={events} clicks={clicks} time={time} width={screenWidth} height={screenHeight} style={project.style}/>}
       </div>
     </div>
@@ -80,3 +81,28 @@ export function Clip({project, clip, sourceUrl, events, clicks, transcript, webc
   </AbsoluteFill>;
 }
 
+function Title({text}) {
+  const frame = useCurrentFrame();
+  return <AbsoluteFill style={{alignItems: 'center', justifyContent: 'center', color: 'white', fontFamily: 'Arial, sans-serif', fontSize: 72, fontWeight: 700, textAlign: 'center', padding: 100, opacity: ease(frame / 12), transform: `translateY(${(1 - ease(frame / 18)) * 20}px)`}}>{text}</AbsoluteFill>;
+}
+
+// One recording edited: intro, the kept clips, outro. Also played live in the panel (render/preview.jsx).
+export function Demo(props) {
+  const {project} = props;
+  const {fps} = useVideoConfig();
+  let offset = project.intro ? Math.round(project.intro.duration * fps) : 0;
+  const sequences = project.clips.map((clip, index) => {
+    const duration = Math.max(1, Math.round((clip.end - clip.start) * fps));
+    const sequence = <Sequence key={index} from={offset} durationInFrames={duration} premountFor={fps}><Clip {...props} clip={clip}/></Sequence>;
+    offset += duration;
+    return sequence;
+  });
+  return <AbsoluteFill style={{background: project.style.background}}>
+    {project.intro && <Sequence durationInFrames={Math.round(project.intro.duration * fps)} premountFor={fps}><Title text={project.intro.text}/></Sequence>}
+    {sequences}
+    {project.outro && <Sequence from={offset} durationInFrames={Math.round(project.outro.duration * fps)} premountFor={fps}><Title text={project.outro.text}/></Sequence>}
+  </AbsoluteFill>;
+}
+
+export const demoFrames = (project, fps = project.export.fps) => project.clips.reduce((total, clip) => total + Math.max(1, Math.round((clip.end - clip.start) * fps)), 0)
+  + Math.round(((project.intro?.duration || 0) + (project.outro?.duration || 0)) * fps);
