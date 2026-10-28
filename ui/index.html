@@ -78,6 +78,9 @@ input[type=checkbox]:checked{background:var(--ink)}input[type=checkbox]:checked:
 .pills{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pills>.muted{font-size:14px;margin-right:4px}#switchList{display:contents}
 .pill{min-height:34px;padding:6px 14px;font-size:14px;background:none;box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
 .pill.on{background:var(--panel2);box-shadow:none;color:var(--ink)}.pill.on::before{content:"✓ ";color:var(--ok)}.pill:not(.on){text-decoration:line-through}
+.bar.camera{justify-content:flex-start;gap:28px;margin-top:14px}.bar .muted{font-size:14px}
+.inline{display:inline-flex;align-items:center;gap:10px;margin:0;color:var(--ink);font-size:14px}.inline select{width:auto;min-height:34px;padding:4px 10px}
+input[type=range]{width:140px;accent-color:var(--ink)}
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;margin-top:40px;padding-top:32px;border-top:1px solid var(--line)}
 details summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;list-style:none}details summary::-webkit-details-marker{display:none}details summary h2::after{content:" ›";color:var(--muted)}details[open] summary h2::after{content:" ⌄"}
 .prompt{display:flex;gap:10px;align-items:center;background:var(--panel);border-radius:999px;padding:6px 6px 6px 18px}
@@ -177,6 +180,11 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
       <video class="player" id="player" controls playsinline></video>
       <!-- Under the video: what's in it (tap to leave a part out), then render -->
       <div class="bar"><div class="pills" id="switches"><span class="muted">In the video</span><span id="switchList"></span></div><button id="renderAgain">Render again</button></div>
+      <!-- The camera bubble's look (only for recordings with a camera) -->
+      <div class="bar camera" id="cameraLook" hidden><span class="muted">Camera</span>
+        <label class="inline">Round <input type="checkbox" id="camRound"></label>
+        <label class="inline">Size <input type="range" id="camSize" min="0.1" max="0.45" step="0.01"></label>
+        <label class="inline">Corner <select id="camPosition"><option value="bottom-right">Bottom right</option><option value="bottom-left">Bottom left</option><option value="top-right">Top right</option><option value="top-left">Top left</option></select></label></div>
       <div class="banner" id="banner"></div>
       <dl class="facts" id="facts"></dl>
       <div class="split">
@@ -388,6 +396,7 @@ async function refresh() {
     steps(project);
   }
   showSwitches(project);
+  showCamera(project);
   $('revealFinal').disabled = !project.final;
   $('renderAgain').disabled = busy || project.state === 'rendering' || !project.recording;
 }
@@ -413,6 +422,18 @@ function showSwitches(project) {
     return pill;
   }));
 }
+// The camera bubble: round or a rounded rectangle, its size and corner. A change waits for Render again, like the switches.
+function showCamera(project) {
+  $('cameraLook').hidden = !project.camera;
+  if (!project.camera || document.activeElement?.closest?.('#cameraLook')) return;
+  $('camRound').checked = project.camera.round; $('camSize').value = project.camera.size; $('camPosition').value = project.camera.position || 'bottom-right';
+}
+for (const [id, key, read] of [['camRound', 'round', box => box.checked], ['camSize', 'size', box => Number(box.value)], ['camPosition', 'position', box => box.value]])
+  $(id).onchange = async () => {
+    try { await api('project-camera', {id: current.id, camera: {[key]: read($(id))}}); $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
+    catch (failure) { toast(failure.message); }
+    finally { $(id).blur(); refresh(); }
+  };
 function timer() {
   if (view !== 'project' || !current || !['recording', 'paused'].includes(current.state)) return;
   $('timer').textContent = clock((current.elapsed || 0) + (current.state === 'recording' ? Date.now() / 1000 - current.startedAt : 0));

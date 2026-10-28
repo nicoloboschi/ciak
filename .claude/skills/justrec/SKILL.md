@@ -163,7 +163,8 @@ Everything else is a direct edit of the project JSON, then re-render:
 - `audio.denoise`: the mic's background noise is removed at render (a local speech denoiser; on unless Mac sound was
   recorded, since it would remove music too). Set `false` if it ever eats the voice; the cleaned voice is cached as
   `recording.clean.wav` in the project.
-- `webcam`: `size` (fraction of width), `position` `bottom-right|bottom-left`.
+- `webcam`: `size` (fraction of width), `position` `bottom-right|bottom-left|top-right|top-left`, `round` (false = rounded rectangle);
+  or `justrec edit <project> --camera round=off,size=0.3,position=top-left`.
 
 - The first `preview`/`render` on a Mac downloads a headless Chrome (~170 MB, ~40 s), once.
 - Paths contain the recording's name (spaces): quote them.

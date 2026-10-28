@@ -71,7 +71,7 @@ export function Clip({project, clip, sourceUrl, events, clicks, transcript, webc
         {!project.cursorBaked && <Cursor events={events} clicks={clicks} time={time} width={screenWidth} height={screenHeight} style={project.style}/>}
       </div>
     </div>
-    {webcam && <div style={{position: 'absolute', bottom: padding, [project.webcam.position === 'bottom-left' ? 'left' : 'right']: padding, width: width * project.webcam.size, height: width * project.webcam.size, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 12px 40px #0009', border: '4px solid #ffffffcc'}}>
+    {webcam && <div style={{position: 'absolute', [project.webcam.position?.startsWith('top') ? 'top' : 'bottom']: padding, [project.webcam.position?.endsWith('left') ? 'left' : 'right']: padding, width: width * project.webcam.size, height: width * project.webcam.size * (project.webcam.round === false ? 0.75 : 1), borderRadius: project.webcam.round === false ? width * 0.016 : '50%', overflow: 'hidden', boxShadow: '0 12px 40px #0009', border: '4px solid #ffffffcc'}}>
       <Sequence from={Math.max(0, Math.round((webcam.start - clip.start) * fps))} layout="none" premountFor={fps}>
         <Video src={webcam.url} muted trimBefore={Math.round((Math.max(0, clip.start - webcam.start) + (webcam.sourceOffset || 0)) * fps)} objectFit="cover" style={{width: '100%', height: '100%'}}/>
       </Sequence>

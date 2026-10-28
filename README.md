@@ -80,7 +80,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - 🧪 Log cursor position and clicks to `<name>.cursor.jsonl` (file written; clicks not yet checked)
 - ✅ Optional system audio, mixed into the same track (never a second track)
 - ✅ Record a single window (only while visible) or a region
-- ✅ Optional webcam bubble
+- ✅ Optional webcam bubble · ✅ round or a rounded rectangle, size and corner (`edit --camera round=off,size=0.3,position=top-left`) · 🧪 the same in the panel, under the video
 - ✅ Mic, Mac sound and webcam each on or off in the video afterwards (`edit --mic off`, the panel's "In the video"): the recorder also saves the mic and the Mac sound apart
 - ✅ Click sounds and zooms on or off too (`edit --clicks off`, `--zooms off`, same panel card)
 - 🧪 Stop from macOS's menu bar recording icon finishes the recording (not tried with the real icon yet)
