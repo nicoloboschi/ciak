@@ -8,7 +8,7 @@
 /* Light and calm (after godly.website): warm white, near-black pills, soft cards, quiet grey labels. Dark follows the Mac. */
 :root{color-scheme:light;--bg:#ffffff;--side:#ffffff;--panel:#f6f6f4;--panel2:#ececea;--field:#ffffff;--line:#e6e5e1;--hover:#f3f3f1;--muted:#8a8a86;--ink:#111111;--accent:#111111;--on-accent:#ffffff;--brand:#ff4d2e;--red:#e5484d;--ok:#1f9d55;--warn:#c27c0e;--shadow:0 1px 2px #0000000a,0 8px 24px #0000000d}
 @media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#0e0e0f;--side:#0e0e0f;--panel:#18181a;--panel2:#232326;--field:#111113;--line:#2a2a2d;--hover:#1c1c1e;--muted:#8d8d93;--ink:#f2f2f0;--accent:#f2f2f0;--on-accent:#111111;--red:#ff6369;--ok:#4cc38a;--warn:#f1a10d;--shadow:none}}
-*{box-sizing:border-box}html,body{height:100%}
+*{box-sizing:border-box}html,body{height:100%}[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Inter",BlinkMacSystemFont,"Segoe UI",sans-serif;font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:300px 1fr}
 button{font:inherit;font-weight:500;border:0;background:var(--panel2);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer;min-height:38px;transition:background .15s,opacity .15s,transform .1s}
 button:hover{background:var(--line)}button:active{transform:scale(.98)}button:disabled{opacity:.4;cursor:default;transform:none}
@@ -70,12 +70,18 @@ input[type=checkbox]:checked{background:var(--ink)}input[type=checkbox]:checked:
 .live .actions{display:flex;gap:12px;justify-content:center}.live .actions button{min-width:150px;min-height:46px}
 
 /* Project */
-.idbox{display:flex;align-items:center;gap:8px;background:var(--panel);border-radius:999px;padding:4px 10px 4px 14px;min-height:38px}
-.idbox code{font:600 15px ui-monospace,Menlo,monospace;color:var(--ink);letter-spacing:.5px}
+.meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:15px;margin-top:6px}.meta #pWhen{margin:0}
+.idbox{display:inline-flex;align-items:center;gap:6px}.idbox code{font:500 14px ui-monospace,Menlo,monospace;color:var(--ink)}
 .player{width:100%;aspect-ratio:16/9;max-height:78vh;margin-bottom:18px;background:#000;border-radius:22px;display:block;box-shadow:var(--shadow)}
-.banner{font-size:13px;color:var(--warn);margin:8px 0 0}
-.agent{margin-bottom:18px}.agent .prompt{display:flex;gap:10px;align-items:center;background:var(--field);border-radius:14px;padding:12px 14px}
-.agent .prompt span{flex:1;font-family:ui-monospace,Menlo,monospace;font-size:13px;overflow-wrap:anywhere}
+.banner{font-size:14px;color:var(--warn);margin:10px 0 0}.banner:empty{display:none}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pills{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pills>.muted{font-size:14px;margin-right:4px}#switchList{display:contents}
+.pill{min-height:34px;padding:6px 14px;font-size:14px;background:none;box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
+.pill.on{background:var(--panel2);box-shadow:none;color:var(--ink)}.pill.on::before{content:"✓ ";color:var(--ok)}.pill:not(.on){text-decoration:line-through}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;margin-top:40px;padding-top:32px;border-top:1px solid var(--line)}
+details summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;list-style:none}details summary::-webkit-details-marker{display:none}details summary h2::after{content:" ›";color:var(--muted)}details[open] summary h2::after{content:" ⌄"}
+.prompt{display:flex;gap:10px;align-items:center;background:var(--panel);border-radius:999px;padding:6px 6px 6px 18px}
+.prompt span{flex:1;font-family:ui-monospace,Menlo,monospace;font-size:13px;overflow-wrap:anywhere}.note{margin:12px 0 0;font-size:14px}
 .phase{margin-bottom:18px}.phase h3{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin:0 0 8px}
 .step{display:grid;grid-template-columns:22px 1fr auto;gap:10px;padding:9px 0;border-top:1px solid var(--line);align-items:start}
 .step:first-of-type{border-top:0}
@@ -85,7 +91,7 @@ input[type=checkbox]:checked{background:var(--ink)}input[type=checkbox]:checked:
 .step b{font-weight:500;display:block}.step small{color:var(--muted);font-size:13px;display:block;overflow-wrap:anywhere}
 .step.failed small{color:var(--red)}
 .step time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;white-space:nowrap}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin:0}.facts dt{color:var(--muted);font-size:13px}.facts dd{margin:0;font-weight:500}
+.facts{display:flex;flex-wrap:wrap;gap:8px 40px;margin:28px 0 0}.facts div{display:flex;flex-direction:column-reverse}.facts dt{color:var(--muted);font-size:13px}.facts dd{margin:0;font-size:22px;font-weight:500;letter-spacing:-.4px}
 #toast{display:none;background:color-mix(in srgb,var(--red) 10%,var(--bg));color:var(--red);border-radius:14px;padding:12px 16px;margin-bottom:18px;white-space:pre-wrap;overflow-wrap:anywhere}
 /* Sidebar links, screenshots, voices */
 .nav{display:flex;flex-direction:column;gap:2px;padding:0 10px 10px}
@@ -104,7 +110,7 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
 .small{min-height:32px;padding:4px 14px;font-size:13px}
 #pNameEdit{font-size:26px;font-weight:600;max-width:420px}
 @keyframes pulse{50%{opacity:.25}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes rise{from{opacity:0;transform:translateY(6px)}}
-@media(max-width:900px){body{grid-template-columns:1fr}aside{position:static;height:auto;max-height:42vh}.cols{grid-template-columns:1fr}main{padding:20px 16px}}
+@media(max-width:900px){body{grid-template-columns:1fr}aside{position:static;height:auto;max-height:42vh}.cols,.split{grid-template-columns:1fr}main{padding:20px 16px}}
 </style>
 </head>
 <body>
@@ -155,8 +161,9 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
   <!-- A project: recording live, or its video, steps and id -->
   <section class="view" id="projectView">
     <div class="head">
-      <div><h1 id="pName" title="Click to rename"></h1><input id="pNameEdit" type="text" maxlength="80" hidden><span class="muted" id="pWhen"></span></div>
-      <div class="actions-row"><div class="idbox"><span class="muted">Project</span><code id="pId"></code><button class="link" id="copyId">Copy</button></div>
+      <div><h1 id="pName" title="Click to rename"></h1><input id="pNameEdit" type="text" maxlength="80" hidden>
+        <div class="meta"><span id="pWhen"></span><span class="idbox">Project <code id="pId"></code><button class="link" id="copyId">Copy</button></span></div></div>
+      <div class="actions-row"><button class="small" id="revealFinal">Show in Finder</button><button class="small" id="revealFolder">Project folder</button>
         <button class="small" id="renameButton">Rename</button><button class="small" id="deleteButton">Delete</button></div>
     </div>
     <div class="card live" id="live">
@@ -168,21 +175,15 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
     </div>
     <div id="made">
       <video class="player" id="player" controls playsinline></video>
+      <!-- Under the video: what's in it (tap to leave a part out), then render -->
+      <div class="bar"><div class="pills" id="switches"><span class="muted">In the video</span><span id="switchList"></span></div><button id="renderAgain">Render again</button></div>
       <div class="banner" id="banner"></div>
-      <div class="cols">
-      <div>
-        <div class="card agent" id="switches"><h2>In the video</h2><div id="switchList"></div>
-          <p class="muted" id="switchNote" style="margin:4px 0 0;font-size:13px">Turn a part off and render again: the recording itself keeps everything.</p></div>
-        <div class="card agent"><h2>Continue with your agent</h2>
-          <div class="prompt"><span id="prompt"></span><button class="link" id="copyPrompt">Copy</button></div>
-          <p class="muted" style="margin:10px 0 0;font-size:13px">Then say what you want: tighter cuts, less zoom, captions, a different background. The agent edits this project and renders it again; this page follows along.</p>
-        </div>
-      </div>
-      <div class="card"><h2>How it was made</h2>
-        <div id="steps"></div>
-        <dl class="facts" id="facts"></dl>
-        <div class="row" style="margin-top:16px"><button id="revealFinal">Show in Finder</button><button id="revealFolder">Project folder</button><button id="renderAgain">Render again</button></div>
-      </div>
+      <dl class="facts" id="facts"></dl>
+      <div class="split">
+        <section><h2>Continue with your agent</h2>
+          <div class="prompt"><span id="prompt"></span><button class="small" id="copyPrompt">Copy</button></div>
+          <p class="muted note">Then say what you want: tighter cuts, less zoom, captions, a different background. The agent edits this project and renders it again; this page follows along.</p></section>
+        <section><details id="stepsBox"><summary><h2>How it was made</h2><span class="muted" id="stepsTotal"></span></summary><div id="steps"></div></details></section>
       </div>
     </div>
   </section>
@@ -376,7 +377,7 @@ async function refresh() {
   $('prompt').textContent = project.prompt + '…';
   const live = ['starting', 'recording', 'paused'].includes(project.state);
   $('live').style.display = live ? 'block' : 'none';
-  $('made').style.display = live ? 'none' : 'grid';
+  $('made').style.display = live ? 'none' : 'block';
   $('live').classList.toggle('recording', project.state === 'recording');
   $('liveState').textContent = project.state === 'paused' ? 'Paused' : 'Recording';
   $('pauseButton').textContent = project.state === 'paused' ? 'Resume' : 'Pause';
@@ -400,18 +401,16 @@ function showSwitches(project) {
   if (!$('switchList').dataset.key?.startsWith(project.id)) { $('renderAgain').classList.remove('primary'); $('renderAgain').textContent = 'Render again'; }
   $('switchList').dataset.key = key;
   $('switchList').replaceChildren(...list.map(([kind, on]) => {
-    const row = document.createElement('div'); row.className = 'toggle';
-    row.innerHTML = '<label><span></span><small></small></label><input type="checkbox">';
-    row.querySelector('span').textContent = switchNames[kind][0];
-    row.querySelector('small').textContent = switchNames[kind][1];
-    const box = row.querySelector('input'); box.id = 'switch-' + kind; row.querySelector('label').htmlFor = box.id; box.checked = on;
-    box.onchange = async () => {
-      box.disabled = true;
-      try { await api('project-switch', {id: project.id, kind, on: box.checked}); $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
-      catch (failure) { box.checked = !box.checked; toast(failure.message); }
-      finally { box.disabled = false; refresh(); }
+    const pill = document.createElement('button'); pill.className = 'pill' + (on ? ' on' : '');
+    pill.textContent = switchNames[kind][0]; pill.title = switchNames[kind][1] + (on ? ': in the video, click to leave it out' : ': left out, click to put it back');
+    pill.setAttribute('aria-pressed', on);
+    pill.onclick = async () => {
+      pill.disabled = true;
+      try { await api('project-switch', {id: project.id, kind, on: !on}); $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
+      catch (failure) { toast(failure.message); }
+      finally { pill.disabled = false; refresh(); }
     };
-    return row;
+    return pill;
   }));
 }
 function timer() {
@@ -441,12 +440,16 @@ function steps(project) {
     }
     return box;
   }));
+  // Open while it's working; folded once ready (opening it again sticks until the state changes).
+  const total = project.steps.length ? (project.steps.reduce((sum, step) => sum + ((step.ended || Date.now()) - step.started), 0) / 1000).toFixed(1) + ' s' : '';
+  $('stepsTotal').textContent = total && project.steps.length + ' steps · ' + total;
+  if ($('stepsBox').dataset.state !== project.id + project.state) { $('stepsBox').dataset.state = project.id + project.state; $('stepsBox').open = project.state !== 'ready'; }
   const facts = [['Recorded', project.duration && clock(project.duration)], ['Final video', project.final && clock(project.final.duration)],
     ['Cut', project.kept != null && project.duration ? (project.duration - project.kept).toFixed(1) + ' s removed' : null],
     ['Zooms', project.zooms], ['Source', project.size && project.size + ' @ ' + project.fps + ' fps'], ['Output', project.final && project.final.width + '×' + project.final.height]];
   $('facts').replaceChildren(...facts.filter(([, value]) => value != null && value !== '').flatMap(([name, value]) => {
-    const term = document.createElement('dt'), data = document.createElement('dd');
-    term.textContent = name; data.textContent = value; return [term, data];
+    const group = document.createElement('div'), term = document.createElement('dt'), data = document.createElement('dd');
+    term.textContent = name; data.textContent = value; group.append(term, data); return [group];
   }));
 }
 
