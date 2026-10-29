@@ -72,7 +72,9 @@ export function Clip({project, clip, sourceUrl, events, clicks, transcript, webc
   let [moveX, moveY] = [0, 0];
   if (follow) {
     // The cursor over the last second and a bit ahead, averaged: the window glides instead of shaking.
-    const seen = Array.from({length: 16}, (_, step) => cursorAt(events, time - 1.2 + step * 0.1)).filter(Boolean);
+    // Typed keys don't count: a terminal's carry no real pointer.
+    const pointer = events.filter(event => event.type !== 'key');
+    const seen = Array.from({length: 16}, (_, step) => cursorAt(pointer, time - 1.2 + step * 0.1)).filter(Boolean);
     // No pointer (a terminal): its left edge, where every line starts.
     const at = seen.length ? {x: seen.reduce((sum, item) => sum + item.x, 0) / seen.length, y: seen.reduce((sum, item) => sum + item.y, 0) / seen.length} : {x: 0, y: 0.5};
     const center = zoom ? {x: at.x + (focus.x - at.x) * strength, y: at.y + (focus.y - at.y) * strength} : at;
