@@ -94,6 +94,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Terminal recordings: `terminal open` + `start --terminal` + `terminal run "<cmd>"` (real shell, secrets masked)
 - ✅ Terminal brand words: `record terminal --color 'Hindsight=#5bb0ff,#22d3c5'` paints a word in a color or a gradient as it shows up
 - ✅ Typing sounds: a tap on each key typed in the terminal (`audio.keys`, on for terminals, `edit --keys on|off`); parts sped past 2x stay silent
+- ✅ Sharper export: `export.crf` in the project (e.g. 12, slower encode) for small text that a site like X compresses again
 - ✅ The check after every render (`ciak project check`): layout, contrast, jumps, flashes, frozen recordings (also a recording that ends before its scene),
   voice vs music, misheard words, caption speed — each with a time and a frame
 
