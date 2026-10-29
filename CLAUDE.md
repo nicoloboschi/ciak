@@ -3,7 +3,7 @@
 ciak is a screen recorder + video editor where **agents do the editing**. The
 human records and reviews; everything in between is files and commands.
 
-The feature checklist lives in `README.md`. When you finish or test a feature,
+The feature checklist lives in `FEATURES.md`. When you finish or test a feature,
 update its status there (⬜ → 🧪 → ✅). ✅ means you actually ran it and checked
 the output, not just that it compiles.
 
@@ -29,7 +29,7 @@ the output, not just that it compiles.
 - `lib/clean.mjs` — the one mic cleanup (`cleanVoice`): recordings at render (`audio.denoise`) and the voice sample.
 - `lib/project.mjs` — projects (`openProject`: a recording or a film, by id, name or path) and edits (`ciak project edit`); `lib/render.mjs` +
   `render/index.jsx` — Remotion render; `lib/ui.mjs` + `ui/index.html` — record panel.
-- `.claude/skills/ciak/SKILL.md` — the one skill: everything an agent can do with ciak
+- `skills/ciak/SKILL.md` — the one skill: everything an agent can do with ciak
   (linked into ~/.claude/skills by `ciak app install`). It is a short guide: how the parts fit and the rules
   help can't teach. Commands and options live in `ciak <word> help`, not there.
 - Each recording is a project: `~/.ciak/projects/<id>/` (`CIAK_PROJECTS`) holds every artifact with
