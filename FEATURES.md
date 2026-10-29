@@ -11,6 +11,8 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 
 ## Record
 
+- ✅ Made for phones: vertical 1080×1920 by default (Shorts, Reels, TikTok, X); a wide screen shows in a 4:5 window that follows the cursor and zooms on clicks; a terminal from its left edge. Presets: vertical, portrait (4:5), square, landscape
+
 - ✅ Screen + cursor + mic into **one** mp4 with a single audio track (ScreenCaptureKit)
 - ✅ Pick the display (`--display <index>`)
 - ✅ Background recording for agents: `ciak record screen|window|region|browser|terminal`, `pause` / `resume` / `stop`, pauses leave no gap
