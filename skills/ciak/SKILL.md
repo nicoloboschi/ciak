@@ -24,6 +24,7 @@ If `ciak` is not found, it isn't installed yet. Tell the user, then run:
 curl -fsSL https://raw.githubusercontent.com/nicoloboschi/ciak/main/install.sh | bash
 ```
 
-It needs macOS 15+, the Xcode command line tools, Node.js 22+, ffmpeg and Brave, and says what's missing.
+It needs macOS 15+, the Xcode command line tools and Node.js 22+, and says what's missing. Everything else
+is downloaded the first time a feature needs it (the first caption or narration in the user's voice takes minutes).
 It puts ciak in `~/.ciak/app`, the `ciak` command in `~/.local/bin` and 🎬 in the menu bar. macOS then asks
 the user once for Screen Recording: tell them to allow ciak.

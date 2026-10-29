@@ -6,6 +6,8 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 
 - ✅ One line: `npx skills add nicoloboschi/ciak` (the agent installs the rest) or `install.sh` (clones into `~/.ciak/app`); `ciak app update`
 - ✅ The documentation is `ciak help` and `ciak <word> help`; the skill points there
+- ✅ Only macOS, the Xcode tools and Node to start: ffmpeg, uv, the noise remover and Chrome download themselves on first use (`~/.ciak/bin`); one Python environment for every model
+- ✅ The ciak browser copies your default browser (Chrome, Brave, Edge, Vivaldi, Chromium) for its logins; without one, Chrome for Testing with its own profile
 
 ## Record
 

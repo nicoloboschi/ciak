@@ -21,9 +21,10 @@ Then ask your agent to record something. The first time, it installs ciak for yo
 curl -fsSL https://raw.githubusercontent.com/nicoloboschi/ciak/main/install.sh | bash
 ```
 
-macOS 15+ on Apple silicon, with the Xcode command line tools, Node.js 22+, ffmpeg and Brave
-([`uv`](https://docs.astral.sh/uv/) for captions and your own voice). You get 🎬 in the menu bar
-(⌘1 screenshot, ⌘2 record) and the `ciak` command. Update with `ciak app update`.
+macOS 15+ on Apple silicon, with the Xcode command line tools and Node.js 22+. Everything else is downloaded the
+first time a feature needs it: ffmpeg, the Chrome that draws videos, and the models for captions and voices.
+Your agent records itself in a copy of your own browser (Chrome, Brave, Edge…), so it has your logins.
+You get 🎬 in the menu bar (⌘1 screenshot, ⌘2 record) and the `ciak` command. Update with `ciak app update`.
 
 ## Use it
 

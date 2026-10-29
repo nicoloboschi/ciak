@@ -16,7 +16,7 @@ the output, not just that it compiles.
 - `rec.swift` — native capture (ScreenCaptureKit + AVFoundation for the camera), one
   process per segment. Compiled on demand into `.build/ciak-rec`. Never compile over
   that path while a recording runs: macOS kills the running recorder.
-- `lib/browser.mjs` — the ciak browser (Brave on a profile copy, debugging port 9333):
+- `lib/browser.mjs` — the ciak browser (your default Chrome-like browser on a profile copy, debugging port 9333):
   `ciak record look|click|type|…` driving commands, and the page recorder used by `ciak record browser`
   (same JSON-lines protocol as `rec.swift`).
 - `app.swift` + `lib/app.mjs` — ciak.app, the menu bar app (`ciak app install`), a **thin shell**: menu, ⌘1 key,
@@ -27,6 +27,8 @@ the output, not just that it compiles.
 - `lib/shot.mjs` — framed screenshots from the command line (`ciak shot`).
 - `lib/voice.mjs` — the user's own cloned voice for narration (Qwen3-TTS via mlx-audio).
 - `lib/clean.mjs` — the one mic cleanup (`cleanVoice`): recordings at render (`audio.denoise`) and the voice sample.
+- `lib/common.mjs` — `tool()` finds ffmpeg, uvx and deep-filter, or downloads them into `~/.ciak/bin` on first use;
+  `python()` is the one Python environment (uv) for every model. Nothing is installed until a feature needs it.
 - `lib/project.mjs` — projects (`openProject`: a recording or a film, by id, name or path) and edits (`ciak project edit`); `lib/render.mjs` +
   `render/index.jsx` — Remotion render; `lib/ui.mjs` + `ui/index.html` — record panel.
 - `skills/ciak/SKILL.md` — the one skill: everything an agent can do with ciak

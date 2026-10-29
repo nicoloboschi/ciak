@@ -17,9 +17,8 @@ command -v git >/dev/null || fail "needs git: xcode-select --install"
 command -v swiftc >/dev/null || fail "needs the Xcode command line tools: xcode-select --install"
 command -v node >/dev/null || fail "needs Node.js 22 or newer: brew install node"
 [ "$(node -p 'process.versions.node.split(".")[0]')" -ge 22 ] || fail "needs Node.js 22 or newer (you have $(node -v))."
-command -v ffmpeg >/dev/null || fail "needs ffmpeg: brew install ffmpeg"
-[ -d "/Applications/Brave Browser.app" ] || fail "needs Brave (the browser your agent records itself in, with a copy of your logins): brew install --cask brave-browser"
-command -v uv >/dev/null || echo "Optional: uv, for captions and narration in your own voice: brew install uv"
+# Everything else (ffmpeg, uv and the voice models, the noise remover, the Chrome that draws videos) is
+# downloaded the first time a feature needs it.
 
 if [ -d "$APP/.git" ]; then
   say "Updating ciak in $APP"
