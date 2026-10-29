@@ -51,7 +51,8 @@ export function Clip({project, clip, sourceUrl, events, clicks, transcript, webc
   const [boxWidth, boxHeight] = [(box?.width ?? width) - 2 * padding, (box?.height ?? height) - 2 * padding];
   // A wide screen in a tall video (Shorts, Reels, X on a phone) fitted whole is a thin strip of tiny text. Instead it
   // fills a 4:5 window as tall as it can be, cropped to what's around the cursor, and the window follows it.
-  const follow = project.width / project.height > 1.3 * boxWidth / boxHeight;
+  // Only a tall video (vertical, portrait) crops: a square one shows the whole desktop, as it was recorded.
+  const follow = boxHeight > boxWidth * 1.1 && project.width / project.height > 1.3 * boxWidth / boxHeight;
   const [fitWidth, fitHeight] = follow ? [boxWidth, Math.min(boxHeight, boxWidth * 5 / 4)] : [boxWidth, boxHeight];
   // At most 2 video pixels per recorded pixel: a small area on a non-Retina screen blown up more turns to mush.
   const ratio = follow ? Math.min(2, fitHeight / project.height, fitWidth * 0.98 / (project.width * 0.4)) : Math.min(2, boxWidth / project.width, boxHeight / project.height);
