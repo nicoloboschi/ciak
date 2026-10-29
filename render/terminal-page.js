@@ -17,4 +17,8 @@ fit.fit();
 // Tell the shell how big the screen is, so programs wrap like in a real window.
 fetch('/resize', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({cols: terminal.cols, rows: terminal.rows})});
 const decode = text => Uint8Array.from(atob(text), character => character.charCodeAt(0));
-new EventSource('/events').onmessage = message => terminal.write(decode(JSON.parse(message.data).data));
+new EventSource('/events').onmessage = message => {
+  const {data, key} = JSON.parse(message.data);
+  if (key) dispatchEvent(new KeyboardEvent('keydown')); // the recorder logs it: a key sound in the render
+  else terminal.write(decode(data));
+};
