@@ -103,7 +103,7 @@
     },
     "style": {
       "type": "string",
-      "description": "A style: fonts, colors, surfaces, radius, backdrop. A name (`ciak styles` lists them: built-in hindsight, midnight, keynote, plus your own in ~/.ciak/styles) or a path to a style .json. \"theme\" overrides on top."
+      "description": "A style: fonts, colors, surfaces, radius, backdrop. A name (`ciak project styles` lists them: built-in hindsight, midnight, keynote, plus your own in ~/.ciak/styles) or a path to a style .json. \"theme\" overrides on top."
     }
   },
   "$defs": {
@@ -684,7 +684,7 @@
         },
         "recording": {
           "type": "string",
-          "description": "The --name it was recorded with (newest wins), or a .project.json path."
+          "description": "A recording project: its id (ciak project list), or the --name it was recorded with (newest wins)."
         },
         "title": {
           "$ref": "#/$defs/rich"

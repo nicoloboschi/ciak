@@ -331,7 +331,7 @@ async function loadList() {
     link.href = '#project/' + item.id;
     const thumb = document.createElement('div');
     thumb.className = 'thumb';
-    if (item.duration) thumb.style.backgroundImage = `url("/thumb?token=${token}&id=${item.id}")`; else thumb.textContent = '●';
+    if (item.duration || item.final) thumb.style.backgroundImage = `url("/thumb?token=${token}&id=${item.id}")`; else thumb.textContent = '●';
     const text = document.createElement('div');
     text.innerHTML = '<b></b><small></small><span class="chip"><span class="dot"></span><span></span></span>';
     text.querySelector('b').textContent = item.name;
@@ -484,14 +484,14 @@ async function refresh() {
     if (![...$('speed').options].some(option => option.value === value)) $('speed').append(new Option(value + '×', value));
     $('speed').value = value; $('speedParts').hidden = !project.speed.parts;
   }
-  $('renderAgain').disabled = busy || project.state === 'rendering' || !project.recording;
+  $('renderAgain').disabled = busy || project.state === 'rendering' || !project.recording && !project.film;
 }
 // The exported file, or the live preview: the edit drawn in the page from the project (30 fps), so a switch shows at once.
 let shown = null, previewEdited = null;
 function viewer(project) {
   if (!shown || !project.final) shown = project.final && project.state !== 'rendering' ? 'final' : 'live';
   $('player').hidden = shown !== 'final'; $('preview').hidden = shown !== 'live';
-  for (const button of $('seg').children) { button.classList.toggle('on', button.dataset.show === shown); button.disabled = button.dataset.show === 'final' && !project.final; }
+  for (const button of $('seg').children) { button.classList.toggle('on', button.dataset.show === shown); button.disabled = button.dataset.show === 'final' ? !project.final : !project.recording; }
   $('finalFile').hidden = !project.final;
   if (project.final) { $('finalName').textContent = project.final.output.split('/').pop(); $('finalName').title = project.final.output; }
   if (shown === 'final') { window.ciakPreviewPause?.(); previewEdited = null; return; }

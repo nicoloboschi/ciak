@@ -9,16 +9,17 @@ the output, not just that it compiles.
 
 ## Layout
 
-- `ciak` — entrypoint, runs `lib/cli.mjs`. Keep it the only CLI (`ciak help`).
+- `ciak` — entrypoint, runs `lib/cli.mjs`. Keep it the only CLI: five words (`record`, `project`, `shot`, `voice`, `app`),
+  each with its own help (`ciak <word> help`). New commands go under one of them, with a line in its help.
 - `lib/session.mjs` — background worker per recording: HTTP control (pause/resume/
   mark/stop), joins segments, mixes all audio into one track, writes the project.
 - `rec.swift` — native capture (ScreenCaptureKit + AVFoundation for the camera), one
   process per segment. Compiled on demand into `.build/ciak-rec`. Never compile over
   that path while a recording runs: macOS kills the running recorder.
 - `lib/browser.mjs` — the ciak browser (Brave on a profile copy, debugging port 9333):
-  `ciak browser ...` driving commands, and the page recorder used by `start --browser`
+  `ciak record look|click|type|…` driving commands, and the page recorder used by `ciak record browser`
   (same JSON-lines protocol as `rec.swift`).
-- `app.swift` + `lib/app.mjs` — ciak.app, the menu bar app (`ciak install`), a **thin shell**: menu, ⌘1 key,
+- `app.swift` + `lib/app.mjs` — ciak.app, the menu bar app (`ciak app install`), a **thin shell**: menu, ⌘1 key,
   the permission check, and starting helpers. macOS ties Screen Recording/Microphone permission to this exact
   build and helpers it starts use it, so **don't change app.swift for features** (new shortcuts are settings: `keys` in lib/app.mjs): each change makes the user grant
   the permission again (install replaces the app only when app.swift changed). Features go in the helpers:
@@ -26,14 +27,17 @@ the output, not just that it compiles.
 - `lib/shot.mjs` — framed screenshots from the command line (`ciak shot`).
 - `lib/voice.mjs` — the user's own cloned voice for narration (Qwen3-TTS via mlx-audio).
 - `lib/clean.mjs` — the one mic cleanup (`cleanVoice`): recordings at render (`audio.denoise`) and the voice sample.
-- `lib/project.mjs` — project JSON and edits (`ciak edit`); `lib/render.mjs` +
+- `lib/project.mjs` — projects (`openProject`: a recording or a film, by id, name or path) and edits (`ciak project edit`); `lib/render.mjs` +
   `render/index.jsx` — Remotion render; `lib/ui.mjs` + `ui/index.html` — record panel.
 - `.claude/skills/ciak/SKILL.md` — the one skill: everything an agent can do with ciak
-  (linked into ~/.claude/skills by `ciak install`). New commands get a line there.
+  (linked into ~/.claude/skills by `ciak app install`). It is a short guide: how the parts fit and the rules
+  help can't teach. Commands and options live in `ciak <word> help`, not there.
 - Each recording is a project: `~/.ciak/projects/<id>/` (`CIAK_PROJECTS`) holds every artifact with
   the base name `recording`: `recording.mp4`, `.project.json`, `.cursor.jsonl`, `.srt`/`.json` (captions),
-  `.render.json`, plus the session's files. Commands take the id (`findProject` in lib/project.mjs: id, path or
-  name). Only finished videos (`render` → `<name>-<id>.mp4`) and screenshots go to `~/Documents/ciak/` (`CIAK_DIR`).
+  `.render.json`, plus the session's files. A film is a project too: `film.json` (its scenes), its images and
+  scene code, and its render's files (`film.mp4`, `.srt`, the check, `film.render.json`). Commands take the id
+  (`openProject` in lib/project.mjs: id, name or path). Only finished videos (`<name>-<id>.mp4`) and screenshots
+  go to `~/Documents/ciak/` (`CIAK_DIR`).
 
 ## Rules
 

@@ -33,10 +33,10 @@ and [`uv`](https://docs.astral.sh/uv/) (for Whisper and the voice model).
 ```bash
 git clone https://github.com/nicoloboschi/ciak && cd ciak
 npm install
-./ciak install
+./ciak app install
 ```
 
-`ciak install` sets up, once:
+`ciak app install` sets up, once:
 - **ciak.app** in the menu bar: ⌘1 framed screenshots, ⌘2 quick recording, Record… opens the panel. Starts at login.
 - the `ciak` command in `~/.local/bin`
 - the agent skill in `~/.claude/skills/ciak`, so Claude Code (or any agent reading skills) knows every command
@@ -58,40 +58,43 @@ and shows the exported file with **Copy**, ready to paste in a chat.
 ### Your agent records itself
 
 ```bash
-ciak browser https://app.example.com              # a second Brave with your logins, works in the background
-ciak start --browser --name demo                  # record its current tab
-ciak browser click "New project"                  # click / type / key / scroll / go / shot; the mouse glides
-ciak stop                                         # auto-edit: idle time cut, zooms on every click
-ciak render demo                                  # → ~/Documents/ciak/demo-<id>.mp4, checked
+ciak record browser https://app.example.com --name demo   # a second Brave with your logins, recorded in the background
+ciak record look                                  # the page's buttons, links and fields, numbered
+ciak record click 12                              # or type / wait / scroll / select / drag…: the mouse glides
+ciak record stop                                  # auto-edit: idle time cut, zooms on every click
+ciak project render demo                          # → ~/Documents/ciak/demo-<id>.mp4, checked
 ```
 
-A terminal works the same way (`ciak terminal open`, `ciak start --terminal`, `ciak terminal run "<cmd>"`),
-with secrets blurred.
+A terminal works the same way (`ciak record terminal`, then `ciak record run "<cmd>"`), with secrets blurred.
+
+Five words cover everything: `ciak record`, `ciak project`, `ciak shot`, `ciak voice`, `ciak app`.
+`ciak <word> help` shows each one.
 
 ### Edit with commands
 
 ```bash
-ciak edit <id> --cut-idle --auto-zoom          # or --cut-silence, --cut 3,7
-ciak edit <id> --speed 1.5                     # or one part: --speed 3,12,40
-ciak edit <id> --background sunset --preset vertical
-ciak edit <id> --mic off --clicks off --camera round=off,size=0.3,position=top-left
-ciak captions <id>                             # local Whisper: .srt and word timestamps
-ciak preview <id> --frame 90                   # one frame as PNG
-ciak render <id>
+ciak project edit <id> --cut-idle --auto-zoom          # or --cut-silence, --cut 3,7
+ciak project edit <id> --speed 1.5                     # or one part: --speed 3,12,40
+ciak project edit <id> --background sunset --preset vertical
+ciak project edit <id> --mic off --clicks off --camera round=off,size=0.3,position=top-left
+ciak project captions <id>                             # local Whisper: .srt and word timestamps
+ciak project preview <id> --frame 90                   # one frame as PNG
+ciak project render <id>
 ```
 
 ### Launch videos
 
-A film is one JSON file of scenes (title, recording, stats, chart, compare, custom React…),
+A film is a project too: one `film.json` of scenes (title, recording, stats, chart, compare, custom React…),
 narrated from each scene's `say`:
 
 ```bash
 ciak voice add me                              # read 15 seconds aloud: your cloned voice, local
-ciak film launch.film.json --live              # play it in the browser, reloads on save
-ciak film launch.film.json                     # final mp4 + .srt + a check of what a viewer would notice
+ciak project new launch --with demo            # a film that starts with your recording
+ciak project live launch                       # play it in the browser, reloads on save
+ciak project render launch                     # final mp4 + .srt + a check of what a viewer would notice
 ```
 
-`ciak schema` describes every field. The check lists text off-frame, low contrast, frozen
+`ciak project schema` describes every field. The check lists text off-frame, low contrast, frozen
 recordings, music over the voice and words a listener would mishear, each with a time and a frame.
 
 ### Screenshots
@@ -122,8 +125,9 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Stop with Enter or Ctrl-C; file is finalized cleanly
 - ✅ Background recording for agents: `start` / `pause` / `resume` / `stop`, pauses leave no gap
 - ✅ If the recorder crashes, the recording so far is kept and the session pauses
-- ✅ Action marks (`ciak mark`, `--at` or `--page`) to drive zooms when the real mouse doesn't move
-- ✅ Logged-in browser for agents (`ciak browser`), recorded while covered, page clicks/typing logged
+- ✅ Action marks (`ciak record mark`, `--at` or `--page`) to drive zooms when the real mouse doesn't move
+- ✅ Logged-in browser for agents (`ciak record browser`), recorded while covered, page clicks/typing logged
+- ✅ Reading the page (`ciak record look`: buttons, links and fields, numbered for `click 12`), `wait` for text, `hover`, `select`, `drag`, `upload`, `back`/`forward`
 - ✅ Drive it from the command line: `browser click/type/paste/key/scroll/go/eval/shot`
 - 🧪 Looks like a person: the mouse bows and slows into its target (longer moves take longer), typing has an uneven rhythm and replaces the field's text, long text is pasted
 - ✅ Browser sound in browser recordings (`--system-audio`: only the ciak browser, not other apps) · 🧪 `--mic`
@@ -140,8 +144,8 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Live preview in the panel: the edit plays in the page (30 fps, Remotion player), a switch or camera change shows at once without a render · ✅ the exported file's name with Copy (the video file on the clipboard, paste it in a chat) and Show in Finder
 - 🧪 Stop from macOS's menu bar recording icon finishes the recording (not tried with the real icon yet)
 - ✅ An ultrawide screen keeps its shape in the video (2560×1080), instead of being squeezed small into 16:9
-- ✅ Menu bar app (`ciak install`): ⌘1 screenshots, Record… (the recording panel), Open Recordings; starts at login and holds the permissions
-- ✅ Panel (`ciak ui`, menu bar Record…): projects on the left (thumbnail, time, length, state); a new recording with live camera preview and mic meter; after Finish every step (stop, encode + mix, clicks, auto edit, render frames with a live count, audio, check) with its timing, then the video and the project id with a prompt for your agent. It follows an agent's renders live. Rename or delete a project there (`ciak project rename|remove`; delete goes to the Trash)
+- ✅ Menu bar app (`ciak app install`): ⌘1 screenshots, Record… (the recording panel), Open Recordings; starts at login and holds the permissions
+- ✅ Panel (`ciak app panel`, menu bar Record…): projects (recordings and films) on the left (thumbnail, time, length, state); a new recording with live camera preview and mic meter; after Finish every step (stop, encode + mix, clicks, auto edit, render frames with a live count, audio, check) with its timing, then the video and the project id with a prompt for your agent. It follows an agent's renders live. Rename or delete a project there (`ciak project rename|remove`; delete goes to the Trash)
 - ✅ Quick recording (⌘2): the screenshot overlay picks an area or a window, a red frame and timer show while it records (default mic); ⌘2 or a click on the timer stops it, the panel opens on the project and renders it. The picker stays loaded between uses, so the overlay opens at once
 - ✅ Panel: Screenshots page (⌘1 shots, newest first: open, copy, show in Finder, delete to the Trash; `ciak shot list|copy|remove`)
 - ✅ Panel: Voices page: every cloned voice with its sample and a Try-it box; add one by reading a text in the page or uploading a voice note or video; a failed try keeps the old voice
@@ -150,11 +154,11 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Recordings follow the screen: they used to freeze on the first picture (macOS ran out of frame slots)
 - ⬜ Menu-bar indicator while recording (so you know it's on)
 - 🧪 Pick the mic by name (`--mic "Brio 100"`)
-- 🧪 Mic level check before recording starts (meter in `ciak ui`)
+- 🧪 Mic level check before recording starts (meter in the panel)
 
 ### Understand
 
-- ✅ Local transcript with word timestamps (`ciak captions`, Whisper on Apple silicon)
+- ✅ Local transcript with word timestamps (`ciak project captions`, Whisper on Apple silicon)
 - ⬜ Scene/screen-change detection (what's on screen when)
 - ✅ One `<name>.project.json` that gathers everything an agent needs:
   video, transcript, cursor log, marks, edit decisions
@@ -181,7 +185,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 
 ### Films (launch videos)
 
-- ✅ `ciak film <film.json>`: scenes (title, stats, image, slide, chart, recording, before/after compare) → one video
+- ✅ Films (`ciak project new`, then `ciak project render`): scenes (title, stats, image, slide, chart, recording, before/after compare) → one video
 - ✅ Narration from each scene's `say` (local Kokoro voice, macOS `say` fallback), scenes stretch to fit it
 - 🧪 Your own voice: `ciak voice add me` records a 15 s sample, films with `"voice": {"name": "me"}` are cloned with Qwen3-TTS (tested with a sample voice, not yet a real one)
 - ✅ Captions timed per sentence, burned in and written as `.srt`
@@ -192,18 +196,18 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Footage or stills behind any scene; chips, pills and counters on title scenes
 - ✅ Animated line charts (dashed projections, end labels, side-by-side panels) and an end card
 - ✅ One-step page capture: `start --browser --url <page> --run "play()" --for 8 --name x`
-- ✅ Schema for film.json (`ciak schema`): one vocabulary, typo suggestions, exact error paths
+- ✅ Schema for film.json (`ciak project schema`): one vocabulary, typo suggestions, exact error paths
 - ✅ Custom scenes: any layout as a React component in the film folder (`"type": "custom"`), with ciak's building blocks
-- ✅ Film styles (`"style": "hindsight"`, `ciak styles`): fonts, colors, surfaces, radius, backdrop; built-in or your own
+- ✅ Film styles (`"style": "hindsight"`, `ciak project styles`): fonts, colors, surfaces, radius, backdrop; built-in or your own
 - ✅ Live preview in the browser (`film --live`): plays with sound, reloads when files change
-- ✅ Frame by frame (`ciak frames`): labelled frames of a scene or time range, before export
+- ✅ Frame by frame (`ciak project frames`): labelled frames of a scene or time range, before export
 - ✅ Terminal recordings: `terminal open` + `start --terminal` + `terminal run "<cmd>"` (real shell, secrets masked)
-- ✅ The check after every render (`ciak check`): layout, contrast, jumps, flashes, frozen recordings (also a recording that ends before its scene),
+- ✅ The check after every render (`ciak project check`): layout, contrast, jumps, flashes, frozen recordings (also a recording that ends before its scene),
   voice vs music, misheard words, caption speed — each with a time and a frame
 
 ### Export
 
-- ✅ `ciak render <project>` → final mp4 (1080p: about 1.3 s of work per second at 30 fps, 2.3 s at 60 fps)
+- ✅ `ciak project render <id>` → final mp4 (1080p: about 1.3 s of work per second at 30 fps, 2.3 s at 60 fps)
 - ✅ Small files: raw recordings ~20 MB/min, final videos ~30 MB/min at 1080p60 (x264, visually lossless)
 - ✅ Preset 16:9 · 🧪 9:16 and square (`--preset vertical|square`) · ⬜ GIF
 - ✅ Check the output before calling it done (one video + one audio track, right length)
