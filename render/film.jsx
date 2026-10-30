@@ -59,14 +59,14 @@ export function Recording({recording, box, frames, rate = 1}) {
     offset += duration;
     return sequence;
   });
-  // If the narration runs longer than the recording, hold its last frame.
+  // Hold the last frame when the narration runs longer, and under the next scene's crossfade.
   const padding = box.padding;
   const ratio = Math.min((box.width - 2 * padding) / project.width, (box.height - 2 * padding) / project.height);
   return <AbsoluteFill>
     {sequences}
-    {frames > offset && <Sequence from={offset}><AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
+    <Sequence from={offset}><AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
       <Img src={recording.lastFrameUrl} style={{width: project.width * ratio, height: project.height * ratio, borderRadius: project.style.radius, boxShadow: '0 24px 70px #0005, 0 0 0 1px #0000000f'}}/>
-    </AbsoluteFill></Sequence>}
+    </AbsoluteFill></Sequence>
   </AbsoluteFill>;
 }
 
