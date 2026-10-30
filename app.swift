@@ -81,7 +81,7 @@ func press(_ index: Int) {
   _ = start(picker, shortcuts[index].args)
 }
 
-// The menu bar icon: screenshot, and Record… which opens the recording panel (ciak ui, one copy at a time).
+// The menu bar icon: the shortcuts, then Record… and Screenshots, which open the panel (ciak ui, one copy at a time).
 final class Menu: NSObject, NSMenuDelegate {
   let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
   var panelURL: URL?
@@ -105,7 +105,8 @@ final class Menu: NSObject, NSMenuDelegate {
       item.tag = index
       return item
     }
-    for entry in keys + [NSMenuItem(title: "Record…", action: #selector(panel), keyEquivalent: ""), .separator(),
+    for entry in keys + [NSMenuItem(title: "Record…", action: #selector(record), keyEquivalent: ""),
+                  NSMenuItem(title: "Screenshots", action: #selector(screenshots), keyEquivalent: ""), .separator(),
                   NSMenuItem(title: "Open Recordings", action: #selector(folder), keyEquivalent: ""), .separator(),
                   NSMenuItem(title: "Quit ciak", action: #selector(quit), keyEquivalent: "q")] {
       entry.target = self
@@ -115,16 +116,30 @@ final class Menu: NSObject, NSMenuDelegate {
   @objc func shortcutItem(_ item: NSMenuItem) { DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { press(item.tag) } } // after the menu closes
   @objc func folder() { NSWorkspace.shared.open(recordingsDir) }
   @objc func quit() { helpers.values.forEach { $0.terminate() }; NSApp.terminate(nil) }
-  // The panel records as a child of this app, so it uses this app's Screen Recording permission.
-  @objc func panel() {
-    guard permitted(), let cli = settings.string(forKey: "cli") else { return }
+  // The panel (ciak ui) starts with this app and keeps running, so the menu opens it at once. It records as a
+  // child of this app, so it uses this app's Screen Recording permission. view: a part of it, e.g. #new or #shots.
+  @objc func record() { show("#new") }
+  @objc func screenshots() { show("#shots") }
+  var pending: String?
+  func show(_ view: String) {
+    guard permitted() else { return }
+    if let panelURL, running(settings.string(forKey: "cli") ?? "", ["ui", "--no-open"]) != nil { open(panelURL, view); return }
+    pending = view
+    warm()
+  }
+  func open(_ url: URL, _ view: String) { if let page = URL(string: "\(url.absoluteString)/\(view)") { NSWorkspace.shared.open(page) } }
+  // Starts the panel's server without a window; it prints {"url": …} first (also when another copy already runs).
+  func warm() {
+    guard let cli = settings.string(forKey: "cli") else { return }
     let output = Pipe()
-    // ui opens the page itself and prints {"url": …} first; when it already runs, open its page again.
-    guard start(cli, ["ui"], output: output) != nil else { if let panelURL { NSWorkspace.shared.open(panelURL) }; return }
+    guard start(cli, ["ui", "--no-open"], output: output) != nil else { return }
     output.fileHandleForReading.readabilityHandler = { handle in
-      if let json = try? JSONSerialization.jsonObject(with: handle.availableData) as? [String: Any], let url = json["url"] as? String {
+      if let json = try? JSONSerialization.jsonObject(with: handle.availableData) as? [String: Any], let url = (json["url"] as? String).flatMap(URL.init(string:)) {
         handle.readabilityHandler = nil
-        DispatchQueue.main.async { self.panelURL = URL(string: url) }
+        DispatchQueue.main.async {
+          self.panelURL = url
+          if let view = self.pending { self.pending = nil; self.open(url, view) }
+        }
       }
     }
   }
@@ -134,13 +149,14 @@ final class Menu: NSObject, NSMenuDelegate {
 if NSRunningApplication.runningApplications(withBundleIdentifier: "com.ciak.app").contains(where: { $0.processIdentifier != getpid() }) { exit(0) }
 NSApplication.shared.setActivationPolicy(.accessory)
 let menu = Menu()
+menu.warm()
 signal(SIGUSR1, SIG_IGN) // kill -USR1 <pid> presses a shortcut (for testing): the first, or defaults key "press" (its index)
 let usr1 = DispatchSource.makeSignalSource(signal: SIGUSR1, queue: .main)
 usr1.setEventHandler { press(CFPreferencesCopyAppValue("press" as CFString, "com.ciak.app" as CFString) as? Int ?? 0) }
 usr1.resume()
 signal(SIGUSR2, SIG_IGN) // kill -USR2 <pid> = Record… from the menu (for testing)
 let usr2 = DispatchSource.makeSignalSource(signal: SIGUSR2, queue: .main)
-usr2.setEventHandler { menu.panel() }
+usr2.setEventHandler { menu.record() }
 usr2.resume()
 var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
 InstallEventHandler(GetApplicationEventTarget(), { _, event, _ in
