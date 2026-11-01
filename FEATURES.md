@@ -83,6 +83,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - 🧪 Your own voice: `ciak voice add me` records a 15 s sample, films with `"voice": {"name": "me"}` are cloned with Qwen3-TTS (tested with a sample voice, not yet a real one)
 - ✅ Captions timed per sentence, burned in and written as `.srt`
 - ✅ Background music (generated, or your file), ducked under the voice
+- 🧪 Songs: `ciak voice song "<style>" --lyrics <file>` → a sung mp3 (ACE-Step 1.5, local, its own singer; 50+ languages): a 100 s Italian song took 3 min on an M3 Max
 - ✅ `--preview`: one contact-sheet image of every scene in ~30 s
 - ✅ Recordings auto-edit on stop (idle cut, zooms) and are referenced by `--name` · ✅ `--no-zoom` skips the zooms (🧪 the panel's "Zoom on clicks" box, on by default)
 - ✅ Keynote look: light theme, two-tone headlines (`*muted*`, `[accent]`), word-by-word reveals

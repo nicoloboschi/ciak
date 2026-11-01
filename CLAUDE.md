@@ -26,6 +26,7 @@ the output, not just that it compiles.
   `picker.swift` (⌘1 screenshot: picker, frame, sound, Finder; ⌘2 quick recording; stays running, the app signals it), `rec.swift`, the panel and the CLI.
 - `lib/shot.mjs` — framed screenshots from the command line (`ciak shot`).
 - `lib/voice.mjs` — the user's own cloned voice for narration (Qwen3-TTS via mlx-audio).
+- `lib/song.mjs` — sung songs as mp3 (`ciak voice song`, ACE-Step 1.5 in its own environment, `~/.ciak/ace-step`).
 - `lib/clean.mjs` — the one mic cleanup (`cleanVoice`): recordings at render (`audio.denoise`) and the voice sample.
 - `lib/common.mjs` — `tool()` finds ffmpeg, uvx and deep-filter, or downloads them into `~/.ciak/bin` on first use;
   `python()` is the one Python environment (uv) for every model. Nothing is installed until a feature needs it.
