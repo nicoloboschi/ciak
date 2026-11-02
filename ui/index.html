@@ -253,7 +253,8 @@ button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
 
   <!-- Screenshots (⌘1): newest first -->
   <section class="view" id="shotsView">
-    <div class="head"><h1>Screenshots</h1><span class="muted">Take one with ⌘1. Saved in ~/Documents/ciak/shots.</span></div>
+    <div class="head"><h1>Screenshots</h1><span class="muted">Take one with ⌘1. Saved in ~/Documents/ciak/shots.</span>
+      <label class="muted" style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer" title="The thin light edge around new screenshots">Outline <input type="checkbox" id="shotOutline"></label></div>
     <div class="grid" id="shots"></div>
   </section>
 
@@ -647,6 +648,9 @@ twice($('deleteButton'), async () => {
 });
 
 // ---- Screenshots ----
+// For the next ones (⌘1 and ciak shot): the ones already taken keep theirs.
+api('shot-outline').then(result => $('shotOutline').checked = result.outline).catch(() => {});
+$('shotOutline').onchange = () => api('shot-outline', {on: $('shotOutline').checked}).catch(failure => toast(failure.message));
 async function loadShots() {
   const shots = await api('shots');
   $('shotCount').textContent = shots.length || '';

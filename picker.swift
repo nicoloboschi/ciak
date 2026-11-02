@@ -187,7 +187,7 @@ func capture(area: NSRect) -> CGImage? {
 }
 func capture(window id: CGWindowID) -> CGImage? { screencapture(["-o", "-l", "\(id)"]) }
 
-// Same look as ciak shot: padding 7% of the longest side, rounded corners, a soft shadow, a faint edge.
+// Same look as ciak shot: padding 7% of the longest side, rounded corners, a soft shadow, a faint edge (unless outline is off).
 func framed(_ shot: CGImage) -> Data? {
   let (width, height) = (shot.width, shot.height)
   let padding = Int((Double(max(width, height)) * 0.07).rounded())
@@ -204,7 +204,7 @@ func framed(_ shot: CGImage) -> Data? {
   context.addPath(path); context.setFillColor(CGColor(gray: 0, alpha: 1)); context.fillPath()
   context.restoreGState()
   context.saveGState(); context.addPath(path); context.clip(); context.draw(shot, in: rect); context.restoreGState()
-  context.addPath(path); context.setStrokeColor(CGColor(gray: 1, alpha: 0.12)); context.setLineWidth(2); context.strokePath()
+  if setting("outline") != "off" { context.addPath(path); context.setStrokeColor(CGColor(gray: 1, alpha: 0.12)); context.setLineWidth(2); context.strokePath() }
   return context.makeImage().flatMap { NSBitmapImageRep(cgImage: $0).representation(using: .png, properties: [:]) }
 }
 
