@@ -357,7 +357,7 @@ function Captions({captions}) {
 }
 
 // Check mode only: measure what is really on screen in this frame and log layout problems.
-function LayoutProbe() {
+function LayoutProbe({captions}) {
   const frame = useCurrentFrame();
   const {width, height} = useVideoConfig();
   const [handle] = useState(() => delayRender('layout probe'));
@@ -413,9 +413,9 @@ function LayoutProbe() {
         if (texts[a].element.contains(texts[b].element) || texts[b].element.contains(texts[a].element)) continue;
         if (overlap(texts[a].box, texts[b].box) > 40) issues.push({kind: 'overlap', text: `${texts[a].text} ⟷ ${texts[b].text}`, box: texts[a].box});
       }
-      // Captions sit in a fixed band at the bottom: nothing important may live there.
+      // Captions sit in a fixed band at the bottom: nothing important may live there (only when the film has captions).
       const band = {left: width * 0.1, right: width * 0.9, top: height - 125, bottom: height - 25};
-      for (const item of items.filter(item => item.kind !== 'caption')) {
+      for (const item of captions ? items.filter(item => item.kind !== 'caption') : []) {
         const shared = overlap(item.box, band);
         if (shared > 400 && (item.kind === 'text' || shared > 0.03 * (item.box.right - item.box.left) * (item.box.bottom - item.box.top))) issues.push({kind: 'caption-zone', text: item.kind === 'media' ? '(recording or image)' : item.text, box: item.box});
       }
@@ -464,7 +464,7 @@ export function Film({film}) {
       </Sequence>;
     })}
     {film.captions && <Captions captions={film.captions}/>}
-    {film.probe && <LayoutProbe/>}
+    {film.probe && <LayoutProbe captions={Boolean(film.captions)}/>}
     {film.stamp && <Stamp scenes={film.scenes}/>}
     {/* Live preview only: exports mix narration and music separately (ducking, loudness). */}
     {film.audio && film.audio.narration.map((line, index) => <Sequence key={index} from={line.from} layout="none"><Audio src={line.url}/></Sequence>)}
