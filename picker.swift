@@ -23,14 +23,14 @@ func trace(_ message: String) {
 func setting(_ name: String) -> String? { UserDefaults.standard.string(forKey: name) ?? UserDefaults(suiteName: "com.ciak.app")?.string(forKey: name) }
 // The wallpaper for a shot: the chosen one (defaults com.ciak.app background), or with auto the one that stands out most
 // from the shot. The PNGs and their average colors (wallpapers.json) are drawn by lib/shot.mjs in the wallpaper folder.
-func wallpaper(for shot: CGImage) -> CGImage? {
+func wallpaper(for shot: CGImage) -> (name: String, image: CGImage)? {
   guard let folder = setting("wallpaper") else { return nil }
   var name = setting("background") ?? "aurora"
   if name == "auto", let data = FileManager.default.contents(atPath: folder + "/wallpapers.json"),
      let tones = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["tones"] as? [String: [Double]], let rgb = average(shot) {
     name = tones.max { contrast(rgb, $0.value) < contrast(rgb, $1.value) }?.key ?? name
   }
-  return NSImage(contentsOfFile: "\(folder)/\(name).png")?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+  return NSImage(contentsOfFile: "\(folder)/\(name).png")?.cgImage(forProposedRect: nil, context: nil, hints: nil).map { (name, $0) }
 }
 // Same rule as contrasting() in lib/shot.mjs: light/dark contrast first, then how different the color is.
 func contrast(_ first: [Double], _ second: [Double]) -> Double {
@@ -218,7 +218,7 @@ func capture(area: NSRect) -> CGImage? {
 func capture(window id: CGWindowID) -> CGImage? { screencapture(["-o", "-l", "\(id)"]) }
 
 // Same look as ciak shot: padding 7% of the longest side, rounded corners, a soft shadow, a faint edge (unless outline is off).
-func framed(_ shot: CGImage) -> Data? {
+func framed(_ shot: CGImage, wallpaper chosen: (name: String, image: CGImage)?, outline: Bool) -> Data? {
   let (width, height) = (shot.width, shot.height)
   let padding = Int((Double(max(width, height)) * 0.07).rounded())
   let radius = max(10, CGFloat(min(width, height)) * 0.018)
@@ -226,7 +226,7 @@ func framed(_ shot: CGImage) -> Data? {
   guard let context = CGContext(data: nil, width: width + 2 * padding, height: height + 2 * padding, bitsPerComponent: 8, bytesPerRow: 0,
                                 space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
   let canvas = CGRect(x: 0, y: 0, width: context.width, height: context.height)
-  if let wallpaper = wallpaper(for: shot) { context.draw(wallpaper, in: canvas) } else { context.setFillColor(CGColor(red: 0.06, green: 0.07, blue: 0.15, alpha: 1)); context.fill(canvas) }
+  if let chosen { context.draw(chosen.image, in: canvas) } else { context.setFillColor(CGColor(red: 0.06, green: 0.07, blue: 0.15, alpha: 1)); context.fill(canvas) }
   let rect = CGRect(x: padding, y: padding, width: width, height: height)
   let path = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
   context.saveGState()
@@ -234,7 +234,7 @@ func framed(_ shot: CGImage) -> Data? {
   context.addPath(path); context.setFillColor(CGColor(gray: 0, alpha: 1)); context.fillPath()
   context.restoreGState()
   context.saveGState(); context.addPath(path); context.clip(); context.draw(shot, in: rect); context.restoreGState()
-  if setting("outline") != "off" { context.addPath(path); context.setStrokeColor(CGColor(gray: 1, alpha: 0.12)); context.setLineWidth(2); context.strokePath() }
+  if outline { context.addPath(path); context.setStrokeColor(CGColor(gray: 1, alpha: 0.12)); context.setLineWidth(2); context.strokePath() }
   return context.makeImage().flatMap { NSBitmapImageRep(cgImage: $0).representation(using: .png, properties: [:]) }
 }
 
@@ -248,11 +248,18 @@ func finish(_ take: (() -> CGImage?)?) {
   DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { // let the overlay leave the screen first
     guard let shot = take() else { return }
     shutter?.play()
-    guard let png = framed(shot) else { return }
+    let (chosen, outline) = (wallpaper(for: shot), setting("outline") != "off")
+    guard let png = framed(shot, wallpaper: chosen, outline: outline) else { return }
     let stamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-").prefix(19)
     let file = outputDir.appendingPathComponent("shot-\(stamp).png")
     try? FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
     do { try png.write(to: file) } catch { fputs("Could not save \(file.path): \(error)\n", stderr); return }
+    // The unframed shot and how it was framed, for ciak shot edit (lib/shot.mjs).
+    let raw = outputDir.appendingPathComponent(".raw")
+    try? FileManager.default.createDirectory(at: raw, withIntermediateDirectories: true)
+    try? NSBitmapImageRep(cgImage: shot).representation(using: .png, properties: [:])?.write(to: raw.appendingPathComponent(file.lastPathComponent))
+    try? JSONSerialization.data(withJSONObject: ["background": chosen?.name ?? "aurora", "outline": outline])
+      .write(to: raw.appendingPathComponent(file.deletingPathExtension().lastPathComponent + ".json"))
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setData(png, forType: .png)
   }
@@ -426,7 +433,7 @@ func pick() {
 
 // Check the frame without a picker: ciak-picker -frame <shot.png> -wallpaper <dir> [-background auto] writes <shot>.framed.png
 if let file = UserDefaults.standard.string(forKey: "frame") {
-  guard let shot = NSImage(contentsOfFile: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil), let png = framed(shot) else { exit(1) }
+  guard let shot = NSImage(contentsOfFile: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil), let png = framed(shot, wallpaper: wallpaper(for: shot), outline: setting("outline") != "off") else { exit(1) }
   try! png.write(to: URL(fileURLWithPath: file + ".framed.png"))
   exit(0)
 }

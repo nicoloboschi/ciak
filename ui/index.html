@@ -109,6 +109,9 @@ details summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;list-s
 .backgrounds{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 20px}
 .backgrounds button{width:64px;height:40px;min-height:0;padding:0;border-radius:10px;border:2px solid transparent;box-shadow:inset 0 0 0 1px #0002;font-size:12px;font-weight:600}
 .backgrounds button[aria-pressed=true]{border-color:var(--ink)}
+#shotEditor{border:0;border-radius:20px;padding:20px;background:var(--panel);color:var(--ink);width:min(900px,92vw)}#shotEditor::backdrop{background:#0008}
+#shotPreview{display:block;width:100%;max-height:60vh;object-fit:contain;margin-bottom:16px}
+#shotEditor .row{display:flex;align-items:center;gap:16px}#shotEditState{flex:1}#shotEditClose{width:auto;flex:none}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
 .shot{background:var(--panel);border-radius:20px;overflow:hidden;padding:8px}
 .shot a{display:block;aspect-ratio:16/10;background:var(--panel2);border-radius:14px;overflow:hidden}.shot img{width:100%;height:100%;object-fit:contain;display:block}
@@ -260,6 +263,10 @@ button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
       <label class="muted" style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer" title="The thin light edge around new screenshots">Outline <input type="checkbox" id="shotOutline"></label></div>
     <div class="backgrounds" id="shotBackgrounds" title="The wallpaper behind new screenshots"></div>
     <div class="grid" id="shots"></div>
+    <dialog id="shotEditor"><img id="shotPreview" alt="">
+      <div class="backgrounds" id="shotEditBackgrounds"></div>
+      <div class="row"><label class="muted" style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer">Outline <input type="checkbox" id="shotEditOutline"></label>
+        <span class="muted" id="shotEditState"></span><button class="small" id="shotEditClose">Done</button></div></dialog>
   </section>
 
   <!-- Voices: your cloned voices for narration -->
@@ -654,18 +661,43 @@ twice($('deleteButton'), async () => {
 // ---- Screenshots ----
 // For the next ones (⌘1 and ciak shot): the ones already taken keep theirs.
 api('shot-outline').then(result => $('shotOutline').checked = result.outline).catch(() => {});
-// The default wallpaper: a swatch per choice, Auto picks per shot.
-function showBackgrounds({background, choices}) {
-  $('shotBackgrounds').replaceChildren(...['auto', ...Object.keys(choices)].map(name => {
+// The default wallpaper: a swatch per choice, Auto picks per shot. The editor below uses the same swatches.
+let shotChoices = {};
+function swatches(place, choices, background, choose) {
+  place.replaceChildren(...['auto', ...Object.keys(choices)].map(name => {
     const button = document.createElement('button');
     button.title = name === 'auto' ? 'Auto: the one that stands out most from each shot' : name;
     button.setAttribute('aria-label', button.title);
     button.setAttribute('aria-pressed', name === background);
     if (name === 'auto') button.textContent = 'Auto'; else button.style.background = choices[name];
-    button.onclick = () => api('shot-background', {name}).then(showBackgrounds).catch(failure => toast(failure.message));
+    button.onclick = () => choose(name);
     return button;
   }));
 }
+function showBackgrounds({background, choices}) {
+  shotChoices = choices;
+  swatches($('shotBackgrounds'), choices, background, name => api('shot-background', {name}).then(showBackgrounds).catch(failure => toast(failure.message)));
+}
+// Edit one shot in place: background and outline, framed again from its unframed copy. One edit at a time:
+// two at once (a swatch, then the outline while it frames) each started from the old state and one was lost.
+let editing = null, edits = Promise.resolve();
+const editShot = (name, change) => edits = edits.then(() => framing(name, change));
+async function framing(name, change = {}) {
+  editing = name;
+  $('shotEditState').textContent = Object.keys(change).length ? 'Framing…' : '';
+  if (!$('shotEditor').open) $('shotEditor').showModal();
+  try {
+    const result = await api('shot-edit', {name, ...change});
+    if (editing !== name) return;
+    $('shotPreview').src = '/shot?token=' + token + '&name=' + encodeURIComponent(name) + '&t=' + Date.now();
+    $('shotEditOutline').checked = result.outline;
+    swatches($('shotEditBackgrounds'), shotChoices, result.background, background => editShot(name, {background}));
+    $('shotEditState').textContent = '';
+    loadShots().catch(() => {});
+  } catch (failure) { $('shotEditState').textContent = ''; toast(failure.message); }
+}
+$('shotEditOutline').onchange = () => editShot(editing, {outline: $('shotEditOutline').checked});
+$('shotEditClose').onclick = () => $('shotEditor').close();
 api('shot-background').then(showBackgrounds).catch(() => {});
 $('shotOutline').onchange = () => api('shot-outline', {on: $('shotOutline').checked}).catch(failure => toast(failure.message));
 async function loadShots() {
@@ -673,20 +705,21 @@ async function loadShots() {
   $('shotCount').textContent = shots.length || '';
   if (view !== 'shots') return;
   // Rebuild only when the list changed, so a half-clicked Delete isn't reset by the refresh.
-  const key = shots.map(shot => shot.name).join('|');
+  const key = shots.map(shot => shot.name + shot.created).join('|');
   if ($('shots').dataset.key === key) return;
   $('shots').dataset.key = key;
   if (!shots.length) { $('shots').replaceChildren(make('div', 'empty', 'No screenshots yet. Press ⌘1, drag an area or press space for a window.')); return; }
   $('shots').replaceChildren(...shots.map(shot => {
     const card = make('div', 'shot'), link = make('a'), bar = make('div');
     const url = '/shot?token=' + token + '&name=' + encodeURIComponent(shot.name);
-    const image = make('img'); image.src = url; image.alt = shot.name; image.loading = 'lazy';
+    const image = make('img'); image.src = url + '&t=' + shot.created; image.alt = shot.name; image.loading = 'lazy';
     link.href = url; link.target = '_blank'; link.title = shot.name; link.append(image);
-    const copy = make('button', 'small', 'Copy'), reveal = make('button', 'small', 'Finder'), remove = make('button', 'small', 'Delete');
+    const edit = make('button', 'small', 'Edit'), copy = make('button', 'small', 'Copy'), reveal = make('button', 'small', 'Finder'), remove = make('button', 'small', 'Delete');
     copy.onclick = () => api('shot-copy', {name: shot.name}).then(() => copy.textContent = 'Copied').catch(failure => toast(failure.message));
     reveal.onclick = () => api('shot-reveal', {name: shot.name}).catch(failure => toast(failure.message));
     twice(remove, () => api('shot-remove', {name: shot.name}).then(loadShots).catch(failure => toast(failure.message)));
-    bar.append(make('small', '', when(shot.created)), copy, reveal, remove);
+    edit.onclick = () => editShot(shot.name);
+    bar.append(make('small', '', when(shot.created)), edit, copy, reveal, remove);
     card.append(link, bar);
     return card;
   }));
