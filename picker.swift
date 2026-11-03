@@ -26,20 +26,22 @@ func setting(_ name: String) -> String? { UserDefaults.standard.string(forKey: n
 func wallpaper(for shot: CGImage) -> (name: String, image: CGImage)? {
   guard let folder = setting("wallpaper") else { return nil }
   var name = setting("background") ?? "aurora"
-  if name == "auto", let data = FileManager.default.contents(atPath: folder + "/wallpapers.json"),
-     let tones = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["tones"] as? [String: [Double]], let rgb = average(shot) {
-    name = tones.max { contrast(rgb, $0.value) < contrast(rgb, $1.value) }?.key ?? name
-  }
+  if name == "auto", let rgb = average(shot) { name = tones().max { contrast(rgb, $0.value) < contrast(rgb, $1.value) }?.key ?? name }
   return NSImage(contentsOfFile: "\(folder)/\(name).png")?.cgImage(forProposedRect: nil, context: nil, hints: nil).map { (name, $0) }
+}
+// Each wallpaper's average color, from wallpapers.json.
+func tones() -> [String: [Double]] {
+  guard let folder = setting("wallpaper"), let data = FileManager.default.contents(atPath: folder + "/wallpapers.json") else { return [:] }
+  return (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["tones"] as? [String: [Double]] ?? [:]
+}
+func luminance(_ rgb: [Double]) -> Double {
+  zip(rgb, [0.2126, 0.7152, 0.0722]).reduce(0) { sum, pair in
+    let value = pair.0 / 255
+    return sum + pair.1 * (value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4))
+  }
 }
 // Same rule as contrasting() in lib/shot.mjs: light/dark contrast first, then how different the color is.
 func contrast(_ first: [Double], _ second: [Double]) -> Double {
-  func luminance(_ rgb: [Double]) -> Double {
-    zip(rgb, [0.2126, 0.7152, 0.0722]).reduce(0) { sum, pair in
-      let value = pair.0 / 255
-      return sum + pair.1 * (value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4))
-    }
-  }
   let (a, b) = (luminance(first), luminance(second))
   return (max(a, b) + 0.05) / (min(a, b) + 0.05) + sqrt(zip(first, second).reduce(0) { $0 + pow($1.0 - $1.1, 2) }) / 255
 }
@@ -234,7 +236,9 @@ func framed(_ shot: CGImage, wallpaper chosen: (name: String, image: CGImage)?, 
   context.addPath(path); context.setFillColor(CGColor(gray: 0, alpha: 1)); context.fillPath()
   context.restoreGState()
   context.saveGState(); context.addPath(path); context.clip(); context.draw(shot, in: rect); context.restoreGState()
-  if outline { context.addPath(path); context.setStrokeColor(CGColor(gray: 1, alpha: 0.12)); context.setLineWidth(2); context.strokePath() }
+  // A faint white edge vanished on light wallpapers: there it's a faint dark one (edgeColor in lib/shot.mjs).
+  let light = chosen.flatMap { tones()[$0.name] }.map { luminance($0) > 0.3 } ?? false
+  if outline { context.addPath(path); context.setStrokeColor(CGColor(gray: light ? 0 : 1, alpha: light ? 0.18 : 0.12)); context.setLineWidth(2); context.strokePath() }
   return context.makeImage().flatMap { NSBitmapImageRep(cgImage: $0).representation(using: .png, properties: [:]) }
 }
 

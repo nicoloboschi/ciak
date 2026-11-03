@@ -237,6 +237,7 @@ button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
             <button id="renderAgain" class="wide">Render again</button></section>
           <!-- What's in it: tap to leave a part out -->
           <section id="switches"><h3>In the video</h3><div id="switchList"></div></section>
+          <section id="projectBackground"><h3>Background</h3><div class="backgrounds" id="projectBackgrounds"></div></section>
           <!-- Playback speed of the whole video (an agent can also speed up one part: edit --speed 2,start,end) -->
           <section id="speedRow"><h3>Speed</h3>
             <select id="speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1× as recorded</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="3">3×</option></select>
@@ -489,6 +490,7 @@ async function refresh() {
     steps(project);
   }
   showSwitches(project);
+  showProjectBackground(project);
   showCamera(project);
   $('speedRow').hidden = !project.speed;
   if (project.speed && document.activeElement !== $('speed')) {
@@ -518,7 +520,7 @@ async function livePreview(id) {
 for (const button of $('seg').children) button.onclick = () => { shown = button.dataset.show; viewer(current); };
 $('copyVideo').onclick = () => api('copy-video', {id: current.id}).then(() => { $('copyVideo').textContent = 'Copied'; setTimeout(() => $('copyVideo').textContent = 'Copy', 2000); }).catch(failure => toast(failure.message));
 // Mic, Mac sound, webcam, click sounds and zooms: each in or out of the video. A change waits for Render again.
-const switchNames = {mic: ['Microphone', 'Your voice'], system: ['Mac sound', 'Sound from apps'], webcam: ['Camera bubble', 'You in a circle in the corner'], clicks: ['Click sounds', 'A soft tick on each click'], zooms: ['Zoom on clicks', 'Moves in where you click']};
+const switchNames = {mic: ['Microphone', 'Your voice'], system: ['Mac sound', 'Sound from apps'], webcam: ['Camera bubble', 'You in a circle in the corner'], clicks: ['Click sounds', 'A soft tick on each click'], zooms: ['Zoom on clicks', 'Moves in where you click'], outline: ['Outline', 'A thin edge around the recording']};
 function showSwitches(project) {
   const list = Object.entries(project.switches || {});
   $('switches').hidden = !list.length;
@@ -533,12 +535,22 @@ function showSwitches(project) {
     pill.type = 'checkbox'; pill.checked = on;
     pill.onchange = async () => {
       pill.disabled = true;
-      try { await api('project-switch', {id: project.id, kind, on: !on}); shown = 'live'; $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
+      try { await api('project-switch', {id: project.id, kind, on: !on}); changed(); }
       catch (failure) { toast(failure.message); }
       finally { pill.disabled = false; refresh(); }
     };
     return row;
   }));
+}
+// After a change: the live preview shows it, the render waits for a click.
+function changed() { shown = 'live'; $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
+// The wallpaper behind the recording: the same swatches as for screenshots; Auto picks the one that stands out.
+function showProjectBackground(project) {
+  $('projectBackground').hidden = !project.switches;
+  const key = project.id + project.background;
+  if ($('projectBackgrounds').dataset.key === key || !Object.keys(shotChoices).length) return;
+  $('projectBackgrounds').dataset.key = key;
+  swatches($('projectBackgrounds'), shotChoices, project.background, name => api('project-background', {id: project.id, name}).then(() => { changed(); refresh(); }).catch(failure => toast(failure.message)));
 }
 // The camera bubble: round or a rounded rectangle, its size and corner. A change waits for Render again, like the switches.
 function showCamera(project) {
