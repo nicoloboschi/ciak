@@ -80,6 +80,13 @@
       "type": "boolean",
       "description": "Burned-in captions from the narration. Default true."
     },
+    "export": {
+      "type": "object",
+      "description": "How the video is encoded.",
+      "properties": {
+        "crf": {"type": "number", "description": "x264 quality, lower is sharper and bigger. Default 20 (fast); 14-16 for a master to upload to YouTube or X."}
+      }
+    },
     "fps": {
       "enum": [
         24,
