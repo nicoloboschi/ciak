@@ -42,6 +42,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Quick recording (⌘2): the screenshot overlay picks an area or a window, a red frame and timer show while it records (default mic); ⌘2 or a click on the timer stops it, the panel opens on the project and renders it. The picker stays loaded between uses, so the overlay opens at once
 - ✅ Panel: Screenshots page (⌘1 shots, newest first: open, copy, show in Finder, delete to the Trash; `ciak shot list|copy|remove`)
 - ✅ Screenshot outline on/off: the thin light edge around new shots (`ciak shot outline off`, `--no-outline` for one, the Outline switch on the Screenshots page); ⌘1 follows it at once
+- ✅ Screenshot background: the default wallpaper for new shots, 14 to choose from or Auto (picks the one that stands out most from each shot: light/dark first, then color); `ciak shot background auto|<name>`, swatches on the Screenshots page; ⌘1 follows it at once
 - ✅ Panel: Voices page: every cloned voice with its sample and a Try-it box; add one by reading a text in the page or uploading a voice note or video; a failed try keeps the old voice
 - ✅ An agent with only the skill edits a project by id ("Use /ciak to edit project <id>: make it vertical, sunset background") — tested with a fresh agent
 - ✅ Projects by id: raw files in `~/.ciak/projects/<id>/`, every command takes the id (or the name)

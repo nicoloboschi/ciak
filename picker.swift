@@ -4,7 +4,7 @@
 // glowing border picks an area (or a window: space; Esc cancels); the shot goes on the wallpaper with rounded
 // corners and a shadow, is saved and copied. It runs as the app's child, so it uses the app's
 // Screen Recording permission: change it freely, the app (and the permission) stay the same.
-// Settings: the app's (defaults com.ciak.app: wallpaper, shots), or arguments -wallpaper <png> -shots <dir>.
+// Settings: the app's (defaults com.ciak.app: wallpaper folder, background, shots), or arguments -wallpaper <dir> -background <name|auto> -shots <dir>.
 import AppKit
 import Carbon
 
@@ -21,7 +21,37 @@ func trace(_ message: String) {
 }
 
 func setting(_ name: String) -> String? { UserDefaults.standard.string(forKey: name) ?? UserDefaults(suiteName: "com.ciak.app")?.string(forKey: name) }
-let wallpaper = setting("wallpaper").flatMap { NSImage(contentsOfFile: $0)?.cgImage(forProposedRect: nil, context: nil, hints: nil) }
+// The wallpaper for a shot: the chosen one (defaults com.ciak.app background), or with auto the one that stands out most
+// from the shot. The PNGs and their average colors (wallpapers.json) are drawn by lib/shot.mjs in the wallpaper folder.
+func wallpaper(for shot: CGImage) -> CGImage? {
+  guard let folder = setting("wallpaper") else { return nil }
+  var name = setting("background") ?? "aurora"
+  if name == "auto", let data = FileManager.default.contents(atPath: folder + "/wallpapers.json"),
+     let tones = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["tones"] as? [String: [Double]], let rgb = average(shot) {
+    name = tones.max { contrast(rgb, $0.value) < contrast(rgb, $1.value) }?.key ?? name
+  }
+  return NSImage(contentsOfFile: "\(folder)/\(name).png")?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+}
+// Same rule as contrasting() in lib/shot.mjs: light/dark contrast first, then how different the color is.
+func contrast(_ first: [Double], _ second: [Double]) -> Double {
+  func luminance(_ rgb: [Double]) -> Double {
+    zip(rgb, [0.2126, 0.7152, 0.0722]).reduce(0) { sum, pair in
+      let value = pair.0 / 255
+      return sum + pair.1 * (value <= 0.03928 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4))
+    }
+  }
+  let (a, b) = (luminance(first), luminance(second))
+  return (max(a, b) + 0.05) / (min(a, b) + 0.05) + sqrt(zip(first, second).reduce(0) { $0 + pow($1.0 - $1.1, 2) }) / 255
+}
+// The shot's average color, 0–255: drawn small (16×16) and averaged.
+func average(_ image: CGImage) -> [Double]? {
+  guard let context = CGContext(data: nil, width: 16, height: 16, bitsPerComponent: 8, bytesPerRow: 64, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue), let pixels = context.data else { return nil }
+  context.interpolationQuality = .medium
+  context.draw(image, in: CGRect(x: 0, y: 0, width: 16, height: 16))
+  let bytes = pixels.bindMemory(to: UInt8.self, capacity: 1024)
+  return (0..<3).map { channel in Double((0..<256).reduce(0) { $0 + Int(bytes[$1 * 4 + channel]) }) / 256 }
+}
 let outputDir = URL(fileURLWithPath: setting("shots") ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Documents/ciak/shots").path)
 func color(_ hex: Int) -> CGColor {
   CGColor(srgbRed: CGFloat(hex >> 16) / 255, green: CGFloat((hex >> 8) & 255) / 255, blue: CGFloat(hex & 255) / 255, alpha: 1)
@@ -196,7 +226,7 @@ func framed(_ shot: CGImage) -> Data? {
   guard let context = CGContext(data: nil, width: width + 2 * padding, height: height + 2 * padding, bitsPerComponent: 8, bytesPerRow: 0,
                                 space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
   let canvas = CGRect(x: 0, y: 0, width: context.width, height: context.height)
-  if let wallpaper { context.draw(wallpaper, in: canvas) } else { context.setFillColor(CGColor(red: 0.06, green: 0.07, blue: 0.15, alpha: 1)); context.fill(canvas) }
+  if let wallpaper = wallpaper(for: shot) { context.draw(wallpaper, in: canvas) } else { context.setFillColor(CGColor(red: 0.06, green: 0.07, blue: 0.15, alpha: 1)); context.fill(canvas) }
   let rect = CGRect(x: padding, y: padding, width: width, height: height)
   let path = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
   context.saveGState()
@@ -394,7 +424,7 @@ func pick() {
   current.makeFirstResponder(current.contentView)
 }
 
-// Check the frame without a picker: ciak-picker -frame <shot.png> -wallpaper <png> writes <shot>.framed.png
+// Check the frame without a picker: ciak-picker -frame <shot.png> -wallpaper <dir> [-background auto] writes <shot>.framed.png
 if let file = UserDefaults.standard.string(forKey: "frame") {
   guard let shot = NSImage(contentsOfFile: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil), let png = framed(shot) else { exit(1) }
   try! png.write(to: URL(fileURLWithPath: file + ".framed.png"))
