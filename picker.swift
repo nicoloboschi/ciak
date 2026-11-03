@@ -4,7 +4,7 @@
 // glowing border picks an area (or a window: space; Esc cancels); the shot goes on the wallpaper with rounded
 // corners and a shadow, is saved and copied. It runs as the app's child, so it uses the app's
 // Screen Recording permission: change it freely, the app (and the permission) stay the same.
-// Settings: the app's (defaults com.ciak.app: wallpaper folder, background, shots), or arguments -wallpaper <dir> -background <name|auto> -shots <dir>.
+// Settings: the app's (defaults com.ciak.app: wallpaper folder, background, shots), or arguments -wallpaper <dir> -background <name|auto|none> -padding <small|medium|large> -shots <dir>.
 import AppKit
 import Carbon
 
@@ -219,10 +219,14 @@ func capture(area: NSRect) -> CGImage? {
 }
 func capture(window id: CGWindowID) -> CGImage? { screencapture(["-o", "-l", "\(id)"]) }
 
-// Same look as ciak shot: padding 7% of the longest side, rounded corners, a soft shadow, a faint edge (unless outline is off).
-func framed(_ shot: CGImage, wallpaper chosen: (name: String, image: CGImage)?, outline: Bool) -> Data? {
+// Same look as ciak shot: the wallpaper (defaults com.ciak.app background), padding a share of the longest side (padding:
+// small, medium, large), rounded corners, a soft shadow. Background none: the bare shot. Also says which ones it used.
+func framed(_ shot: CGImage) -> (png: Data, background: String, padding: String)? {
+  let size = setting("padding") ?? "medium"
+  if setting("background") == "none" { return NSBitmapImageRep(cgImage: shot).representation(using: .png, properties: [:]).map { ($0, "none", size) } }
+  let chosen = wallpaper(for: shot)
   let (width, height) = (shot.width, shot.height)
-  let padding = Int((Double(max(width, height)) * 0.07).rounded())
+  let padding = Int((Double(max(width, height)) * (["small": 0.035, "large": 0.12][size] ?? 0.07)).rounded())
   let radius = max(10, CGFloat(min(width, height)) * 0.018)
   let shadow = CGFloat(padding) * 0.5
   guard let context = CGContext(data: nil, width: width + 2 * padding, height: height + 2 * padding, bitsPerComponent: 8, bytesPerRow: 0,
@@ -236,10 +240,7 @@ func framed(_ shot: CGImage, wallpaper chosen: (name: String, image: CGImage)?, 
   context.addPath(path); context.setFillColor(CGColor(gray: 0, alpha: 1)); context.fillPath()
   context.restoreGState()
   context.saveGState(); context.addPath(path); context.clip(); context.draw(shot, in: rect); context.restoreGState()
-  // A faint white edge vanished on light wallpapers: there it's a faint dark one (edgeColor in lib/shot.mjs).
-  let light = chosen.flatMap { tones()[$0.name] }.map { luminance($0) > 0.3 } ?? false
-  if outline { context.addPath(path); context.setStrokeColor(CGColor(gray: light ? 0 : 1, alpha: light ? 0.18 : 0.12)); context.setLineWidth(2); context.strokePath() }
-  return context.makeImage().flatMap { NSBitmapImageRep(cgImage: $0).representation(using: .png, properties: [:]) }
+  return context.makeImage().flatMap { NSBitmapImageRep(cgImage: $0).representation(using: .png, properties: [:]) }.map { ($0, chosen?.name ?? "aurora", size) }
 }
 
 let shutter = NSSound(contentsOfFile: "/System/Library/Components/CoreAudio.component/Contents/SharedSupport/SystemSounds/system/Screen Capture.aif", byReference: true) ?? NSSound(named: "Glass")
@@ -252,8 +253,7 @@ func finish(_ take: (() -> CGImage?)?) {
   DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { // let the overlay leave the screen first
     guard let shot = take() else { return }
     shutter?.play()
-    let (chosen, outline) = (wallpaper(for: shot), setting("outline") != "off")
-    guard let png = framed(shot, wallpaper: chosen, outline: outline) else { return }
+    guard let (png, background, padding) = framed(shot) else { return }
     let stamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-").prefix(19)
     let file = outputDir.appendingPathComponent("shot-\(stamp).png")
     try? FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
@@ -262,7 +262,7 @@ func finish(_ take: (() -> CGImage?)?) {
     let raw = outputDir.appendingPathComponent(".raw")
     try? FileManager.default.createDirectory(at: raw, withIntermediateDirectories: true)
     try? NSBitmapImageRep(cgImage: shot).representation(using: .png, properties: [:])?.write(to: raw.appendingPathComponent(file.lastPathComponent))
-    try? JSONSerialization.data(withJSONObject: ["background": chosen?.name ?? "aurora", "outline": outline])
+    try? JSONSerialization.data(withJSONObject: ["background": background, "padding": padding])
       .write(to: raw.appendingPathComponent(file.deletingPathExtension().lastPathComponent + ".json"))
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setData(png, forType: .png)
@@ -435,9 +435,9 @@ func pick() {
   current.makeFirstResponder(current.contentView)
 }
 
-// Check the frame without a picker: ciak-picker -frame <shot.png> -wallpaper <dir> [-background auto] writes <shot>.framed.png
+// Check the frame without a picker: ciak-picker -frame <shot.png> -wallpaper <dir> [-background auto|none] [-padding large] writes <shot>.framed.png
 if let file = UserDefaults.standard.string(forKey: "frame") {
-  guard let shot = NSImage(contentsOfFile: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil), let png = framed(shot, wallpaper: wallpaper(for: shot), outline: setting("outline") != "off") else { exit(1) }
+  guard let shot = NSImage(contentsOfFile: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil), let png = framed(shot)?.png else { exit(1) }
   try! png.write(to: URL(fileURLWithPath: file + ".framed.png"))
   exit(0)
 }

@@ -237,7 +237,7 @@ button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
             <button id="renderAgain" class="wide">Render again</button></section>
           <!-- What's in it: tap to leave a part out -->
           <section id="switches"><h3>In the video</h3><div id="switchList"></div></section>
-          <section id="projectBackground"><h3>Background</h3><div class="backgrounds" id="projectBackgrounds"></div></section>
+          <section id="projectBackground"><h3>Background</h3><div class="backgrounds" id="projectBackgrounds"></div><div class="seg" id="projectPadding"></div></section>
           <!-- Playback speed of the whole video (an agent can also speed up one part: edit --speed 2,start,end) -->
           <section id="speedRow"><h3>Speed</h3>
             <select id="speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1× as recorded</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="3">3×</option></select>
@@ -261,12 +261,12 @@ button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
   <!-- Screenshots (⌘1): newest first -->
   <section class="view" id="shotsView">
     <div class="head"><h1>Screenshots</h1><span class="muted">Take one with ⌘1. Saved in ~/Documents/ciak/shots.</span>
-      <label class="muted" style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer" title="The thin light edge around new screenshots">Outline <input type="checkbox" id="shotOutline"></label></div>
+      <div class="seg" id="shotPadding" title="The space around new screenshots and recordings"></div></div>
     <div class="backgrounds" id="shotBackgrounds" title="The wallpaper behind new screenshots"></div>
     <div class="grid" id="shots"></div>
     <dialog id="shotEditor"><img id="shotPreview" alt="">
       <div class="backgrounds" id="shotEditBackgrounds"></div>
-      <div class="row"><label class="muted" style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer">Outline <input type="checkbox" id="shotEditOutline"></label>
+      <div class="row"><div class="seg" id="shotEditPadding"></div>
         <span class="muted" id="shotEditState"></span><button class="small" id="shotEditClose">Done</button></div></dialog>
   </section>
 
@@ -520,7 +520,7 @@ async function livePreview(id) {
 for (const button of $('seg').children) button.onclick = () => { shown = button.dataset.show; viewer(current); };
 $('copyVideo').onclick = () => api('copy-video', {id: current.id}).then(() => { $('copyVideo').textContent = 'Copied'; setTimeout(() => $('copyVideo').textContent = 'Copy', 2000); }).catch(failure => toast(failure.message));
 // Mic, Mac sound, webcam, click sounds and zooms: each in or out of the video. A change waits for Render again.
-const switchNames = {mic: ['Microphone', 'Your voice'], system: ['Mac sound', 'Sound from apps'], webcam: ['Camera bubble', 'You in a circle in the corner'], clicks: ['Click sounds', 'A soft tick on each click'], zooms: ['Zoom on clicks', 'Moves in where you click'], outline: ['Outline', 'A thin edge around the recording']};
+const switchNames = {mic: ['Microphone', 'Your voice'], system: ['Mac sound', 'Sound from apps'], webcam: ['Camera bubble', 'You in a circle in the corner'], clicks: ['Click sounds', 'A soft tick on each click'], zooms: ['Zoom on clicks', 'Moves in where you click']};
 function showSwitches(project) {
   const list = Object.entries(project.switches || {});
   $('switches').hidden = !list.length;
@@ -547,10 +547,12 @@ function changed() { shown = 'live'; $('renderAgain').classList.add('primary'); 
 // The wallpaper behind the recording: the same swatches as for screenshots; Auto picks the one that stands out.
 function showProjectBackground(project) {
   $('projectBackground').hidden = !project.switches;
-  const key = project.id + project.background;
+  const key = project.id + project.background + project.padding;
   if ($('projectBackgrounds').dataset.key === key || !Object.keys(shotChoices).length) return;
   $('projectBackgrounds').dataset.key = key;
-  swatches($('projectBackgrounds'), shotChoices, project.background, name => api('project-background', {id: project.id, name}).then(() => { changed(); refresh(); }).catch(failure => toast(failure.message)));
+  const choose = change => api('project-background', {id: project.id, ...change}).then(() => { changed(); refresh(); }).catch(failure => toast(failure.message));
+  swatches($('projectBackgrounds'), shotChoices, project.background, name => choose({name}));
+  paddingSwitch($('projectPadding'), project.padding, padding => choose({padding}));
 }
 // The camera bubble: round or a rounded rectangle, its size and corner. A change waits for Render again, like the switches.
 function showCamera(project) {
@@ -672,26 +674,37 @@ twice($('deleteButton'), async () => {
 
 // ---- Screenshots ----
 // For the next ones (⌘1 and ciak shot): the ones already taken keep theirs.
-api('shot-outline').then(result => $('shotOutline').checked = result.outline).catch(() => {});
-// The default wallpaper: a swatch per choice, Auto picks per shot. The editor below uses the same swatches.
+// The default wallpaper: a swatch per choice, Auto picks per shot, None leaves the shot bare (square corners).
+// The shot editor and the recording page use the same swatches, and the same padding switch.
 let shotChoices = {};
 function swatches(place, choices, background, choose) {
-  place.replaceChildren(...['auto', ...Object.keys(choices)].map(name => {
+  place.replaceChildren(...['auto', 'none', ...Object.keys(choices)].map(name => {
     const button = document.createElement('button');
-    button.title = name === 'auto' ? 'Auto: the one that stands out most from each shot' : name;
+    button.title = {auto: 'Auto: the one that stands out most from each shot', none: 'None: just the shot, no background'}[name] || name;
     button.setAttribute('aria-label', button.title);
     button.setAttribute('aria-pressed', name === background);
-    if (name === 'auto') button.textContent = 'Auto'; else button.style.background = choices[name];
+    if (name === 'auto' || name === 'none') button.textContent = name === 'auto' ? 'Auto' : 'None'; else button.style.background = choices[name];
     button.onclick = () => choose(name);
     return button;
   }));
 }
-function showBackgrounds({background, choices}) {
-  shotChoices = choices;
-  swatches($('shotBackgrounds'), choices, background, name => api('shot-background', {name}).then(showBackgrounds).catch(failure => toast(failure.message)));
+function paddingSwitch(place, padding, choose) {
+  place.replaceChildren(...['small', 'medium', 'large'].map(name => {
+    const button = document.createElement('button');
+    button.textContent = name[0].toUpperCase() + name.slice(1); button.title = 'Padding: ' + name;
+    button.classList.toggle('on', name === padding);
+    button.onclick = () => choose(name);
+    return button;
+  }));
 }
-// Edit one shot in place: background and outline, framed again from its unframed copy. One edit at a time:
-// two at once (a swatch, then the outline while it frames) each started from the old state and one was lost.
+function showBackgrounds({background, padding, choices}) {
+  shotChoices = choices;
+  if (current?.switches) showProjectBackground(current);  // the recording page drew before the choices came
+  swatches($('shotBackgrounds'), choices, background, name => api('shot-background', {name}).then(showBackgrounds).catch(failure => toast(failure.message)));
+  paddingSwitch($('shotPadding'), padding, name => api('shot-padding', {padding: name}).then(() => api('shot-background')).then(showBackgrounds).catch(failure => toast(failure.message)));
+}
+// Edit one shot in place: background and padding, framed again from its unframed copy. One edit at a time:
+// two at once (a swatch, then the padding while it frames) each started from the old state and one was lost.
 let editing = null, edits = Promise.resolve();
 const editShot = (name, change) => edits = edits.then(() => framing(name, change));
 async function framing(name, change = {}) {
@@ -702,16 +715,14 @@ async function framing(name, change = {}) {
     const result = await api('shot-edit', {name, ...change});
     if (editing !== name) return;
     $('shotPreview').src = '/shot?token=' + token + '&name=' + encodeURIComponent(name) + '&t=' + Date.now();
-    $('shotEditOutline').checked = result.outline;
+    paddingSwitch($('shotEditPadding'), result.padding, padding => editShot(name, {padding}));
     swatches($('shotEditBackgrounds'), shotChoices, result.background, background => editShot(name, {background}));
     $('shotEditState').textContent = '';
     loadShots().catch(() => {});
   } catch (failure) { $('shotEditState').textContent = ''; toast(failure.message); }
 }
-$('shotEditOutline').onchange = () => editShot(editing, {outline: $('shotEditOutline').checked});
 $('shotEditClose').onclick = () => $('shotEditor').close();
 api('shot-background').then(showBackgrounds).catch(() => {});
-$('shotOutline').onchange = () => api('shot-outline', {on: $('shotOutline').checked}).catch(failure => toast(failure.message));
 async function loadShots() {
   const shots = await api('shots');
   $('shotCount').textContent = shots.length || '';

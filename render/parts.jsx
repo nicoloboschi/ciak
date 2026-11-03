@@ -88,7 +88,7 @@ export function Clip({project, clip, sourceUrl, events, clicks, transcript, webc
   const caption = project.captions?.enabled ? transcript.find(item => time >= item.start && time < item.end) : null;
   const webcam = webcams?.find(item => time >= item.start && time < item.end);
   return <AbsoluteFill style={{justifyContent: 'center', alignItems: 'center'}}>
-    <div style={{width: viewWidth, height: viewHeight, overflow: 'hidden', position: 'relative', borderRadius: project.style.radius, boxShadow: [project.style.shadow && '0 24px 70px #0008', project.style.outline !== false && `0 0 0 1px ${project.style.edge || '#ffffff18'}`].filter(Boolean).join(', ') || undefined}}>
+    <div style={{width: viewWidth, height: viewHeight, overflow: 'hidden', position: 'relative', borderRadius: project.style.radius, boxShadow: project.style.shadow ? '0 24px 70px #0008' : undefined}}>
       <div style={{width: screenWidth, height: screenHeight, transformOrigin: '0 0', transform: `translate(${moveX}px, ${moveY}px) scale(${scale})`}}>
         <Video src={sourceUrl} muted playbackRate={rate} trimBefore={Math.round(clip.start * fps)} objectFit="fill" style={{width: screenWidth, height: screenHeight}}/>
         {sound && <Audio src={sound} playbackRate={rate} trimBefore={Math.round(clip.start * fps)}/>}
