@@ -39,7 +39,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ An ultrawide screen keeps its shape in the video (2560×1080), instead of being squeezed small into 16:9
 - ✅ Menu bar app (`ciak app install`): ⌘1 screenshots, Record… and Screenshots (open the panel, which starts with the app so it opens at once), Open Recordings; starts at login and holds the permissions
 - ✅ Panel (`ciak app panel`, menu bar Record…): projects (recordings and films) on the left (thumbnail, time, length, state); a new recording with live camera preview and mic meter; after Finish every step (stop, encode + mix, clicks, auto edit, render frames with a live count, audio, check) with its timing, then the video and the project id with a prompt for your agent. It follows an agent's renders live. Rename or delete a project there (`ciak project rename|remove`; delete goes to the Trash)
-- ✅ Quick recording (⌘2): the screenshot overlay picks an area or a window, a red frame and timer show while it records (default mic); ⌘2 or a click on the timer stops it, the panel opens on the project and renders it. The picker stays loaded between uses, so the overlay opens at once
+- ✅ Quick recording (⌘2): the screenshot overlay picks an area or a window, a red frame and timer show while it records (the Mac sound, so a video playing is heard; no mic); ⌘2 or a click on the timer stops it, the panel opens on the project and renders it. The picker stays loaded between uses, so the overlay opens at once
 - ✅ Panel: Screenshots page (⌘1 shots, newest first: open, copy, show in Finder, delete to the Trash; `ciak shot list|copy|remove`)
 - ✅ Screenshot background: the default wallpaper for new shots, 14 to choose from or Auto (picks the one that stands out most from each shot: light/dark first, then color); `ciak shot background auto|<name>`, swatches on the Screenshots page; ⌘1 follows it at once
 - ✅ Edit a screenshot in place: change its background (auto, none) and padding after it's taken (`ciak shot edit <file> --background b --padding p`, Edit on each shot in the panel). Each shot keeps its unframed copy in shots/.raw (⌘1 too); older shots are cut back out of their frame
@@ -76,7 +76,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - 🧪 Burned-in captions with a clean style
 - 🧪 Intro/outro title cards (`intro` / `outro` in the project)
 - 🧪 Loudness normalization for the voice; ✅ a mic with nobody talking is left quiet instead of lifted (key presses no longer become thumps)
-- ✅ No mic unless asked (`--mic default`, the panel's Microphone, quick recordings have none)
+- ✅ No mic unless asked (`--mic default`, the panel's Microphone, quick recordings record the Mac sound only)
 - ✅ Mic background noise removed automatically (`lib/clean.mjs`: level, then DeepFilterNet), for recordings and the cloned voice's sample: a built-in-mic recording went from 10 dB to 47 dB between voice and pauses
 - ✅ Rendering via Remotion, so every edit is code an agent can change
 

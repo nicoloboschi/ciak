@@ -358,7 +358,7 @@ func record(_ source: [String], around rect: NSRect) {
   frames = [frame, pill]
   trace("grey frame shown")
   DispatchQueue.global().async {
-    let result = ciak(["start"] + source + ["--fps", "60", "--name", "Quick recording"])
+    let result = ciak(["start"] + source + ["--fps", "60", "--system-audio", "--name", "Quick recording"])  // the Mac sound (a video playing), no mic
     DispatchQueue.main.async {
       guard let id = result?["id"] as? String else { done(); return }
       session = id
