@@ -455,9 +455,10 @@ export function Film({film}) {
       const last = index === film.scenes.length - 1;
       // Crossfade: each scene runs on under the next one while it fades in, so the picture
       // never passes through the bare background between two scenes.
-      const overlap = last ? 0 : Math.round(fps / 3);
+      // A scene with "cut": true starts with a hard cut instead (one continuous set, e.g. a dialogue).
+      const overlap = last || film.scenes[index + 1].cut ? 0 : Math.round(fps / 3);
       return <Sequence key={index} from={scene.from} durationInFrames={scene.frames + overlap} premountFor={fps}>
-        <Crossfade frames={scene.frames} fade={Math.round(fps / 3)} last={last} background={theme.background}>
+        <Crossfade frames={scene.frames} fade={scene.cut ? 0 : Math.round(fps / 3)} last={last} background={theme.background}>
           <Backdrop theme={theme} offset={scene.from}/>
           <Scene scene={scene} theme={theme} frames={scene.frames} reserve={film.captions ? 140 : 30}/>
         </Crossfade>
@@ -503,7 +504,7 @@ function Backdrop({theme, offset}) {
 
 function Crossfade({frames, fade, last, background, children}) {
   const frame = useCurrentFrame();
-  const opacity = Math.min(ease(frame / fade), last ? ease((frames - frame) / fade) : 1);
+  const opacity = fade ? Math.min(ease(frame / fade), last ? ease((frames - frame) / fade) : 1) : 1;
   return <AbsoluteFill style={{opacity, background}}>{children}</AbsoluteFill>;
 }
 
