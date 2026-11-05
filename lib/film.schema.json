@@ -31,6 +31,10 @@
           "type": "string",
           "description": "A voice from ciak voice list (your own, cloned), or a Kokoro voice, e.g. af_heart, af_bella, am_michael, bf_emma. Default af_heart."
         },
+        "room": {
+          "type": "boolean",
+          "description": "Voices sound recorded in a small room (boom mic, early reflections) instead of a studio: for dialogue and sketches."
+        },
         "speed": {
           "type": "number",
           "minimum": 0.7,
@@ -70,6 +74,13 @@
             }
           }
         }
+      ]
+    },
+    "ambience": {
+      "description": "Room tone under the whole film (an office hum, a cafe): a file or {file, volume}. Steady and quiet, never ducked under the voice like music.",
+      "anyOf": [
+        {"type": "string"},
+        {"type": "object", "required": ["file"], "additionalProperties": false, "properties": {"file": {"type": "string"}, "volume": {"type": "number", "minimum": 0.1, "maximum": 3}}}
       ]
     },
     "clicks": {
