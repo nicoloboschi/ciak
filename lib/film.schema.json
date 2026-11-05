@@ -31,6 +31,10 @@
           "type": "string",
           "description": "A voice from ciak voice list (your own, cloned), or a Kokoro voice, e.g. af_heart, af_bella, am_michael, bf_emma. Default af_heart."
         },
+        "engine": {
+          "enum": ["dia"],
+          "description": "dia: every voice through Dia, a dialogue model that sounds like people talking rather than reading. Each voice is a sample: a cloned voice (justrec voice list) or voices/<name>.wav + voices/<name>.txt (its words) in the film's folder. Slow: about half a minute per line."
+        },
         "room": {
           "type": "boolean",
           "description": "Voices sound recorded in a small room (boom mic, early reflections) instead of a studio: for dialogue and sketches."
@@ -896,6 +900,10 @@
         "cut": {
           "type": "boolean",
           "description": "Start this scene with a hard cut instead of a crossfade, e.g. between lines of a dialogue in one set."
+        },
+        "sound": {
+          "description": "A sound effect played when this scene starts (a sting, a whoosh), mixed into the one audio track: a file relative to film.json or {file, volume}.",
+          "oneOf": [{"type": "string"}, {"type": "object", "required": ["file"], "additionalProperties": false, "properties": {"file": {"type": "string"}, "volume": {"type": "number", "minimum": 0}}}]
         },
         "mouth": {
           "type": "boolean",
