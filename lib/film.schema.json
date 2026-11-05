@@ -878,6 +878,14 @@
         "say": {
           "$ref": "#/$defs/common/say"
         },
+        "voice": {
+          "type": "string",
+          "description": "Who says this scene's line, for a dialogue: a cloned voice (justrec voice list) or a Kokoro voice (am_michael, bm_george, af_heart...). The scene sits tight around its line; add a scene with \"duration\" for a pause."
+        },
+        "mouth": {
+          "type": "boolean",
+          "description": "Give the component the speaker's mouth shapes (props.scene.mouthCues: [{start, end, value}], seconds from the scene start; value A-H, X = rest, Rhubarb Lip Sync / Preston Blair) to animate a cartoon mouth."
+        },
         "duration": {
           "$ref": "#/$defs/common/duration"
         },
