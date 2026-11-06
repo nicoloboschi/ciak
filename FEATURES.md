@@ -83,6 +83,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 ## Films (launch videos)
 
 - ✅ Films (`ciak project new`, then `ciak project render`): scenes (title, stats, image, slide, chart, recording, before/after compare) → one video
+- ✅ The first scene starts in full, no fade from black: frame 0 is the hook and the picture a feed shows before the video plays
 - ✅ Narration from each scene's `say` (local Kokoro voice, macOS `say` fallback), scenes stretch to fit it
 - 🧪 Your own voice: `ciak voice add me` records a 15 s sample, films with `"voice": {"name": "me"}` are cloned with Qwen3-TTS (tested with a sample voice, not yet a real one)
 - ✅ Captions timed per sentence, burned in and written as `.srt`
