@@ -96,6 +96,9 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ One-step page capture: `start --browser --url <page> --run "play()" --for 8 --name x`
 - ✅ Schema for film.json (`ciak project schema`): one vocabulary, typo suggestions, exact error paths
 - ✅ Custom scenes: any layout as a React component in the film folder (`"type": "custom"`), with ciak's building blocks
+- ✅ Dialogue and cartoon mouths: a custom scene's own `"voice"` (one speaker per line, tight turns), `"mouth": true` (mouth shapes from Rhubarb Lip Sync in `scene.mouthCues`), `"cut": true` for hard cuts
+- 🧪 Dialogue voices through Dia (`"voice": {"engine": "dia"}`): each voice is a sample (yours, or `voices/<name>.wav` + `.txt` next to the film)
+- 🧪 Film sound for sketches: `"ambience"` (steady room tone, never ducked), `"voice": {"room": true}` (small-room sound), a scene's `"sound"` (a sting or whoosh as it starts, in the one track)
 - ✅ Film styles (`"style": "hindsight"`, `ciak project styles`): fonts, colors, surfaces, radius, backdrop; built-in or your own
 - ✅ Live preview in the browser (`film --live`): plays with sound, reloads when files change
 - ✅ Frame by frame (`ciak project frames`): labelled frames of a scene or time range, before export
