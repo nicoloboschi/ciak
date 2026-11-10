@@ -5,301 +5,390 @@
 <title>ciak</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
 <style>
-/* Light and calm (after godly.website): warm white, near-black pills, soft cards, quiet grey labels. Dark follows the Mac. */
-:root{color-scheme:light;--bg:#ffffff;--side:#ffffff;--panel:#f6f6f4;--panel2:#ececea;--field:#ffffff;--line:#e6e5e1;--hover:#f3f3f1;--muted:#8a8a86;--ink:#111111;--accent:#111111;--on-accent:#ffffff;--brand:#ff4d2e;--red:#e5484d;--ok:#1f9d55;--warn:#c27c0e;--shadow:0 1px 2px #0000000a,0 8px 24px #0000000d}
-@media (prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#0e0e0f;--side:#0e0e0f;--panel:#18181a;--panel2:#232326;--field:#111113;--line:#2a2a2d;--hover:#1c1c1e;--muted:#8d8d93;--ink:#f2f2f0;--accent:#f2f2f0;--on-accent:#111111;--red:#ff6369;--ok:#4cc38a;--warn:#f1a10d;--shadow:none}}
-*{box-sizing:border-box}html,body{height:100%}[hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Inter",BlinkMacSystemFont,"Segoe UI",sans-serif;font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased;display:grid;grid-template-columns:300px 1fr}
-button{font:inherit;font-weight:500;border:0;background:var(--panel2);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer;min-height:38px;transition:background .15s,opacity .15s,transform .1s}
-button:hover{background:var(--line)}button:active{transform:scale(.98)}button:disabled{opacity:.4;cursor:default;transform:none}
-button.primary{background:var(--accent);color:var(--on-accent)}button.primary:hover{opacity:.85;background:var(--accent)}
-button.danger{background:var(--red);color:#fff}button.danger:hover{opacity:.85;background:var(--red)}
-button.link{background:none;color:var(--muted);padding:0 4px;min-height:0;font-size:13px;text-decoration:underline;text-underline-offset:3px}button.link:hover{color:var(--ink);background:none}
-select,input[type=text],input[type=number]{width:100%;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:9px 12px;color:var(--ink);font:inherit;min-height:40px}
-select:hover,input[type=text]:hover,input[type=number]:hover{border-color:var(--muted)}
-:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-label{display:block;font-size:13px;color:var(--muted);margin:0 0 6px}
-h1{font-size:30px;font-weight:600;letter-spacing:-.9px;margin:0;line-height:1.15}h2{font-size:17px;margin:0 0 16px;font-weight:600;letter-spacing:-.3px}
-.muted{color:var(--muted)}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+/* A Mac window (after Apple's guidelines): a sidebar to move around, a toolbar on each page with its main action
+   at the trailing edge, grouped settings, system type. Blue means "you can act / selected"; red means recording,
+   and is used for nothing else. The one signature: clapperboard stripes, shown while a take is live or rendering.
+   Light and dark follow the Mac; no switch of our own. */
+:root{color-scheme:light;
+  --window:#ffffff;--sidebar:#f4f4f6;--group:#f5f5f7;--fill:#0000000d;--fill2:#00000017;--sep:#0000001a;
+  --label:#1d1d1f;--secondary:#6e6e73;--tertiary:#aeaeb2;
+  --accent:#0071e3;--accent-text:#0066cc;--on-accent:#fff;--select:#0071e324;
+  --record:#d92d20;--ok:#248a3d;--warn:#b25000;
+  --glass:#ffffffb8;--shadow:0 1px 2px #0000000f,0 4px 16px #00000012;--pop:0 12px 40px #00000033,0 0 0 .5px #0000001f}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;
+  --window:#1e1e1f;--sidebar:#252527;--group:#2a2a2c;--fill:#ffffff12;--fill2:#ffffff1f;--sep:#ffffff17;
+  --label:#f5f5f7;--secondary:#98989d;--tertiary:#636366;
+  --accent:#0071e3;--accent-text:#4ea1ff;--select:#0a84ff38;
+  --record:#ff453a;--ok:#30d158;--warn:#ff9f0a;
+  --glass:#1e1e1fb8;--shadow:0 0 0 .5px #ffffff14;--pop:0 12px 40px #00000080,0 0 0 .5px #ffffff26}}
+*{box-sizing:border-box}html,body{height:100%;overflow:hidden}[hidden]{display:none!important}
+body{margin:0;background:var(--window);color:var(--label);font:14px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+  -webkit-font-smoothing:antialiased;display:grid;grid-template-columns:248px minmax(0,1fr);transition:grid-template-columns .25s ease}
+body.nosidebar{grid-template-columns:0 minmax(0,1fr)}
+svg.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 
-/* Sidebar: new recording + projects */
-aside{background:var(--side);display:flex;flex-direction:column;min-height:0;height:100vh;position:sticky;top:0;padding-top:6px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:-.6px;padding:18px 22px 18px}
-.brand i{font-style:normal;font-size:20px;line-height:1}
-#newButton{margin:0 18px 18px;width:calc(100% - 36px);min-height:42px}
-.list-title{padding:10px 22px 8px;font-size:13px;color:var(--muted)}
+/* Controls: bordered by default, filled accent when prominent, red for destructive. 28 px tall, 13 px text, like AppKit. */
+button{font:500 13px/1 inherit;font-family:inherit;border:0;background:var(--fill);color:var(--label);border-radius:8px;padding:0 12px;min-height:28px;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:default;white-space:nowrap;transition:background-color .12s,opacity .12s,transform .12s}
+button:hover{background:var(--fill2)}button:active:not(:disabled){transform:scale(.97)}button:disabled{opacity:.4}
+button.primary{background:var(--accent);color:var(--on-accent)}button.primary:hover{background:color-mix(in srgb,var(--accent) 88%,#000)}
+button.danger{background:var(--record);color:#fff}
+button.plain{background:none;color:var(--secondary)}button.plain:hover{background:var(--fill);color:var(--label)}
+button.link{background:none;color:var(--accent-text);padding:0 2px;min-height:0}button.link:hover{text-decoration:underline}
+button.icon{padding:0;width:28px}
+button.large{min-height:36px;font-size:14px;padding:0 18px;border-radius:10px}
+button[data-armed]{background:var(--record);color:#fff}
+select,input[type=text],input[type=number]{background:var(--window);border:1px solid var(--sep);border-radius:7px;padding:4px 8px;color:var(--label);font:13px inherit;font-family:inherit;min-height:28px;width:100%}
+select:hover,input[type=text]:hover,input[type=number]:hover{border-color:var(--tertiary)}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:1px}
+label{font-size:13px}
+.muted{color:var(--secondary)}.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace}
+/* Switch (a checkbox) */
+input[type=checkbox]{appearance:none;flex:none;width:32px;height:19px;border-radius:999px;background:var(--fill2);position:relative;margin:0;transition:background .2s}
+input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;box-shadow:0 1px 2px #0004;transition:transform .2s}
+input[type=checkbox]:checked{background:var(--accent)}input[type=checkbox]:checked::after{transform:translateX(13px)}input[type=checkbox]:disabled{opacity:.4}
+input[type=range]{width:140px;accent-color:var(--accent)}
+/* Segmented control */
+.seg{display:inline-flex;background:var(--fill);border-radius:8px;padding:2px;gap:2px}
+.seg button{background:none;min-height:24px;padding:0 11px;border-radius:6px;color:var(--label);font-weight:400}
+.seg button.on{background:var(--window);box-shadow:0 1px 2px #0000002e,0 0 0 .5px #0000000f;font-weight:500}
+@media (prefers-color-scheme:dark){.seg button.on{background:#636366}}
+.seg button:disabled{opacity:.35}
+
+/* Sidebar */
+aside{background:var(--sidebar);border-right:1px solid var(--sep);height:100vh;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.brand{display:flex;align-items:center;gap:9px;padding:16px 18px 14px;font-weight:700;font-size:16px;letter-spacing:-.3px}
+.mark{width:22px;height:18px;border-radius:4px;background:var(--label);position:relative;overflow:hidden;flex:none}
+.mark::before{content:"";position:absolute;inset:0 0 auto;height:6px;background:repeating-linear-gradient(-55deg,var(--label) 0 4px,var(--sidebar) 4px 8px);transform-origin:0 100%;transform:rotate(-12deg)}
+.nav{display:flex;flex-direction:column;gap:1px;padding:0 10px}
+.nav a,.nav button{display:flex;align-items:center;gap:9px;padding:0 10px;min-height:30px;border-radius:7px;color:inherit;text-decoration:none;font:500 13px inherit;font-family:inherit;background:none;justify-content:flex-start;width:100%}
+.nav a:hover,.nav button:hover:not(:disabled){background:var(--fill)}
+.nav .on,.nav button:disabled{background:var(--select);opacity:1}
+.nav svg{color:var(--accent-text)}#newButton svg{color:var(--record)}
+.nav span{margin-left:auto;color:var(--secondary);font-weight:400;font-size:12px;font-variant-numeric:tabular-nums}
+.list-title{padding:18px 20px 6px;font-size:11px;font-weight:600;color:var(--secondary);letter-spacing:.2px}
 #list{overflow-y:auto;flex:1;padding:0 10px 16px}
-.item{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:8px;border-radius:14px;cursor:pointer;text-decoration:none;color:inherit;align-items:center}
-.item:hover{background:var(--hover)}.item.on{background:var(--panel)}
-.thumb{width:84px;aspect-ratio:16/10;border-radius:8px;background:var(--panel2) center/cover no-repeat;display:grid;place-items:center;color:var(--muted);font-size:16px;box-shadow:inset 0 0 0 1px #0000000f}
-.item b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.item small{display:block;color:var(--muted);font-size:12px}
-.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;border-radius:999px;padding:1px 8px;margin-top:4px;background:var(--panel2);color:var(--muted)}
-.chip.ready{color:var(--ok)}.chip.recording,.chip.paused{color:var(--red)}.chip.rendering,.chip.finalizing{color:var(--warn)}.chip.error{color:var(--red)}
-.dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}.recording .dot{animation:pulse 1.2s infinite}
-.empty{color:var(--muted);font-size:14px;padding:10px 12px}
+.item{display:grid;grid-template-columns:56px minmax(0,1fr);gap:9px;padding:6px;border-radius:8px;text-decoration:none;color:inherit;align-items:center}
+.item:hover{background:var(--fill)}.item.on{background:var(--select)}
+.thumb{width:56px;aspect-ratio:16/10;border-radius:5px;background:var(--fill2) center/cover no-repeat;display:grid;place-items:center;color:var(--record);font-size:10px;box-shadow:inset 0 0 0 .5px var(--sep)}
+.item b{display:block;font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item small{display:block;color:var(--secondary);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--secondary)}
+.chip.ready{display:none}.chip.recording,.chip.paused,.chip.error{color:var(--record)}.chip.rendering,.chip.finalizing{color:var(--warn)}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}.recording .dot{animation:pulse 1.2s infinite}
+.empty{color:var(--secondary);font-size:13px;padding:8px 12px}
 
-/* Main */
-main{padding:34px 40px 64px;min-width:0;max-width:1280px}
-.view{display:none}.view.on{display:block;animation:rise .25s ease-out}
-.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:26px;flex-wrap:wrap}
-.head>.muted,.head h1+.muted,#pWhen{display:block;font-size:15px;margin-top:4px}
-.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
-.card{background:var(--panel);border-radius:22px;padding:24px}
-.field{margin-bottom:16px}.row{display:flex;gap:12px}.row>*{flex:1;min-width:0}
-.toggle{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:4px 0 16px}.toggle label{margin:0;color:var(--ink);font-size:15px}
-.toggle small{display:block;color:var(--muted);font-size:13px}
-input[type=checkbox]{appearance:none;flex:none;width:40px;height:24px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .2s;margin:0}
-input[type=checkbox]::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .2s}
-input[type=checkbox]:checked{background:var(--ink)}input[type=checkbox]:checked::after{transform:translateX(16px);background:var(--bg)}input[type=checkbox]:disabled{opacity:.4}
-.region{display:none}.region.on{display:flex}
-.stage{aspect-ratio:16/10;background:var(--panel2);border-radius:16px;position:relative;overflow:hidden;display:grid;place-items:center}
+/* Main: each page has its toolbar on top (glass, stays while the page scrolls) */
+main{min-width:0;height:100vh;overflow-y:auto;padding:0 0 64px}
+.view{display:none}.view.on{display:block;animation:rise .2s ease-out}
+.toolbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;min-height:52px;padding:10px 24px 10px 14px;
+  background:var(--glass);backdrop-filter:saturate(1.8) blur(20px);-webkit-backdrop-filter:saturate(1.8) blur(20px);border-bottom:1px solid var(--sep)}
+@media (prefers-reduced-transparency:reduce){.toolbar,#pickBar{background:var(--window);backdrop-filter:none}}
+.toolbar .title{min-width:0;flex:1;display:flex;align-items:baseline;gap:10px}
+.toolbar h1{font-size:17px;font-weight:600;letter-spacing:-.2px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toolbar .sub{color:var(--secondary);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.toolbar .tools{display:flex;gap:6px;align-items:center;flex:none}
+.page{padding:22px 28px;max-width:1320px}
+#toast{display:none;margin:14px 28px 0;background:color-mix(in srgb,var(--record) 10%,var(--window));color:var(--record);border-radius:10px;padding:10px 14px;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;cursor:default}
+#toast::after{content:"  ✕";opacity:.6}
+
+/* Grouped settings (like System Settings): rows with a label on the left and the control on the right */
+.group{background:var(--group);border-radius:10px;margin:0 0 18px}
+.group-title{font-size:13px;font-weight:600;margin:0 4px 7px}
+.rowline{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 14px;min-height:44px;border-top:1px solid var(--sep);font-size:13px}
+.rowline:first-child{border-top:0}
+.rowline>label:first-child,.rowline>span:first-child{flex:none;margin:0;color:var(--label)}
+.rowline small{display:block;color:var(--secondary);font-size:11px}
+.rowline select,.rowline input[type=text]{width:auto;max-width:62%;min-width:160px}
+.rowline input[type=text]{text-align:right;background:none;border-color:transparent}.rowline input[type=text]:hover,.rowline input[type=text]:focus{border-color:var(--sep);text-align:left}
+.region{display:none;gap:8px;padding:0 14px 12px}.region.on{display:grid;grid-template-columns:repeat(4,1fr)}
+.region label{display:block;font-size:11px;color:var(--secondary);margin-bottom:3px}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+
+/* New recording */
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
+.stage{aspect-ratio:16/10;background:var(--group);border-radius:12px;position:relative;overflow:hidden;display:grid;place-items:center}
 .stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-.stage .note{color:var(--muted);font-size:14px;text-align:center}
-.count{position:absolute;inset:0;display:none;place-items:center;font-size:96px;font-weight:700;color:#fff;background:#0008}
-.meter{height:6px;background:var(--line);border-radius:999px;overflow:hidden;margin:6px 0 4px}.meter div{height:100%;width:0;background:var(--ok);border-radius:999px;transition:width .08s}
-.check{display:grid;gap:14px;margin:18px 0}
-#startButton{width:100%;font-size:16px;min-height:50px}
+.stage .note{color:var(--secondary);font-size:13px;text-align:center}
+.count{position:absolute;inset:0;display:none;place-items:center;font-size:110px;font-weight:700;color:#fff;background:#000a;font-variant-numeric:tabular-nums;animation:pop .35s var(--spring)}
+.meter{height:5px;background:var(--fill2);border-radius:999px;overflow:hidden;margin:6px 0 5px}.meter div{height:100%;width:0;background:var(--ok);border-radius:999px;transition:width .08s}
+.level{margin:16px 2px 20px;font-size:13px}.level small{font-size:12px}
+#startButton{width:100%;min-height:44px;font-size:15px;border-radius:12px;background:var(--record);color:#fff;gap:10px}
+#startButton:hover{background:color-mix(in srgb,var(--record) 88%,#000)}
+#startButton::before{content:"";width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px #ffffff55}
 
-/* Recording */
-.live{text-align:center;padding:52px 20px}
-.live .state{display:inline-flex;align-items:center;gap:8px;color:var(--red);font-weight:600;font-size:13px;background:var(--bg);border-radius:999px;padding:4px 12px}
-.live .state .dot{width:9px;height:9px}
-.timer{font-size:88px;font-weight:300;letter-spacing:-4px;font-variant-numeric:tabular-nums;margin:8px 0}
-.live .meter{max-width:340px;margin:18px auto 28px}
-.live .actions{display:flex;gap:12px;justify-content:center}.live .actions button{min-width:150px;min-height:46px}
+/* Clapper stripes: a take is live (recording) or being made (rendering). */
+.clapper{height:10px;background:repeating-linear-gradient(-55deg,var(--label) 0 10px,transparent 10px 20px);opacity:.9}
+.clapper.moving{animation:slide 1s linear infinite;background-size:24.4px 10px;background-image:repeating-linear-gradient(-55deg,var(--label) 0 10px,transparent 10px 20px)}
 
-/* Project */
-.meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;color:var(--muted);font-size:15px;margin-top:6px}.meta #pWhen{margin:0}
-.idbox{display:inline-flex;align-items:center;gap:6px}.idbox code{font:500 14px ui-monospace,Menlo,monospace;color:var(--ink)}
-.player{width:100%;aspect-ratio:16/9;max-height:78vh;margin-bottom:18px;background:#000;border-radius:22px;display:block;box-shadow:var(--shadow)}
-.player.preview{aspect-ratio:auto;max-height:none;overflow:hidden;background:var(--panel)}
-.viewer-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-.seg{display:inline-flex;background:var(--panel);border-radius:999px;padding:3px}.seg button{background:none;border:0;box-shadow:none;color:var(--muted);padding:6px 14px;font-size:14px}
-.seg button.on{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px #0002}.seg button:disabled{opacity:.4}
-.file{display:flex;align-items:center;gap:8px;min-width:0}.file span{font:13px ui-monospace,Menlo,monospace;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:36ch}
-.banner{font-size:14px;color:var(--warn);margin:10px 0 0}.banner:empty{display:none}
-.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.pills{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pills>.muted{font-size:14px;margin-right:4px}#switchList{display:contents}
-.pill{min-height:34px;padding:6px 14px;font-size:14px;background:none;box-shadow:inset 0 0 0 1px var(--line);color:var(--muted)}
-.pill.on{background:var(--panel2);box-shadow:none;color:var(--ink)}.pill.on::before{content:"✓ ";color:var(--ok)}.pill:not(.on){text-decoration:line-through}
-.bar.camera{justify-content:flex-start;gap:28px;margin-top:14px}.bar .muted{font-size:14px}
-.bar.camera>select{width:auto;min-height:34px;padding:4px 10px}
-.inline{display:inline-flex;align-items:center;gap:10px;margin:0;color:var(--ink);font-size:14px}.inline select{width:auto;min-height:34px;padding:4px 10px}
-input[type=range]{width:140px;accent-color:var(--ink)}
-.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;margin-top:40px;padding-top:32px;border-top:1px solid var(--line)}
-details summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;list-style:none}details summary::-webkit-details-marker{display:none}details summary h2::after{content:" ›";color:var(--muted)}details[open] summary h2::after{content:" ⌄"}
-.prompt{display:flex;gap:10px;align-items:center;background:var(--panel);border-radius:999px;padding:6px 6px 6px 18px}
-.prompt span{flex:1;font-family:ui-monospace,Menlo,monospace;font-size:13px;overflow-wrap:anywhere}.note{margin:12px 0 0;font-size:14px}
-.phase{margin-bottom:18px}.phase h3{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin:0 0 8px}
-.step{display:grid;grid-template-columns:22px 1fr auto;gap:10px;padding:9px 0;border-top:1px solid var(--line);align-items:start}
-.step:first-of-type{border-top:0}
-.step .icon{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;margin-top:2px}
-.step.done .icon{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}.step.failed .icon{background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red)}
-.step.running .icon{border:2px solid var(--line);border-top-color:var(--warn);animation:spin .8s linear infinite}
-.step b{font-weight:500;display:block}.step small{color:var(--muted);font-size:13px;display:block;overflow-wrap:anywhere}
-.step.failed small{color:var(--red)}
-.step time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;white-space:nowrap}
-.facts{display:flex;flex-wrap:wrap;gap:8px 40px;margin:28px 0 0}.facts div{display:flex;flex-direction:column-reverse}.facts dt{color:var(--muted);font-size:13px}.facts dd{margin:0;font-size:22px;font-weight:500;letter-spacing:-.4px}
-#toast{display:none;background:color-mix(in srgb,var(--red) 10%,var(--bg));color:var(--red);border-radius:14px;padding:12px 16px;margin-bottom:18px;white-space:pre-wrap;overflow-wrap:anywhere}
-/* Sidebar links, screenshots, voices */
-.nav{display:flex;flex-direction:column;gap:2px;padding:0 10px 10px}
-.nav a{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:12px;color:inherit;text-decoration:none;font-weight:500}
-.nav a:hover{background:var(--hover)}.nav a.on{background:var(--panel)}.nav a span{color:var(--muted);font-weight:400;font-size:13px}
-.backgrounds{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 20px}
-.backgrounds button{width:64px;height:40px;min-height:0;padding:0;border-radius:10px;border:2px solid transparent;box-shadow:inset 0 0 0 1px #0002;font-size:12px;font-weight:600}
-.backgrounds button[aria-pressed=true]{border-color:var(--ink)}
-#shotEditor{border:0;border-radius:20px;padding:20px;background:var(--panel);color:var(--ink);width:min(900px,92vw)}#shotEditor::backdrop{background:#0008}
-#shotPreview{display:block;width:100%;max-height:60vh;object-fit:contain;margin-bottom:16px}
-#shotEditor .row{display:flex;align-items:center;gap:16px}#shotEditState{flex:1}#shotEditClose,#shotEditMore{width:auto;flex:none}#shotEditor .row .seg{flex:none}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
-.shot{background:var(--panel);border-radius:20px;overflow:hidden;padding:8px}
-.shot a{display:block;aspect-ratio:16/10;background:var(--panel2);border-radius:14px;overflow:hidden}.shot img{width:100%;height:100%;object-fit:contain;display:block}
-#shots{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding-bottom:90px}
-.shot{position:relative;padding:6px;border-radius:16px}.shot a{border-radius:11px}
-.shot.picked,.shot.picked:hover{box-shadow:0 0 0 3px var(--brand)}
-.shot .check{position:absolute;top:12px;left:12px;z-index:2;width:30px;height:30px;min-height:0;padding:0;border-radius:50%;border:2px solid #fff;background:#0006;color:#fff;font-size:15px;font-weight:700;backdrop-filter:blur(6px);opacity:0;transition:opacity .15s}
-.shot:hover .check,.picking .shot .check,.shot.picked .check{opacity:1}.shot.picked .check{background:var(--brand);border-color:var(--brand)}
-.shot .acts{position:absolute;left:12px;right:12px;bottom:40px;z-index:2;display:flex;gap:4px;justify-content:center;opacity:0;transition:opacity .15s}
-.shot:hover .acts{opacity:1}.picking .shot .acts{display:none}
-.shot .acts button{min-height:28px;padding:3px 10px;font-size:12px;background:#000b;color:#fff;backdrop-filter:blur(6px)}
-.shot small{display:block;padding:7px 4px 1px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.picking .shot a{cursor:copy}
-#pickBar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 20px;border-radius:999px;background:var(--ink);color:var(--bg);box-shadow:0 10px 30px #0006}
-#pickBar button{min-height:34px}#pickDo{background:var(--brand);color:#fff}#pickClear{background:none;color:inherit;opacity:.7}
-.voice{margin-bottom:18px}.voice .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
-.voice h3{margin:0;font-size:19px;font-weight:600;letter-spacing:-.3px}.voice p{margin:0 0 12px;color:var(--muted);font-size:14px}
-audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say input{flex:1}
-.script{background:var(--field);border-radius:14px;padding:14px 16px;font-size:16px;line-height:1.6;margin:0 0 14px}
-.actions-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.small{min-height:32px;padding:4px 14px;font-size:13px}
-#pNameEdit{font-size:26px;font-weight:600;max-width:420px}
-@keyframes pulse{50%{opacity:.25}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes rise{from{opacity:0;transform:translateY(6px)}}
-@media(max-width:900px){body{grid-template-columns:1fr}aside{position:static;height:auto;max-height:42vh}.cols,.split{grid-template-columns:1fr}main{padding:20px 16px}}
-/* Project page: video left, edit panel right (stacked on a narrow window) */
-.studio{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:start;margin-bottom:34px}
-.studio .player{margin-bottom:0}
-.studio .facts{gap:14px 32px;margin-top:22px}.studio .facts dd{font-size:18px}
-.edit{background:var(--panel);border-radius:22px;padding:6px 20px;position:sticky;top:20px}
-.edit section{padding:16px 0;border-top:1px solid var(--line)}.edit section:first-child{border-top:0}
-.edit h3{font-size:13px;font-weight:500;color:var(--muted);margin:0 0 10px}
-.edit .pills{gap:6px}.edit select{width:100%}.edit .hint{font-size:12px;margin:8px 0 0}
-.edit .line{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--ink);font-size:14px;margin:0 0 12px}.edit .line:last-child{margin:0}#switchList .line{margin-bottom:12px}#switchList .line:last-child{margin:0}
-.edit .line select{width:auto;min-height:34px;padding:4px 10px}.edit .line input[type=range]{width:150px}
-.edit .file{flex-direction:column;align-items:stretch;gap:8px;margin-bottom:12px}.edit .file span{max-width:none;font-size:12px}
-#rawList .file{flex-direction:row;align-items:center;margin-bottom:6px}#rawList .file span{flex:1}
+/* Recording live */
+.live{background:var(--group);border-radius:16px;overflow:hidden;text-align:center;max-width:720px;margin:20px auto}
+.live .inner{padding:40px 20px 36px}
+.live .state{display:inline-flex;align-items:center;gap:7px;color:var(--record);font-weight:600;font-size:12px;letter-spacing:.3px;text-transform:uppercase}
+.live .state .dot{width:8px;height:8px}
+.timer{font-size:84px;font-weight:200;letter-spacing:-3px;font-variant-numeric:tabular-nums;margin:4px 0}
+.live .meter{max-width:300px;margin:18px auto 26px}
+.live .actions{display:flex;gap:10px;justify-content:center}.live .actions button{min-width:140px}
+
+/* Project: video on the left, inspector on the right */
+.studio{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+.viewer-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.player{width:100%;aspect-ratio:16/9;max-height:76vh;background:#000;border-radius:12px;display:block;box-shadow:var(--shadow)}
+.player.preview{aspect-ratio:auto;max-height:none;overflow:hidden;background:var(--group)}
+.banner{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--secondary);margin:10px 0 0}.banner:empty{display:none}
+.banner.rendering::before{content:"";width:60px;height:8px;border-radius:2px;flex:none;background:repeating-linear-gradient(-55deg,var(--warn) 0 5px,transparent 5px 10px);background-size:12.2px 8px;animation:slide .8s linear infinite}
+.facts{display:flex;flex-wrap:wrap;gap:12px 32px;margin:20px 2px 0}.facts div{display:flex;flex-direction:column-reverse}
+.facts dt{color:var(--secondary);font-size:12px}.facts dd{margin:0;font-size:17px;font-weight:500;font-variant-numeric:tabular-nums}
+.inspector{position:sticky;top:72px}
+.inspector .group{padding:2px 0}
+.inspector .group-title{margin-top:2px}
+.inspector .rowline select{min-width:0;max-width:none}
+.inspector .pad{padding:10px 14px}
+.file{display:flex;align-items:center;gap:8px;min-width:0}.file span{font:12px ui-monospace,"SF Mono",Menlo,monospace;color:var(--secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+#finalFile{flex-direction:column;align-items:stretch}#finalFile span{flex:none}
 .file-actions{display:flex;gap:6px}.file-actions button{flex:1}
-button.wide{width:100%}
-.viewer-top{margin-bottom:12px}
-@media (max-width:1100px){.studio{grid-template-columns:1fr}.edit{position:static}}
-/* Cursor (after recent.design): a rounded arrow everywhere, the text bar where you type. White on dark. */
-html,html *{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dy='1' stdDeviation='1.6' flood-opacity='.3'/%3E%3C/filter%3E%3Cpath filter='url(%23s)' d='M6 5.2 21.6 10.6c.9.3.9 1.5 0 1.9l-6.1 2.4c-.3.1-.5.3-.6.6l-2.4 6.1c-.4.9-1.6.9-1.9 0L5.2 6c-.2-.5.3-1 .8-.8Z' fill='%23111' stroke='%23fff' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") 6 5,auto}
-@media (prefers-color-scheme:dark){html,html *{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cfilter id='s' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dy='1' stdDeviation='1.6' flood-opacity='.3'/%3E%3C/filter%3E%3Cpath filter='url(%23s)' d='M6 5.2 21.6 10.6c.9.3.9 1.5 0 1.9l-6.1 2.4c-.3.1-.5.3-.6.6l-2.4 6.1c-.4.9-1.6.9-1.9 0L5.2 6c-.2-.5.3-1 .8-.8Z' fill='%23fff' stroke='%23111' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E") 6 5,auto}}
-html input[type=text],html input[type=number],html textarea,html [contenteditable]{cursor:text}
-html :disabled{cursor:not-allowed}
-/* Motion (after recent.design): a spring on everything, a press shrinks a little, pictures grow under the mouse,
-   an ↗ pops in on a screenshot, the error note springs in. Off when the Mac asks for less motion. */
+#rawList .file{padding:7px 14px;border-top:1px solid var(--sep)}#rawList .file:first-child{border-top:0}
+#switchList{display:contents}
+.hint{font-size:11px;margin:6px 0 0;color:var(--secondary)}
+.backgrounds{display:flex;flex-wrap:wrap;gap:7px}
+.backgrounds button{width:40px;height:28px;min-height:0;padding:0;border-radius:7px;box-shadow:inset 0 0 0 .5px #0003;font-size:10px;font-weight:600;transition:transform .15s,box-shadow .15s}
+.backgrounds button:hover{transform:scale(1.08)}
+.backgrounds button[aria-pressed=true]{box-shadow:0 0 0 2px var(--window),0 0 0 4px var(--accent)}
+.inspector .backgrounds{padding:12px 14px 10px}.inspector #projectPadding{margin:0 14px 12px}
+.below{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;margin-top:36px;padding-top:26px;border-top:1px solid var(--sep)}
+h2{font-size:15px;font-weight:600;margin:0 0 10px}
+.prompt{display:flex;gap:10px;align-items:center;background:var(--group);border-radius:10px;padding:6px 6px 6px 14px}
+.prompt span{flex:1;font:12px ui-monospace,"SF Mono",Menlo,monospace;overflow-wrap:anywhere}.note{margin:10px 0 0;font-size:13px}
+details summary{display:flex;align-items:baseline;gap:10px;list-style:none}details summary::-webkit-details-marker{display:none}
+details summary h2::before{content:"›";display:inline-block;width:14px;color:var(--secondary);transition:transform .2s}details[open] summary h2::before{transform:rotate(90deg)}
+.phase{margin-bottom:16px}.phase h3{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin:0 0 6px}
+.step{display:grid;grid-template-columns:20px 1fr auto;gap:10px;padding:7px 0;border-top:1px solid var(--sep);align-items:start;font-size:13px}
+.step:first-of-type{border-top:0}
+.step .icon{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:10px;margin-top:1px}
+.step.done .icon{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}.step.failed .icon{background:color-mix(in srgb,var(--record) 18%,transparent);color:var(--record)}
+.step.running .icon{border:2px solid var(--fill2);border-top-color:var(--warn);animation:spin .8s linear infinite}
+.step b{font-weight:500;display:block}.step small{color:var(--secondary);font-size:12px;display:block;overflow-wrap:anywhere}
+.step.failed small{color:var(--record)}.step time{font-variant-numeric:tabular-nums;color:var(--secondary);font-size:12px;white-space:nowrap}
+#pNameEdit{font-size:17px;font-weight:600;max-width:360px;min-height:30px}
+#pName{cursor:text}
+
+/* Screenshots: a photo grid by day, Select like Photos, a glass bar for the picked ones */
+.day{grid-column:1/-1;font-size:13px;font-weight:600;margin:14px 2px -2px;color:var(--label)}.day:first-child{margin-top:0}
+#shots{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:10px;padding-bottom:90px}
+.shot{position:relative;border-radius:10px}
+.shot a{display:block;aspect-ratio:4/3;background:var(--group);border-radius:10px;overflow:hidden;cursor:default}
+.shot img{width:100%;height:100%;object-fit:contain;display:block;transition:transform .4s var(--spring)}
+.shot:hover img{transform:scale(1.025)}
+.shot.picked a{box-shadow:0 0 0 3px var(--accent)}.shot.picked img{transform:scale(.94)}
+.shot .pick{position:absolute;top:8px;left:8px;z-index:2;width:24px;height:24px;min-height:0;padding:0;border-radius:50%;border:1.5px solid #fff;background:#0000004d;color:#fff;font-size:12px;font-weight:700;box-shadow:0 1px 3px #0005;opacity:0;transition:opacity .15s}
+.shot:hover .pick,.picking .shot .pick,.shot.picked .pick{opacity:1}.shot.picked .pick{background:var(--accent);border-color:#fff}
+.shot .acts{position:absolute;left:8px;right:8px;bottom:30px;z-index:2;display:flex;gap:4px;justify-content:center;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .2s}
+.shot:hover .acts{opacity:1;transform:none}.picking .shot .acts{display:none}
+.shot .acts button.icon{width:24px;padding:0}.shot .acts svg.i{width:14px;height:14px}
+.shot .acts button{min-height:24px;padding:0 9px;font-size:12px;border-radius:6px;background:#000000a6;color:#fff;backdrop-filter:blur(8px)}
+.shot .acts button:hover{background:#000000d0}.shot .acts button[data-armed]{background:var(--record)}
+.shot small{display:block;padding:5px 2px 0;color:var(--secondary);font-size:11px;font-variant-numeric:tabular-nums}
+.picking .shot a{cursor:pointer}
+#pickBar{position:fixed;left:calc(50% + 124px);bottom:24px;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 18px;border-radius:14px;
+  background:var(--glass);backdrop-filter:saturate(1.8) blur(24px);-webkit-backdrop-filter:saturate(1.8) blur(24px);box-shadow:var(--pop);font-size:13px;font-weight:500;animation:pop .3s var(--spring)}
+body.nosidebar #pickBar{left:50%}
+#pickText{margin-right:6px;font-variant-numeric:tabular-nums}
+/* Default style for new shots: a popover under its toolbar button */
+#stylePop{inset:auto;position-anchor:--style;top:calc(anchor(bottom) + 8px);right:anchor(right);margin:0;border:0;border-radius:12px;padding:14px;width:330px;background:var(--window);color:var(--label);box-shadow:var(--pop)}
+#styleButton{anchor-name:--style}
+#stylePop h3{font-size:12px;font-weight:600;color:var(--secondary);margin:0 0 8px}#stylePop .seg{margin-top:4px}
+/* The shot editor: a sheet */
+#shotEditor{border:0;border-radius:16px;padding:0;background:var(--window);color:var(--label);width:min(920px,94vw);box-shadow:var(--pop);overflow:hidden}
+#shotEditor::backdrop{background:#0006;backdrop-filter:blur(2px)}
+#shotEditor[open]{animation:pop .3s var(--spring)}
+.sheet-preview{background:var(--group);padding:18px;display:grid;place-items:center}
+#shotPreview{display:block;max-width:100%;max-height:58vh;object-fit:contain;border-radius:4px}
+.sheet-controls{padding:14px 18px 16px;display:grid;gap:12px}
+.sheet-controls .rowline{padding:0;min-height:0;border:0;justify-content:flex-start}
+.sheet-controls .rowline>span:first-child{width:84px;color:var(--secondary)}
+.sheet-foot{display:flex;align-items:center;gap:10px}#shotEditState{flex:1;font-size:13px}
+
+/* Voices */
+.voice{background:var(--group);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.voice .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:4px}
+.voice h3{margin:0;font-size:15px;font-weight:600}.voice p{margin:0 0 10px;color:var(--secondary);font-size:12px}
+audio{width:100%;height:32px}.say{display:flex;gap:8px;margin-top:10px}.say input{flex:1}
+.script{background:var(--window);border-radius:8px;padding:12px 14px;font-size:15px;line-height:1.55;margin:0 0 12px;font-family:ui-serif,"New York",Georgia,serif}
+.actions-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.card{background:var(--group);border-radius:12px;padding:16px}
+
 :root{--spring:cubic-bezier(.16,1,.3,1)}
-button,.pill,.seg button,.nav a,.item{transition:background-color .15s,color .15s,opacity .15s,box-shadow .2s,transform .28s var(--spring)}
-button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
-.item .thumb{transition:transform .5s var(--spring),box-shadow .3s}.item:hover .thumb{transform:scale(1.05);box-shadow:inset 0 0 0 1px #0000000f,0 6px 16px #0000001f}
-.shot{transition:transform .5s var(--spring),box-shadow .3s}.shot:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-.shot a{position:relative}.shot img{transition:transform .6s var(--spring)}.shot:hover img{transform:scale(1.03)}
-.player{transition:box-shadow .3s}
+.item .thumb{transition:transform .4s var(--spring)}.item:hover .thumb{transform:scale(1.04)}
 #toast{animation:pop .3s var(--spring)}
-@keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){*,*::after{transition:none!important;animation:none!important}}
+@keyframes pulse{50%{opacity:.25}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes rise{from{opacity:0;transform:translateY(4px)}}
+@keyframes pop{from{opacity:0;transform:scale(.94)}}@keyframes slide{to{background-position:24.4px 0}}
+#pickBar{animation-name:barIn}@keyframes barIn{from{opacity:0;transform:translate(-50%,12px)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+@media (max-width:1100px){.studio{grid-template-columns:1fr}.inspector{position:static}}
+@media (max-width:860px){body,body.nosidebar{grid-template-columns:minmax(0,1fr)}aside{position:fixed;z-index:30;width:260px;left:0;box-shadow:var(--pop);transition:transform .25s}
+  body:not(.sidebaropen) aside{transform:translateX(-100%)}.cols,.below{grid-template-columns:1fr}.page{padding:16px}#pickBar{left:50%}.toolbar{padding-right:16px}}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-side" viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="2.5"/><path d="M6 2.5v11"/></symbol>
+  <symbol id="i-rec" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2.6" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-photo" viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><circle cx="5.5" cy="6.3" r="1.2"/><path d="m2 12 4-4 3 3 2-2 3.5 3.5"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 16 16"><path d="M2 7v2M4.5 5v6M7 2.5v11M9.5 5v6M12 6.5v3M14.3 7.5v1"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 16 16"><path d="M1.5 4.5a1.5 1.5 0 0 1 1.5-1.5h3l1.5 1.5H13a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 13 13.5H3A1.5 1.5 0 0 1 1.5 12z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 16 16"><path d="M2.5 4h11M6 4V2.5h4V4M3.8 4l.7 9.5h7l.7-9.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 16 16"><path d="M4 2.8v10.4L13 8z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6.3"/><path d="m5.3 8.2 1.8 1.8 3.6-3.8"/></symbol>
+  <symbol id="i-brush" viewBox="0 0 16 16"><path d="M9.5 2.5 13.5 6.5 7.5 12.5 3.5 8.5zM3.5 8.5 2 14l5.5-1.5"/></symbol>
+</svg>
 <aside>
-  <div class="brand"><i>🎬</i>ciak</div>
-  <button class="primary" id="newButton">New recording</button>
-  <nav class="nav"><a href="#shots" id="navShots">Screenshots <span id="shotCount"></span></a><a href="#voices" id="navVoices">Voices <span id="voiceCount"></span></a></nav>
-  <div class="list-title">Projects</div>
+  <div class="brand"><span class="mark" aria-hidden="true"></span>ciak</div>
+  <nav class="nav">
+    <button id="newButton"><svg class="i"><use href="#i-rec"/></svg>New Recording</button>
+    <a href="#shots" id="navShots"><svg class="i"><use href="#i-photo"/></svg>Screenshots <span id="shotCount"></span></a>
+    <a href="#voices" id="navVoices"><svg class="i"><use href="#i-wave"/></svg>Voices <span id="voiceCount"></span></a>
+  </nav>
+  <div class="list-title">Recordings</div>
   <div id="list"></div>
 </aside>
 <main>
-  <div id="toast" role="alert"></div>
-
-  <!-- New recording: setup on the left, camera and mic check on the right -->
+  <!-- New recording: what and how on the left, the camera and mic check and the record button on the right -->
   <section class="view" id="newView">
-    <div class="head"><h1>New recording</h1><span class="muted">Everything stays on this Mac. Your agent does the editing.</span></div>
-    <div class="cols">
-      <div class="card"><h2>Setup</h2>
-        <fieldset id="setup" style="border:0;padding:0;margin:0;min-width:0">
-          <div class="field"><label for="name">Name</label><input id="name" type="text" value="My demo" maxlength="80"></div>
-          <div class="field"><label for="source">What to record</label><select id="source"><option>Loading…</option></select></div>
-          <div class="toggle"><label for="useRegion">Only a region<small>Crop inside the screen or window</small></label><input id="useRegion" type="checkbox"></div>
-          <div class="row region field" id="region">
+    <div class="toolbar"><button class="icon plain side" title="Show or hide the sidebar (⌃⌘S)" aria-label="Sidebar"><svg class="i"><use href="#i-side"/></svg></button>
+      <div class="title"><h1>New Recording</h1><span class="sub">Everything stays on this Mac. Your agent does the editing.</span></div></div>
+    <div class="toast-slot"></div>
+    <div class="page cols">
+      <fieldset id="setup">
+        <div class="group">
+          <div class="rowline"><label for="name">Name</label><input id="name" type="text" value="My demo" maxlength="80"></div>
+          <div class="rowline"><label for="source">Record</label><select id="source"><option>Loading…</option></select></div>
+          <div class="rowline"><label for="useRegion">Only a region<small>Crop inside the screen or window</small></label><input id="useRegion" type="checkbox"></div>
+          <div class="region" id="region">
             <div><label for="rx">Left</label><input id="rx" type="number" value="0" min="0"></div><div><label for="ry">Top</label><input id="ry" type="number" value="0" min="0"></div>
             <div><label for="rw">Width</label><input id="rw" type="number" value="1280" min="2"></div><div><label for="rh">Height</label><input id="rh" type="number" value="720" min="2"></div>
           </div>
-          <div class="field"><label for="mic">Microphone</label><select id="mic"><option value="">Off</option></select></div>
-          <div class="field"><label for="camera">Camera bubble</label><select id="camera"><option value="">Off</option></select></div>
-          <div class="toggle"><label for="systemAudio">Mac sound<small>Mixed into the same audio track</small></label><input id="systemAudio" type="checkbox"></div>
-          <div class="toggle"><label for="autoZoom">Zoom on clicks<small>Moves in where you click; you can turn it off later too</small></label><input id="autoZoom" type="checkbox" checked></div>
-          <div class="row">
-            <div class="field"><label for="fps">Frame rate</label><select id="fps"><option value="60">60 fps</option><option value="30">30 fps · smaller</option></select></div>
-            <div class="field"><label for="delay">Countdown</label><select id="delay"><option value="3">3 s</option><option value="5">5 s</option><option value="0">None</option></select></div>
-          </div>
-        </fieldset>
-        <button class="link" id="refresh">↻ Refresh screens, windows and devices</button>
-      </div>
-      <div class="card"><h2>Check</h2>
+        </div>
+        <div class="group-title">Sound and camera</div>
+        <div class="group">
+          <div class="rowline"><label for="mic">Microphone</label><select id="mic"><option value="">Off</option></select></div>
+          <div class="rowline"><label for="systemAudio">Mac sound<small>Mixed into the same audio track</small></label><input id="systemAudio" type="checkbox"></div>
+          <div class="rowline"><label for="camera">Camera bubble</label><select id="camera"><option value="">Off</option></select></div>
+        </div>
+        <div class="group-title">Options</div>
+        <div class="group">
+          <div class="rowline"><label for="autoZoom">Zoom on clicks<small>Moves in where you click; you can turn it off later</small></label><input id="autoZoom" type="checkbox" checked></div>
+          <div class="rowline"><label for="fps">Frame rate</label><select id="fps"><option value="60">60 fps</option><option value="30">30 fps · smaller</option></select></div>
+          <div class="rowline"><label for="delay">Countdown</label><select id="delay"><option value="3">3 s</option><option value="5">5 s</option><option value="0">None</option></select></div>
+        </div>
+        <button class="link" id="refresh">Refresh screens, windows and devices</button>
+      </fieldset>
+      <div>
         <div class="stage"><video id="cameraPreview" autoplay muted playsinline hidden></video><div class="note" id="cameraNote">Camera off</div><div class="count" id="count"></div></div>
-        <div class="check">
-          <div><label>Microphone level</label><div class="meter"><div id="level"></div></div><small class="muted" id="micNote">Pick a microphone to test it.</small></div>
-        </div>
-        <button class="primary" id="startButton">● Start recording</button>
+        <div class="level"><span>Microphone level</span><div class="meter"><div id="level"></div></div><small class="muted" id="micNote">Pick a microphone to test it.</small></div>
+        <button id="startButton">Start Recording</button>
       </div>
     </div>
   </section>
 
-  <!-- A project: recording live, or its video, steps and id -->
+  <!-- A project: recording live, or its video, its settings and how it was made -->
   <section class="view" id="projectView">
-    <div class="head">
-      <div><h1 id="pName" title="Click to rename"></h1><input id="pNameEdit" type="text" maxlength="80" hidden>
-        <div class="meta"><span id="pWhen"></span><span class="idbox">Project <code id="pId"></code><button class="link" id="copyId">Copy</button></span></div></div>
-      <div class="actions-row"><button class="small" id="revealFolder">Project folder</button>
-        <button class="small" id="renameButton">Rename</button><button class="small" id="deleteButton">Delete</button></div>
-    </div>
-    <div class="card live" id="live">
-      <div class="state"><span class="dot"></span><span id="liveState">Recording</span></div>
-      <div class="timer" id="timer">00:00</div>
-      <div class="muted" id="liveNote">Show what you're building. Pause any time.</div>
-      <div class="meter"><div id="liveLevel"></div></div>
-      <div class="actions"><button id="pauseButton">Pause</button><button class="danger" id="finishButton">■ Finish</button></div>
-    </div>
-    <div id="made">
-      <!-- Left: the exported video or the edit playing live, its numbers. Right: what to change, then render. -->
-      <div class="studio">
-        <div class="stage-col">
-          <div class="viewer-top"><div class="seg" id="seg"><button data-show="final">Exported video</button><button data-show="live">Live preview</button></div></div>
-          <video class="player" id="player" controls playsinline></video>
-          <div class="player preview" id="preview" hidden></div>
-          <div class="banner" id="banner"></div>
-          <dl class="facts" id="facts"></dl>
-        </div>
-        <div class="edit">
-          <section><h3>Export</h3>
-            <div class="file" id="finalFile"><span id="finalName"></span><div class="file-actions"><button class="small" id="copyVideo">Copy</button><button class="small" id="revealFinal">Show in Finder</button></div></div>
-            <button id="renderAgain" class="wide">Render again</button></section>
-          <!-- The raw files, ready to paste while the video renders -->
-          <section id="rawFiles" hidden><h3>Raw files</h3><div id="rawList"></div></section>
-          <!-- What's in it: tap to leave a part out -->
-          <section id="switches"><h3>In the video</h3><div id="switchList"></div></section>
-          <section id="projectBackground"><h3>Background</h3><div class="backgrounds" id="projectBackgrounds"></div><div class="seg" id="projectPadding"></div></section>
-          <!-- Playback speed of the whole video (an agent can also speed up one part: edit --speed 2,start,end) -->
-          <section id="speedRow"><h3>Speed</h3>
-            <select id="speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1× as recorded</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="3">3×</option></select>
-            <p class="muted hint" id="speedParts" hidden>Some parts have their own speed; picking here resets them.</p></section>
-          <!-- The camera bubble's look (only for recordings with a camera) -->
-          <section id="cameraLook" hidden><h3>Camera</h3>
-            <label class="line">Round <input type="checkbox" id="camRound"></label>
-            <label class="line">Size <input type="range" id="camSize" min="0.1" max="0.45" step="0.01"></label>
-            <label class="line">Corner <select id="camPosition"><option value="bottom-right">Bottom right</option><option value="bottom-left">Bottom left</option><option value="top-right">Top right</option><option value="top-left">Top left</option></select></label></section>
-        </div>
+    <div class="toolbar"><button class="icon plain side" title="Show or hide the sidebar (⌃⌘S)" aria-label="Sidebar"><svg class="i"><use href="#i-side"/></svg></button>
+      <div class="title"><h1 id="pName" title="Click to rename"></h1><input id="pNameEdit" type="text" maxlength="80" hidden>
+        <span class="sub"><span id="pWhen"></span> · <span class="mono" id="pId"></span> <button class="link" id="copyId">Copy ID</button></span></div>
+      <div class="tools">
+        <button class="icon plain" id="revealFolder" title="Show the project folder in Finder" aria-label="Project folder"><svg class="i"><use href="#i-folder"/></svg></button>
+        <button class="plain" id="renameButton">Rename</button>
+        <button class="icon plain" id="deleteButton" title="Move this project to the Trash" aria-label="Delete project"><svg class="i"><use href="#i-trash"/></svg></button>
+        <button id="renderAgain">Render Again</button></div></div>
+    <div class="toast-slot"></div>
+    <div class="page">
+      <div class="live" id="live"><div class="clapper moving"></div><div class="inner">
+        <div class="state"><span class="dot"></span><span id="liveState">Recording</span></div>
+        <div class="timer" id="timer">00:00</div>
+        <div class="muted" id="liveNote">Show what you're building. Pause any time.</div>
+        <div class="meter"><div id="liveLevel"></div></div>
+        <div class="actions"><button class="large" id="pauseButton">Pause</button><button class="large danger" id="finishButton">Finish</button></div></div>
       </div>
-      <div class="split">
-        <section><h2>Continue with your agent</h2>
-          <div class="prompt"><span id="prompt"></span><button class="small" id="copyPrompt">Copy</button></div>
-          <p class="muted note">Then say what you want: tighter cuts, less zoom, captions, a different background. The agent edits this project and renders it again; this page follows along.</p></section>
-        <section><details id="stepsBox"><summary><h2>How it was made</h2><span class="muted" id="stepsTotal"></span></summary><div id="steps"></div></details></section>
+      <div id="made">
+        <div class="studio">
+          <div>
+            <div class="viewer-top"><div class="seg" id="seg"><button data-show="final">Exported Video</button><button data-show="live">Live Preview</button></div></div>
+            <video class="player" id="player" controls playsinline></video>
+            <div class="player preview" id="preview" hidden></div>
+            <div class="banner" id="banner"></div>
+            <dl class="facts" id="facts"></dl>
+          </div>
+          <div class="inspector">
+            <div class="group-title" id="finalTitle">Export</div>
+            <div class="group"><div class="pad"><div class="file" id="finalFile"><span id="finalName"></span>
+              <div class="file-actions"><button id="copyVideo">Copy</button><button id="revealFinal">Show in Finder</button></div></div></div></div>
+            <!-- The raw files, ready to paste while the video renders -->
+            <div id="rawFiles" hidden><div class="group-title">Raw files</div><div class="group" id="rawList"></div></div>
+            <!-- What's in it: each part on or off -->
+            <div id="switches"><div class="group-title">In the video</div><div class="group"><div id="switchList"></div></div></div>
+            <div id="projectBackground"><div class="group-title">Background</div><div class="group"><div class="backgrounds" id="projectBackgrounds"></div><div class="seg" id="projectPadding"></div></div></div>
+            <!-- Playback speed of the whole video (an agent can also speed up one part: edit --speed 2,start,end) -->
+            <div id="speedRow"><div class="group-title">Speed</div><div class="group"><div class="rowline"><span>Whole video</span>
+              <select id="speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1">1× as recorded</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option><option value="2">2×</option><option value="3">3×</option></select></div>
+              <p class="hint pad" id="speedParts" hidden>Some parts have their own speed; picking here resets them.</p></div></div>
+            <!-- The camera bubble's look (only for recordings with a camera) -->
+            <div id="cameraLook" hidden><div class="group-title">Camera</div><div class="group">
+              <label class="rowline">Round <input type="checkbox" id="camRound"></label>
+              <label class="rowline">Size <input type="range" id="camSize" min="0.1" max="0.45" step="0.01"></label>
+              <label class="rowline">Corner <select id="camPosition"><option value="bottom-right">Bottom right</option><option value="bottom-left">Bottom left</option><option value="top-right">Top right</option><option value="top-left">Top left</option></select></label></div></div>
+          </div>
+        </div>
+        <div class="below">
+          <section><h2>Continue with your agent</h2>
+            <div class="prompt"><span id="prompt"></span><button id="copyPrompt">Copy</button></div>
+            <p class="muted note">Then say what you want: tighter cuts, less zoom, captions, a different background. The agent edits this project and renders it again; this page follows along.</p></section>
+          <section><details id="stepsBox"><summary><h2>How it was made</h2><span class="muted" id="stepsTotal"></span></summary><div id="steps"></div></details></section>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Screenshots (⌘1): newest first -->
+  <!-- Screenshots (⌘1): newest first, by day -->
   <section class="view" id="shotsView">
-    <div class="head"><h1>Screenshots</h1><span class="muted">Take one with ⌘1. Saved in ~/Documents/ciak/shots.</span>
-      <div class="seg" id="shotPadding" title="The space around new screenshots and recordings"></div></div>
-    <div class="backgrounds" id="shotBackgrounds" title="The wallpaper behind new screenshots"></div>
-    <div class="grid" id="shots"></div>
-    <div id="pickBar" hidden><span id="pickText"></span><button id="pickDo"></button><button id="pickClear">Cancel</button></div>
-    <dialog id="shotEditor"><img id="shotPreview" alt="">
-      <div class="backgrounds" id="shotEditBackgrounds"></div>
-      <div class="row"><div class="seg" id="shotEditPadding"></div><div class="seg" id="shotEditLayout"></div>
-        <span class="muted" id="shotEditState"></span><button class="small" id="shotEditMore" hidden title="Pick more shots to add to this collage">Add more</button><button class="small" id="shotEditClose">Done</button></div></dialog>
+    <div class="toolbar"><button class="icon plain side" title="Show or hide the sidebar (⌃⌘S)" aria-label="Sidebar"><svg class="i"><use href="#i-side"/></svg></button>
+      <div class="title"><h1>Screenshots</h1><span class="sub">Take one with ⌘1 · saved in ~/Documents/ciak/shots</span></div>
+      <div class="tools"><button class="plain" id="styleButton" popovertarget="stylePop" title="The background and padding of new screenshots and recordings"><svg class="i"><use href="#i-brush"/></svg>Style</button>
+        <button id="selectButton" title="Pick screenshots to put in a collage">Select</button></div></div>
+    <div popover id="stylePop"><h3>Background for new shots</h3><div class="backgrounds" id="shotBackgrounds"></div>
+      <h3 style="margin-top:14px">Padding</h3><div class="seg" id="shotPadding"></div></div>
+    <div class="toast-slot"></div>
+    <div class="page"><div id="shots"></div></div>
+    <div id="pickBar" hidden><span id="pickText"></span><button id="pickClear">Cancel</button><button class="primary" id="pickDo"></button></div>
+    <dialog id="shotEditor">
+      <div class="sheet-preview"><img id="shotPreview" alt=""></div>
+      <div class="sheet-controls">
+        <div class="rowline"><span>Background</span><div class="backgrounds" id="shotEditBackgrounds"></div></div>
+        <div class="rowline"><span>Padding</span><div class="seg" id="shotEditPadding"></div></div>
+        <div class="rowline" id="shotLayoutRow"><span>Layout</span><div class="seg" id="shotEditLayout"></div></div>
+        <div class="sheet-foot"><span class="muted" id="shotEditState"></span><button id="shotEditMore" hidden title="Pick more shots to add to this collage">Add More…</button><button class="primary" id="shotEditClose">Done</button></div>
+      </div></dialog>
   </section>
 
   <!-- Voices: your cloned voices for narration -->
   <section class="view" id="voicesView">
-    <div class="head"><h1>Voices</h1><span class="muted">Your own voices, for narration. In a film: "voice": {"name": "…"}</span></div>
-    <div class="cols">
+    <div class="toolbar"><button class="icon plain side" title="Show or hide the sidebar (⌃⌘S)" aria-label="Sidebar"><svg class="i"><use href="#i-side"/></svg></button>
+      <div class="title"><h1>Voices</h1><span class="sub">Your own voices, for narration. In a film: "voice": {"name": "…"}</span></div></div>
+    <div class="toast-slot"></div>
+    <div class="page cols">
       <div id="voices"></div>
-      <div class="card"><h2>Add a voice</h2>
-        <div class="field"><label for="voiceName">Name</label><input id="voiceName" type="text" placeholder="me" maxlength="40"></div>
-        <label>Read this aloud, in your normal demo voice (about 15 seconds):</label>
+      <div class="card"><h2>Add a Voice</h2>
+        <div class="group" style="background:var(--window)"><div class="rowline"><label for="voiceName">Name</label><input id="voiceName" type="text" placeholder="me" maxlength="40"></div></div>
+        <p class="muted" style="font-size:13px;margin:0 0 8px">Read this aloud, in your normal demo voice (about 15 seconds):</p>
         <p class="script" id="voiceScript">Hi, I'm going to show you something I built. It records the screen, cuts the boring parts, and turns it into a short video in about two minutes. Let's open the dashboard and look at the numbers.</p>
         <div class="meter"><div id="voiceLevel"></div></div>
-        <div class="actions-row" style="margin-top:12px"><button class="primary" id="voiceRecord">● Record</button>
-          <label class="muted" style="margin:0">or <button class="link" id="voicePick">upload a file</button> (a voice note or a video, any language)</label>
+        <div class="actions-row" style="margin-top:12px"><button class="danger" id="voiceRecord">Record</button>
+          <span class="muted" style="font-size:13px">or <button class="link" id="voicePick">upload a file</button> (a voice note or a video, any language)</span>
           <input type="file" id="voiceFile" accept="audio/*,video/*" hidden></div>
-        <p class="muted" id="voiceNote" style="margin:12px 0 0;font-size:13px">The same name replaces that voice; a failed try keeps the old one.</p>
+        <p class="muted" id="voiceNote" style="margin:12px 0 0;font-size:12px">The same name replaces that voice; a failed try keeps the old one.</p>
       </div>
     </div>
   </section>
+  <div id="toast" role="alert" title="Click to dismiss"></div>
 </main>
 <script>
 // Click sounds (after recent.design): tiny tones made in the page, no sound files. A press is a short tap,
@@ -338,12 +427,25 @@ const api = async (action, body = {}) => {
   return result;
 };
 const toast = message => { $('toast').textContent = message || ''; $('toast').style.display = message ? 'block' : 'none'; };
-const clock = seconds => { seconds = Math.max(0, Math.round(seconds || 0)); return Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0'); };
-const when = time => {
-  const date = new Date(time), today = new Date();
-  const day = date.toDateString() === today.toDateString() ? 'Today' : date.toDateString() === new Date(today - 864e5).toDateString() ? 'Yesterday' : date.toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
-  return day + ' ' + date.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'});
+$('toast').onclick = () => toast('');
+// The sidebar: hidden or shown with the toolbar button or ⌃⌘S (on a narrow window it slides over the page).
+const narrow = matchMedia('(max-width:860px)');
+const sidebar = show => {
+  if (narrow.matches) document.body.classList.toggle('sidebaropen', show ?? !document.body.classList.contains('sidebaropen'));
+  else { document.body.classList.toggle('nosidebar', show == null ? undefined : !show); try { localStorage.setItem('ciak-sidebar', document.body.classList.contains('nosidebar') ? 'off' : 'on'); } catch {} }
 };
+try { if (localStorage.getItem('ciak-sidebar') === 'off') document.body.classList.add('nosidebar'); } catch {}
+for (const button of document.querySelectorAll('.side')) button.onclick = () => sidebar();
+addEventListener('keydown', event => { if (event.ctrlKey && event.metaKey && event.key.toLowerCase() === 's') { event.preventDefault(); sidebar(); } });
+const clock = seconds => { seconds = Math.max(0, Math.round(seconds || 0)); return Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0'); };
+const dayName = time => {
+  const date = new Date(time), today = new Date();
+  return date.toDateString() === today.toDateString() ? 'Today' : date.toDateString() === new Date(today - 864e5).toDateString() ? 'Yesterday'
+    : today - date < 6 * 864e5 ? date.toLocaleDateString(undefined, {weekday: 'long'})
+    : date.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: date.getFullYear() === today.getFullYear() ? undefined : 'numeric'});
+};
+const hour = time => new Date(time).toLocaleTimeString(undefined, {hour: 'numeric', minute: '2-digit'});
+const when = time => dayName(time) + ' ' + hour(time);
 const media = (id, kind) => '/media?token=' + token + '&id=' + id + '&kind=' + kind;
 const labels = {recording: 'Recording', paused: 'Paused', finalizing: 'Finishing', rendering: 'Rendering', ready: 'Ready', saved: 'Not rendered', error: 'Failed', starting: 'Starting'};
 let projects = [], current = null, view = null, busy = false;
@@ -377,11 +479,14 @@ function route() {
   for (const name of ['new', 'project', 'shots', 'voices']) $(name + 'View').classList.toggle('on', view === name);
   $('navShots').classList.toggle('on', view === 'shots'); $('navVoices').classList.toggle('on', view === 'voices');
   $('newButton').disabled = view === 'new';
+  $(view + 'View').querySelector('.toast-slot').append($('toast'));
+  document.body.classList.remove('sidebaropen');
   toast('');
   if (view === 'shots' || view === 'voices') stopPreview();  // the live page keeps the mic meter
   if (view === 'project') { current = {id}; editName(false); refresh(); } else current = null;
   if (view === 'new') { preview(); loadSources(); }
-  if (view === 'shots') loadShots().catch(failure => toast(failure.message));
+  if (view !== 'shots') { selecting = false; picked = []; adding = null; }
+  if (view === 'shots') { $('shots').dataset.key = ''; loadShots().catch(failure => toast(failure.message)); }
   if (view === 'voices') loadVoices().catch(failure => toast(failure.message));
   loadList().catch(failure => toast(failure.message));
 }
@@ -473,7 +578,7 @@ $('startButton').onclick = async () => {
     const session = await api('start', body);
     location.hash = '#project/' + session.id;
   } catch (failure) { toast(failure.message); $('count').style.display = 'none'; preview(); }
-  finally { busy = false; $('startButton').disabled = false; $('setup').disabled = false; $('startButton').textContent = '● Start recording'; }
+  finally { busy = false; $('startButton').disabled = false; $('setup').disabled = false; $('startButton').textContent = 'Start Recording'; }
 };
 
 // ---- A project: live recording, then the steps, the video and the id ----
@@ -492,6 +597,7 @@ async function refresh() {
   const live = ['starting', 'recording', 'paused'].includes(project.state);
   $('live').style.display = live ? 'block' : 'none';
   $('made').style.display = live ? 'none' : 'block';
+  $('renderAgain').hidden = live;
   $('live').classList.toggle('recording', project.state === 'recording');
   $('liveState').textContent = project.state === 'paused' ? 'Paused' : 'Recording';
   $('pauseButton').textContent = project.state === 'paused' ? 'Resume' : 'Pause';
@@ -499,6 +605,7 @@ async function refresh() {
   if (!live) {
     if (fresh && project.final) { $('player').src = media(project.id, 'final') + '&v=' + project.final.elapsedSeconds; shown = null; }
     $('banner').textContent = project.state === 'rendering' ? 'Rendering the video… the live preview plays meanwhile.' : project.final || !project.recording ? '' : 'Not exported yet: this is the live preview.';
+    $('banner').classList.toggle('rendering', project.state === 'rendering');
     viewer(project);
     steps(project);
   }
@@ -520,7 +627,7 @@ function viewer(project) {
   if (!shown || !project.final) shown = project.final && project.state !== 'rendering' ? 'final' : 'live';
   $('player').hidden = shown !== 'final'; $('preview').hidden = shown !== 'live';
   for (const button of $('seg').children) { button.classList.toggle('on', button.dataset.show === shown); button.disabled = button.dataset.show === 'final' ? !project.final : !project.recording; }
-  $('finalFile').hidden = !project.final;
+  $('finalTitle').hidden = $('finalFile').closest('.group').hidden = !project.final;
   if (project.final) { $('finalName').textContent = project.final.output.split('/').pop(); $('finalName').title = project.final.output; }
   if (shown === 'final') { window.ciakPreviewPause?.(); previewEdited = null; return; }
   $('player').pause();
@@ -539,7 +646,7 @@ function showRaw(project) {
   if ($('rawList').dataset.key === key) return;
   $('rawList').dataset.key = key; $('rawList').replaceChildren();
   for (const name of list) {
-    const row = make('div', 'file'), copy = make('button', 'small', 'Copy');
+    const row = make('div', 'file'), copy = make('button', '', 'Copy');
     copy.onclick = () => api('copy-video', {id: project.id, name}).then(() => { copy.textContent = 'Copied'; setTimeout(() => copy.textContent = 'Copy', 2000); }).catch(failure => toast(failure.message));
     row.append(make('span', '', name), copy); $('rawList').append(row);
   }
@@ -551,12 +658,12 @@ function showSwitches(project) {
   $('switches').hidden = !list.length;
   const key = project.id + JSON.stringify(project.switches);
   if ($('switchList').dataset.key === key) return;
-  if (!$('switchList').dataset.key?.startsWith(project.id)) { $('renderAgain').classList.remove('primary'); $('renderAgain').textContent = 'Render again'; }
+  if (!$('switchList').dataset.key?.startsWith(project.id)) { $('renderAgain').classList.remove('primary'); $('renderAgain').textContent = 'Render Again'; }
   $('switchList').dataset.key = key;
   $('switchList').replaceChildren(...list.map(([kind, on]) => {
     // A row like the camera's: the name, then a switch.
     const row = document.createElement('label'), pill = document.createElement('input');
-    row.className = 'line'; row.title = switchNames[kind][1]; row.append(switchNames[kind][0], pill);
+    row.className = 'rowline'; row.title = switchNames[kind][1]; row.append(switchNames[kind][0], pill);
     pill.type = 'checkbox'; pill.checked = on;
     pill.onchange = async () => {
       pill.disabled = true;
@@ -568,7 +675,7 @@ function showSwitches(project) {
   }));
 }
 // After a change: the live preview shows it, the render waits for a click.
-function changed() { shown = 'live'; $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
+function changed() { shown = 'live'; $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render Changes'; }
 // The wallpaper behind the recording: the same swatches as for screenshots; Auto picks the one that stands out.
 function showProjectBackground(project) {
   $('projectBackground').hidden = !project.switches;
@@ -587,12 +694,12 @@ function showCamera(project) {
 }
 for (const [id, key, read] of [['camRound', 'round', box => box.checked], ['camSize', 'size', box => Number(box.value)], ['camPosition', 'position', box => box.value]])
   $(id).onchange = async () => {
-    try { await api('project-camera', {id: current.id, camera: {[key]: read($(id))}}); shown = 'live'; $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
+    try { await api('project-camera', {id: current.id, camera: {[key]: read($(id))}}); shown = 'live'; $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render Changes'; }
     catch (failure) { toast(failure.message); }
     finally { $(id).blur(); refresh(); }
   };
 $('speed').onchange = async () => {
-  try { await api('project-speed', {id: current.id, speed: Number($('speed').value)}); shown = 'live'; $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render with changes'; }
+  try { await api('project-speed', {id: current.id, speed: Number($('speed').value)}); shown = 'live'; $('renderAgain').classList.add('primary'); $('renderAgain').textContent = 'Render Changes'; }
   catch (failure) { toast(failure.message); }
   finally { $('speed').blur(); refresh(); }
 };
@@ -651,13 +758,13 @@ $('finishButton').onclick = async () => {
     await refresh();
     await api('render', {id});
   } catch (failure) { toast(failure.message); }
-  finally { busy = false; $('finishButton').disabled = $('pauseButton').disabled = false; $('finishButton').textContent = '■ Finish'; refresh(); loadList(); }
+  finally { busy = false; $('finishButton').disabled = $('pauseButton').disabled = false; $('finishButton').textContent = 'Finish'; refresh(); loadList(); }
 };
 $('renderAgain').onclick = async () => {
   if (busy) return; busy = true; toast('');
   const id = current.id;
   $('renderAgain').disabled = true;
-  $('renderAgain').classList.remove('primary'); $('renderAgain').textContent = 'Render again';
+  $('renderAgain').classList.remove('primary'); $('renderAgain').textContent = 'Render Again';
   try { await api('render', {id}); } catch (failure) { toast(failure.message); }
   finally { busy = false; refresh(); loadList(); }
 };
@@ -668,12 +775,12 @@ $('revealFolder').onclick = () => api('reveal', {id: current.id, kind: 'folder'}
 addEventListener('beforeunload', event => { if (current && ['recording', 'paused'].includes(current.state)) { event.preventDefault(); event.returnValue = 'The recording keeps going in the background.'; } });
 
 // Two clicks for anything that throws away: the first arms the button for 3 s.
-function twice(button, action) {
+function twice(button, action, ask = 'Click again to delete') {
   button.onclick = () => {
     if (button.dataset.armed) { delete button.dataset.armed; return action(); }
-    const text = button.textContent;
-    button.dataset.armed = 1; button.textContent = 'Sure? Click again';
-    setTimeout(() => { if (button.dataset.armed) { delete button.dataset.armed; button.textContent = text; } }, 3000);
+    const content = button.innerHTML, width = button.style.width;
+    button.dataset.armed = 1; button.textContent = ask; button.style.width = 'auto';
+    setTimeout(() => { if (button.dataset.armed) { delete button.dataset.armed; button.innerHTML = content; button.style.width = width; } }, 3000);
   };
 }
 const make = (tag, className, text) => { const item = document.createElement(tag); if (className) item.className = className; if (text != null) item.textContent = text; return item; };
@@ -743,9 +850,9 @@ async function framing(name, change = {}) {
     paddingSwitch($('shotEditPadding'), result.padding, padding => editShot(name, {padding}));
     swatches($('shotEditBackgrounds'), shotChoices, result.background, background => editShot(name, {background}));
     // A collage also picks how its shots sit: one row, one column, a grid, or auto (closest to 4:3).
-    $("shotEditLayout").style.display = result.layout ? "" : "none";
+    $('shotLayoutRow').hidden = !result.layout;
     $('shotEditMore').hidden = !result.layout;
-    $('shotEditMore').onclick = () => { $('shotEditor').close(); adding = name; picked = []; showPicked(); };
+    $('shotEditMore').onclick = () => { $('shotEditor').close(); adding = name; picked = []; selecting = true; showPicked(); };
     $('shotEditLayout').replaceChildren(...(result.layout ? ['auto', 'row', 'column', 'grid'] : []).map(layout => {
       const button = make('button', layout === result.layout ? 'on' : '', layout[0].toUpperCase() + layout.slice(1));
       button.onclick = () => editShot(name, {layout});
@@ -756,29 +863,33 @@ async function framing(name, change = {}) {
   } catch (failure) { $('shotEditState').textContent = ''; toast(failure.message); }
 }
 $('shotEditClose').onclick = () => $('shotEditor').close();
-// Pick shots for a collage (the ✓ on each, then a click on any picture picks it too), in the order picked.
-// adding: a collage that gets the picked ones (Add more in its editor).
-let picked = [], adding = null;
+// Select (like Photos): a click on a picture picks it, numbered in the order picked; the bar at the bottom makes
+// the collage. The ✓ on a picture also starts it. adding: a collage that gets the picked ones (Add More… in its editor).
+let picked = [], adding = null, selecting = false;
 const showPicked = () => {
-  const picking = picked.length > 0 || adding;
+  const picking = selecting || picked.length > 0 || adding;
   $('shotsView').classList.toggle('picking', !!picking);
   $('pickBar').hidden = !picking;
-  $('pickText').textContent = adding ? `Pick shots to add · ${picked.length} picked` : `${picked.length} picked`;
-  $('pickDo').textContent = adding ? 'Add to collage' : 'Make collage';
+  $('selectButton').textContent = picking ? 'Done' : 'Select';
+  $('pickText').textContent = adding ? `Add to the collage · ${picked.length} selected` : picked.length ? `${picked.length} selected` : 'Select two or more';
+  $('pickDo').textContent = adding ? 'Add to Collage' : 'Make Collage';
   $('pickDo').disabled = picked.length < (adding ? 1 : 2);
-  for (const card of $('shots').children) {
+  for (const card of $('shots').querySelectorAll('.shot')) {
     const order = picked.indexOf(card.dataset.name);
     card.classList.toggle('picked', order >= 0);
-    const check = card.querySelector('.check'); if (check) check.textContent = order >= 0 ? order + 1 : '';
+    card.querySelector('.pick').textContent = order >= 0 ? order + 1 : '';
   }
 };
 const togglePick = name => { picked = picked.includes(name) ? picked.filter(other => other !== name) : [...picked, name]; showPicked(); };
-$('pickClear').onclick = () => { const back = adding; picked = []; adding = null; showPicked(); if (back) editShot(back); };
+const stopPicking = () => { const back = adding; picked = []; adding = null; selecting = false; showPicked(); if (back) editShot(back); };
+$('pickClear').onclick = stopPicking;
+$('selectButton').onclick = () => { if (selecting || picked.length || adding) stopPicking(); else { selecting = true; showPicked(); } };
+addEventListener('keydown', event => { if (event.key === 'Escape' && view === 'shots' && !$('shotEditor').open && (selecting || picked.length || adding)) stopPicking(); });
 $('pickDo').onclick = async () => {
   $('pickDo').disabled = true; $('pickDo').textContent = 'Making…';
   try {
     const result = await api('shot-collage', {names: picked, into: adding});
-    picked = []; adding = null; showPicked();
+    picked = []; adding = null; selecting = false; showPicked();
     await loadShots();
     editShot(result.output.split('/').pop());
   } catch (failure) { toast(failure.message); showPicked(); }
@@ -793,22 +904,30 @@ async function loadShots() {
   if ($('shots').dataset.key === key) return;
   $('shots').dataset.key = key;
   if (!shots.length) { $('shots').replaceChildren(make('div', 'empty', 'No screenshots yet. Press ⌘1, drag an area or press space for a window.')); return; }
-  $('shots').replaceChildren(...shots.map(shot => {
+  // By day, newest first: a heading, then that day's pictures.
+  let lastDay = null;
+  $('shots').replaceChildren(...shots.flatMap(shot => {
     const card = make('div', 'shot'), link = make('a'), acts = make('div', 'acts');
     card.dataset.name = shot.name;
     const url = '/shot?token=' + token + '&name=' + encodeURIComponent(shot.name);
     const image = make('img'); image.src = url + '&t=' + shot.created; image.alt = shot.name; image.loading = 'lazy';
     link.href = url; link.target = '_blank'; link.title = shot.name; link.append(image);
-    link.onclick = event => { if (picked.length || adding) { event.preventDefault(); togglePick(shot.name); } };
-    const check = make('button', 'check'); check.title = 'Pick for a collage'; check.onclick = () => togglePick(shot.name);
-    const edit = make('button', '', 'Edit'), copy = make('button', '', 'Copy'), reveal = make('button', '', 'Finder'), remove = make('button', '', 'Delete');
+    link.onclick = event => { if (selecting || picked.length || adding) { event.preventDefault(); togglePick(shot.name); } };
+    const pick = make('button', 'pick'); pick.title = 'Select for a collage'; pick.setAttribute('aria-label', pick.title);
+    pick.onclick = () => { selecting = true; togglePick(shot.name); };
+    const edit = make('button', '', 'Edit'), copy = make('button', '', 'Copy'), reveal = make('button', 'icon'), remove = make('button', 'icon');
+    reveal.innerHTML = '<svg class="i"><use href="#i-folder"/></svg>'; remove.innerHTML = '<svg class="i"><use href="#i-trash"/></svg>';
+    reveal.title = 'Show in Finder'; remove.title = 'Move to the Trash';
+    for (const button of [reveal, remove]) button.setAttribute('aria-label', button.title);
     copy.onclick = () => api('shot-copy', {name: shot.name}).then(() => copy.textContent = 'Copied').catch(failure => toast(failure.message));
     reveal.onclick = () => api('shot-reveal', {name: shot.name}).catch(failure => toast(failure.message));
-    twice(remove, () => api('shot-remove', {name: shot.name}).then(loadShots).catch(failure => toast(failure.message)));
+    twice(remove, () => api('shot-remove', {name: shot.name}).then(loadShots).catch(failure => toast(failure.message)), 'Delete?');
     edit.onclick = () => editShot(shot.name);
     acts.append(edit, copy, reveal, remove);
-    card.append(check, link, acts, make('small', '', when(shot.created)));
-    return card;
+    card.append(pick, link, acts, make('small', '', hour(shot.created) + (shot.name.startsWith('collage-') ? ' · Collage' : '')));
+    const day = dayName(shot.created), heading = day !== lastDay && make('div', 'day', day);
+    lastDay = day;
+    return heading ? [heading, card] : [card];
   }));
   picked = picked.filter(name => shots.some(shot => shot.name === name)); showPicked();
 }
@@ -875,13 +994,13 @@ $('voiceRecord').onclick = async () => {
       analyser.getFloatTimeDomainData(buffer);
       $('voiceLevel').style.width = Math.min(100, Math.sqrt(buffer.reduce((total, value) => total + value * value, 0) / buffer.length) * 500) + '%';
       const seconds = (Date.now() - started) / 1000;
-      $('voiceRecord').textContent = '■ Stop · ' + Math.floor(seconds) + ' s';
+      $('voiceRecord').textContent = 'Stop · ' + Math.floor(seconds) + ' s';
       if (seconds >= 20) voiceRecorder.stop(); else requestAnimationFrame(tick);
     };
     voiceRecorder.ondataavailable = event => parts.push(event.data);
     voiceRecorder.onstop = () => {
       mic.getTracks().forEach(track => track.stop()); context.close();
-      voiceRecorder = null; $('voiceRecord').textContent = '● Record'; $('voiceLevel').style.width = '0';
+      voiceRecorder = null; $('voiceRecord').textContent = 'Record'; $('voiceLevel').style.width = '0';
       addVoice(new Blob(parts, {type: parts[0]?.type}));
     };
     voiceRecorder.start(); tick();
