@@ -115,6 +115,7 @@ details summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;list-s
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
 .shot{background:var(--panel);border-radius:20px;overflow:hidden;padding:8px}
 .shot a{display:block;aspect-ratio:16/10;background:var(--panel2);border-radius:14px;overflow:hidden}.shot img{width:100%;height:100%;object-fit:contain;display:block}
+.shot.picked{outline:3px solid var(--brand)}.shot input{width:18px;height:18px;margin:0}
 .shot div{display:flex;align-items:center;gap:6px;padding:10px 4px 2px}.shot small{flex:1;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .voice{margin-bottom:18px}.voice .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
 .voice h3{margin:0;font-size:19px;font-weight:600;letter-spacing:-.3px}.voice p{margin:0 0 12px;color:var(--muted);font-size:14px}
@@ -264,12 +265,13 @@ button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
   <!-- Screenshots (⌘1): newest first -->
   <section class="view" id="shotsView">
     <div class="head"><h1>Screenshots</h1><span class="muted">Take one with ⌘1. Saved in ~/Documents/ciak/shots.</span>
-      <div class="seg" id="shotPadding" title="The space around new screenshots and recordings"></div></div>
+      <div class="seg" id="shotPadding" title="The space around new screenshots and recordings"></div>
+      <button class="small" id="shotCollage" hidden title="Put the picked shots on one wallpaper: a poster a feed shows whole">Collage</button></div>
     <div class="backgrounds" id="shotBackgrounds" title="The wallpaper behind new screenshots"></div>
     <div class="grid" id="shots"></div>
     <dialog id="shotEditor"><img id="shotPreview" alt="">
       <div class="backgrounds" id="shotEditBackgrounds"></div>
-      <div class="row"><div class="seg" id="shotEditPadding"></div>
+      <div class="row"><div class="seg" id="shotEditPadding"></div><div class="seg" id="shotEditLayout"></div>
         <span class="muted" id="shotEditState"></span><button class="small" id="shotEditClose">Done</button></div></dialog>
   </section>
 
@@ -732,11 +734,34 @@ async function framing(name, change = {}) {
     $('shotPreview').src = '/shot?token=' + token + '&name=' + encodeURIComponent(name) + '&t=' + Date.now();
     paddingSwitch($('shotEditPadding'), result.padding, padding => editShot(name, {padding}));
     swatches($('shotEditBackgrounds'), shotChoices, result.background, background => editShot(name, {background}));
+    // A collage also picks how its shots sit: one row, one column, a grid, or auto (closest to 4:3).
+    $("shotEditLayout").style.display = result.layout ? "" : "none";
+    $('shotEditLayout').replaceChildren(...(result.layout ? ['auto', 'row', 'column', 'grid'] : []).map(layout => {
+      const button = make('button', layout === result.layout ? 'on' : '', layout[0].toUpperCase() + layout.slice(1));
+      button.onclick = () => editShot(name, {layout});
+      return button;
+    }));
     $('shotEditState').textContent = '';
     loadShots().catch(() => {});
   } catch (failure) { $('shotEditState').textContent = ''; toast(failure.message); }
 }
 $('shotEditClose').onclick = () => $('shotEditor').close();
+// Pick shots (the box on each) for a collage, in the order picked.
+let picked = [];
+const showPicked = () => {
+  $('shotCollage').hidden = picked.length < 2;
+  $('shotCollage').textContent = `Collage ${picked.length}`;
+  for (const card of $('shots').children) card.classList?.toggle('picked', picked.includes(card.dataset.name));
+};
+$('shotCollage').onclick = async () => {
+  $('shotCollage').disabled = true; $('shotCollage').textContent = 'Making…';
+  try {
+    const result = await api('shot-collage', {names: picked});
+    picked = []; showPicked();
+    await loadShots();
+    editShot(result.output.split('/').pop());
+  } catch (failure) { toast(failure.message); showPicked(); } finally { $('shotCollage').disabled = false; }
+};
 api('shot-background').then(showBackgrounds).catch(() => {});
 async function loadShots() {
   const shots = await api('shots');
@@ -749,6 +774,9 @@ async function loadShots() {
   if (!shots.length) { $('shots').replaceChildren(make('div', 'empty', 'No screenshots yet. Press ⌘1, drag an area or press space for a window.')); return; }
   $('shots').replaceChildren(...shots.map(shot => {
     const card = make('div', 'shot'), link = make('a'), bar = make('div');
+    card.dataset.name = shot.name;
+    const pick = make('input'); pick.type = 'checkbox'; pick.title = 'Pick for a collage'; pick.checked = picked.includes(shot.name);
+    pick.onchange = () => { picked = pick.checked ? [...picked, shot.name] : picked.filter(name => name !== shot.name); showPicked(); };
     const url = '/shot?token=' + token + '&name=' + encodeURIComponent(shot.name);
     const image = make('img'); image.src = url + '&t=' + shot.created; image.alt = shot.name; image.loading = 'lazy';
     link.href = url; link.target = '_blank'; link.title = shot.name; link.append(image);
@@ -757,10 +785,11 @@ async function loadShots() {
     reveal.onclick = () => api('shot-reveal', {name: shot.name}).catch(failure => toast(failure.message));
     twice(remove, () => api('shot-remove', {name: shot.name}).then(loadShots).catch(failure => toast(failure.message)));
     edit.onclick = () => editShot(shot.name);
-    bar.append(make('small', '', when(shot.created)), edit, copy, reveal, remove);
+    bar.append(pick, make('small', '', when(shot.created)), edit, copy, reveal, remove);
     card.append(link, bar);
     return card;
   }));
+  picked = picked.filter(name => shots.some(shot => shot.name === name)); showPicked();
 }
 
 // ---- Voices ----
