@@ -136,6 +136,7 @@ audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say inp
 .edit .line{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--ink);font-size:14px;margin:0 0 12px}.edit .line:last-child{margin:0}#switchList .line{margin-bottom:12px}#switchList .line:last-child{margin:0}
 .edit .line select{width:auto;min-height:34px;padding:4px 10px}.edit .line input[type=range]{width:150px}
 .edit .file{flex-direction:column;align-items:stretch;gap:8px;margin-bottom:12px}.edit .file span{max-width:none;font-size:12px}
+#rawList .file{flex-direction:row;align-items:center;margin-bottom:6px}#rawList .file span{flex:1}
 .file-actions{display:flex;gap:6px}.file-actions button{flex:1}
 button.wide{width:100%}
 .viewer-top{margin-bottom:12px}
@@ -235,6 +236,8 @@ button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
           <section><h3>Export</h3>
             <div class="file" id="finalFile"><span id="finalName"></span><div class="file-actions"><button class="small" id="copyVideo">Copy</button><button class="small" id="revealFinal">Show in Finder</button></div></div>
             <button id="renderAgain" class="wide">Render again</button></section>
+          <!-- The raw files, ready to paste while the video renders -->
+          <section id="rawFiles" hidden><h3>Raw files</h3><div id="rawList"></div></section>
           <!-- What's in it: tap to leave a part out -->
           <section id="switches"><h3>In the video</h3><div id="switchList"></div></section>
           <section id="projectBackground"><h3>Background</h3><div class="backgrounds" id="projectBackgrounds"></div><div class="seg" id="projectPadding"></div></section>
@@ -489,6 +492,7 @@ async function refresh() {
     viewer(project);
     steps(project);
   }
+  showRaw(project);
   showSwitches(project);
   showProjectBackground(project);
   showCamera(project);
@@ -519,6 +523,17 @@ async function livePreview(id) {
 }
 for (const button of $('seg').children) button.onclick = () => { shown = button.dataset.show; viewer(current); };
 $('copyVideo').onclick = () => api('copy-video', {id: current.id}).then(() => { $('copyVideo').textContent = 'Copied'; setTimeout(() => $('copyVideo').textContent = 'Copy', 2000); }).catch(failure => toast(failure.message));
+function showRaw(project) {
+  const list = project.raw || [], key = project.id + list.join();
+  $('rawFiles').hidden = !list.length;
+  if ($('rawList').dataset.key === key) return;
+  $('rawList').dataset.key = key; $('rawList').replaceChildren();
+  for (const name of list) {
+    const row = make('div', 'file'), copy = make('button', 'small', 'Copy');
+    copy.onclick = () => api('copy-video', {id: project.id, name}).then(() => { copy.textContent = 'Copied'; setTimeout(() => copy.textContent = 'Copy', 2000); }).catch(failure => toast(failure.message));
+    row.append(make('span', '', name), copy); $('rawList').append(row);
+  }
+}
 // Mic, Mac sound, webcam, click sounds and zooms: each in or out of the video. A change waits for Render again.
 const switchNames = {mic: ['Microphone', 'Your voice'], system: ['Mac sound', 'Sound from apps'], webcam: ['Camera bubble', 'You in a circle in the corner'], clicks: ['Click sounds', 'A soft tick on each click'], zooms: ['Zoom on clicks', 'Moves in where you click']};
 function showSwitches(project) {

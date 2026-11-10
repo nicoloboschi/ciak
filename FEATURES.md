@@ -34,7 +34,7 @@ Status: ✅ done and tested · 🧪 built, not yet tested · ⬜ not started
 - ✅ Panel feel (after recent.design): a rounded arrow cursor (black, white in dark mode), quiet click tones made in the page (a tap on press, rising/falling on a switch), springy presses and hovers
 - ✅ Speed: the whole video (`edit --speed 1.5`, the panel's Speed menu, shown at once in the live preview) or one part (`edit --speed 3,12,40`); the voice keeps its pitch
 - ✅ Click sounds and zooms on or off too (`edit --clicks off`, `--zooms off`, same panel card)
-- ✅ Live preview in the panel: the edit plays in the page (30 fps, Remotion player), a switch or camera change shows at once without a render · ✅ the exported file's name with Copy (the video file on the clipboard, paste it in a chat) and Show in Finder
+- ✅ Live preview in the panel: the edit plays in the page (30 fps, Remotion player), a switch or camera change shows at once without a render · ✅ the exported file's name with Copy (the video file on the clipboard, paste it in a chat) and Show in Finder · ✅ Raw files (screen, camera, cleaned voice) each with Copy, usable while the video renders
 - 🧪 Stop from macOS's menu bar recording icon finishes the recording (not tried with the real icon yet)
 - ✅ An ultrawide screen keeps its shape in the video (2560×1080), instead of being squeezed small into 16:9
 - ✅ Menu bar app (`ciak app install`): ⌘1 screenshots, Record… and Screenshots (open the panel, which starts with the app so it opens at once), Open Recordings; starts at login and holds the permissions
