@@ -111,12 +111,22 @@ details summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;list-s
 .backgrounds button[aria-pressed=true]{border-color:var(--ink)}
 #shotEditor{border:0;border-radius:20px;padding:20px;background:var(--panel);color:var(--ink);width:min(900px,92vw)}#shotEditor::backdrop{background:#0008}
 #shotPreview{display:block;width:100%;max-height:60vh;object-fit:contain;margin-bottom:16px}
-#shotEditor .row{display:flex;align-items:center;gap:16px}#shotEditState{flex:1}#shotEditClose{width:auto;flex:none}
+#shotEditor .row{display:flex;align-items:center;gap:16px}#shotEditState{flex:1}#shotEditClose,#shotEditMore{width:auto;flex:none}#shotEditor .row .seg{flex:none}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
 .shot{background:var(--panel);border-radius:20px;overflow:hidden;padding:8px}
 .shot a{display:block;aspect-ratio:16/10;background:var(--panel2);border-radius:14px;overflow:hidden}.shot img{width:100%;height:100%;object-fit:contain;display:block}
-.shot.picked{outline:3px solid var(--brand)}.shot input{width:18px;height:18px;margin:0}
-.shot div{display:flex;align-items:center;gap:6px;padding:10px 4px 2px}.shot small{flex:1;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#shots{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding-bottom:90px}
+.shot{position:relative;padding:6px;border-radius:16px}.shot a{border-radius:11px}
+.shot.picked,.shot.picked:hover{box-shadow:0 0 0 3px var(--brand)}
+.shot .check{position:absolute;top:12px;left:12px;z-index:2;width:30px;height:30px;min-height:0;padding:0;border-radius:50%;border:2px solid #fff;background:#0006;color:#fff;font-size:15px;font-weight:700;backdrop-filter:blur(6px);opacity:0;transition:opacity .15s}
+.shot:hover .check,.picking .shot .check,.shot.picked .check{opacity:1}.shot.picked .check{background:var(--brand);border-color:var(--brand)}
+.shot .acts{position:absolute;left:12px;right:12px;bottom:40px;z-index:2;display:flex;gap:4px;justify-content:center;opacity:0;transition:opacity .15s}
+.shot:hover .acts{opacity:1}.picking .shot .acts{display:none}
+.shot .acts button{min-height:28px;padding:3px 10px;font-size:12px;background:#000b;color:#fff;backdrop-filter:blur(6px)}
+.shot small{display:block;padding:7px 4px 1px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.picking .shot a{cursor:copy}
+#pickBar{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 20px;border-radius:999px;background:var(--ink);color:var(--bg);box-shadow:0 10px 30px #0006}
+#pickBar button{min-height:34px}#pickDo{background:var(--brand);color:#fff}#pickClear{background:none;color:inherit;opacity:.7}
 .voice{margin-bottom:18px}.voice .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
 .voice h3{margin:0;font-size:19px;font-weight:600;letter-spacing:-.3px}.voice p{margin:0 0 12px;color:var(--muted);font-size:14px}
 audio{width:100%;height:36px}.say{display:flex;gap:10px;margin-top:12px}.say input{flex:1}
@@ -155,8 +165,6 @@ button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
 .item .thumb{transition:transform .5s var(--spring),box-shadow .3s}.item:hover .thumb{transform:scale(1.05);box-shadow:inset 0 0 0 1px #0000000f,0 6px 16px #0000001f}
 .shot{transition:transform .5s var(--spring),box-shadow .3s}.shot:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
 .shot a{position:relative}.shot img{transition:transform .6s var(--spring)}.shot:hover img{transform:scale(1.03)}
-.shot a::after{content:"↗";position:absolute;right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#000a;color:#fff;font-size:16px;backdrop-filter:blur(6px);transform:scale(0);transition:transform .3s var(--spring)}
-.shot:hover a::after{transform:scale(1)}
 .player{transition:box-shadow .3s}
 #toast{animation:pop .3s var(--spring)}
 @keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
@@ -265,14 +273,14 @@ button:active:not(:disabled),.item:active,.nav a:active{transform:scale(.97)}
   <!-- Screenshots (⌘1): newest first -->
   <section class="view" id="shotsView">
     <div class="head"><h1>Screenshots</h1><span class="muted">Take one with ⌘1. Saved in ~/Documents/ciak/shots.</span>
-      <div class="seg" id="shotPadding" title="The space around new screenshots and recordings"></div>
-      <button class="small" id="shotCollage" hidden title="Put the picked shots on one wallpaper: a poster a feed shows whole">Collage</button></div>
+      <div class="seg" id="shotPadding" title="The space around new screenshots and recordings"></div></div>
     <div class="backgrounds" id="shotBackgrounds" title="The wallpaper behind new screenshots"></div>
     <div class="grid" id="shots"></div>
+    <div id="pickBar" hidden><span id="pickText"></span><button id="pickDo"></button><button id="pickClear">Cancel</button></div>
     <dialog id="shotEditor"><img id="shotPreview" alt="">
       <div class="backgrounds" id="shotEditBackgrounds"></div>
       <div class="row"><div class="seg" id="shotEditPadding"></div><div class="seg" id="shotEditLayout"></div>
-        <span class="muted" id="shotEditState"></span><button class="small" id="shotEditClose">Done</button></div></dialog>
+        <span class="muted" id="shotEditState"></span><button class="small" id="shotEditMore" hidden title="Pick more shots to add to this collage">Add more</button><button class="small" id="shotEditClose">Done</button></div></dialog>
   </section>
 
   <!-- Voices: your cloned voices for narration -->
@@ -736,6 +744,8 @@ async function framing(name, change = {}) {
     swatches($('shotEditBackgrounds'), shotChoices, result.background, background => editShot(name, {background}));
     // A collage also picks how its shots sit: one row, one column, a grid, or auto (closest to 4:3).
     $("shotEditLayout").style.display = result.layout ? "" : "none";
+    $('shotEditMore').hidden = !result.layout;
+    $('shotEditMore').onclick = () => { $('shotEditor').close(); adding = name; picked = []; showPicked(); };
     $('shotEditLayout').replaceChildren(...(result.layout ? ['auto', 'row', 'column', 'grid'] : []).map(layout => {
       const button = make('button', layout === result.layout ? 'on' : '', layout[0].toUpperCase() + layout.slice(1));
       button.onclick = () => editShot(name, {layout});
@@ -746,21 +756,32 @@ async function framing(name, change = {}) {
   } catch (failure) { $('shotEditState').textContent = ''; toast(failure.message); }
 }
 $('shotEditClose').onclick = () => $('shotEditor').close();
-// Pick shots (the box on each) for a collage, in the order picked.
-let picked = [];
+// Pick shots for a collage (the ✓ on each, then a click on any picture picks it too), in the order picked.
+// adding: a collage that gets the picked ones (Add more in its editor).
+let picked = [], adding = null;
 const showPicked = () => {
-  $('shotCollage').hidden = picked.length < 2;
-  $('shotCollage').textContent = `Collage ${picked.length}`;
-  for (const card of $('shots').children) card.classList?.toggle('picked', picked.includes(card.dataset.name));
+  const picking = picked.length > 0 || adding;
+  $('shotsView').classList.toggle('picking', !!picking);
+  $('pickBar').hidden = !picking;
+  $('pickText').textContent = adding ? `Pick shots to add · ${picked.length} picked` : `${picked.length} picked`;
+  $('pickDo').textContent = adding ? 'Add to collage' : 'Make collage';
+  $('pickDo').disabled = picked.length < (adding ? 1 : 2);
+  for (const card of $('shots').children) {
+    const order = picked.indexOf(card.dataset.name);
+    card.classList.toggle('picked', order >= 0);
+    const check = card.querySelector('.check'); if (check) check.textContent = order >= 0 ? order + 1 : '';
+  }
 };
-$('shotCollage').onclick = async () => {
-  $('shotCollage').disabled = true; $('shotCollage').textContent = 'Making…';
+const togglePick = name => { picked = picked.includes(name) ? picked.filter(other => other !== name) : [...picked, name]; showPicked(); };
+$('pickClear').onclick = () => { const back = adding; picked = []; adding = null; showPicked(); if (back) editShot(back); };
+$('pickDo').onclick = async () => {
+  $('pickDo').disabled = true; $('pickDo').textContent = 'Making…';
   try {
-    const result = await api('shot-collage', {names: picked});
-    picked = []; showPicked();
+    const result = await api('shot-collage', {names: picked, into: adding});
+    picked = []; adding = null; showPicked();
     await loadShots();
     editShot(result.output.split('/').pop());
-  } catch (failure) { toast(failure.message); showPicked(); } finally { $('shotCollage').disabled = false; }
+  } catch (failure) { toast(failure.message); showPicked(); }
 };
 api('shot-background').then(showBackgrounds).catch(() => {});
 async function loadShots() {
@@ -773,20 +794,20 @@ async function loadShots() {
   $('shots').dataset.key = key;
   if (!shots.length) { $('shots').replaceChildren(make('div', 'empty', 'No screenshots yet. Press ⌘1, drag an area or press space for a window.')); return; }
   $('shots').replaceChildren(...shots.map(shot => {
-    const card = make('div', 'shot'), link = make('a'), bar = make('div');
+    const card = make('div', 'shot'), link = make('a'), acts = make('div', 'acts');
     card.dataset.name = shot.name;
-    const pick = make('input'); pick.type = 'checkbox'; pick.title = 'Pick for a collage'; pick.checked = picked.includes(shot.name);
-    pick.onchange = () => { picked = pick.checked ? [...picked, shot.name] : picked.filter(name => name !== shot.name); showPicked(); };
     const url = '/shot?token=' + token + '&name=' + encodeURIComponent(shot.name);
     const image = make('img'); image.src = url + '&t=' + shot.created; image.alt = shot.name; image.loading = 'lazy';
     link.href = url; link.target = '_blank'; link.title = shot.name; link.append(image);
-    const edit = make('button', 'small', 'Edit'), copy = make('button', 'small', 'Copy'), reveal = make('button', 'small', 'Finder'), remove = make('button', 'small', 'Delete');
+    link.onclick = event => { if (picked.length || adding) { event.preventDefault(); togglePick(shot.name); } };
+    const check = make('button', 'check'); check.title = 'Pick for a collage'; check.onclick = () => togglePick(shot.name);
+    const edit = make('button', '', 'Edit'), copy = make('button', '', 'Copy'), reveal = make('button', '', 'Finder'), remove = make('button', '', 'Delete');
     copy.onclick = () => api('shot-copy', {name: shot.name}).then(() => copy.textContent = 'Copied').catch(failure => toast(failure.message));
     reveal.onclick = () => api('shot-reveal', {name: shot.name}).catch(failure => toast(failure.message));
     twice(remove, () => api('shot-remove', {name: shot.name}).then(loadShots).catch(failure => toast(failure.message)));
     edit.onclick = () => editShot(shot.name);
-    bar.append(pick, make('small', '', when(shot.created)), edit, copy, reveal, remove);
-    card.append(link, bar);
+    acts.append(edit, copy, reveal, remove);
+    card.append(check, link, acts, make('small', '', when(shot.created)));
     return card;
   }));
   picked = picked.filter(name => shots.some(shot => shot.name === name)); showPicked();
